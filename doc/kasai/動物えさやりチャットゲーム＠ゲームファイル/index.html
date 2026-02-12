@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>動物えさやりチャットゲーム（プロトタイプ）</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="noScroll">
+  <!-- 背景装飾 -->
+  <div class="bgFloat" aria-hidden="true">
+    <span class="f f1">✨</span><span class="f f2">🌟</span><span class="f f3">🍀</span><span class="f f4">💫</span>
+    <span class="f f5">🫧</span><span class="f f6">🌈</span><span class="f f7">⭐</span><span class="f f8">🦴</span>
+  </div>
+
+  <div class="appShell">
+    <!-- タイトル画面（オーバーレイ） -->
+    <div class="titleOverlay show" id="titleOverlay" role="dialog" aria-modal="true" aria-label="タイトル画面">
+      <div class="titleCard" role="document">
+        <div class="titleTop">
+          <div class="titleLogo" aria-hidden="true">🦁🐧🦫🐼</div>
+          <div>
+            <div class="titleName">動物えさやりチャット</div>
+            <div class="titleSub">あなたの入力で、動物のリアクションが変わる！</div>
+          </div>
+        </div>
+
+        <div class="titleBody">
+          <div class="titlePreview" aria-hidden="true">
+            <div class="previewAnimal">🐾</div>
+            <div class="previewText">「肉」「魚」「草」「野菜」
+または自由入力でごはんをあげよう！</div>
+          </div>
+
+          <div class="titleNotes">
+            <div class="note"><span>🎨</span> 画像生成は現在オフ（必要になったら実装します）</div>
+            <div class="note"><span>🔊</span> 効果音あり（音が出ます）</div>
+            <div class="note"><span>🫧</span> もぐもぐ中はアイコンが上下に揺れます</div>
+          </div>
+        </div>
+
+        <div class="titleActions">
+          <button id="btnStart" class="btn primary big" type="button">▶ はじめる</button>
+          <button id="btnStartMuted" class="btn ghost big" type="button">🔇 音なしで開始</button>
+        </div>
+
+        <div class="titleFoot">ヒント：自由入力は「想像力ボーナス」あり！</div>
+      </div>
+    </div>
+
+    <!-- ============================
+         ゲーム画面（結果はここに出さない）
+         ============================ -->
+    <section id="screenGame" class="screen show" aria-label="ゲーム画面">
+      <header class="appHeader">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">🦁</div>
+          <div class="brandText">
+            <h1>動物えさやりチャット</h1>
+            <p>あなたの入力で、動物のリアクションが変わる！</p>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <!-- 左：動物 -->
+        <section class="panel animalPanel" aria-label="動物エリア">
+          <div class="animalCard">
+            <div class="animalArt" id="animalArt" aria-hidden="true">🐾</div>
+
+            <div class="animalMeta">
+              <div class="animalNameRow">
+                <h2 id="animalName">動物</h2>
+                <span class="tag" id="animalTag">性格</span>
+              </div>
+
+              <div class="speech" aria-live="polite" aria-atomic="true">
+                <div class="bubble" id="begLine">……おなかすいた……</div>
+                <div class="bubbleHint">（下のボタンか、自由入力でごはんをあげてね）</div>
+              </div>
+
+              <div class="likes" id="likes" aria-label="好き嫌い"></div>
+
+              <div class="miniTips">
+                <div class="tipTitle">🎯 コツ</div>
+                <ul>
+                  <li>クイック4択は安全に遊べるよ</li>
+                  <li>自由入力は「想像力ボーナス」あり</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice">
+            <strong>画像生成は現在オフ</strong>
+            <p>コストが高いため、いまは「仮の結果イラスト（絵文字）」を表示します。必要になったら実装します。</p>
+          </div>
+        </section>
+
+        <!-- 右：チャット＆操作 -->
+        <section class="panel chatPanel" aria-label="チャットエリア">
+          <div class="chatHeader">
+            <h3>チャット</h3>
+            <div class="small">動物の反応がここに出るよ</div>
+          </div>
+
+          <div id="chatLog" class="chatLog" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+          <div class="controls">
+            <div class="quickRow" aria-label="クイック選択">
+              <button class="btn" data-quick="肉" type="button">🍖 肉</button>
+              <button class="btn" data-quick="魚" type="button">🐟 魚</button>
+              <button class="btn" data-quick="草" type="button">🌿 草</button>
+              <button class="btn" data-quick="野菜" type="button">🥕 野菜</button>
+            </div>
+
+            <div class="freeRow" aria-label="自由入力">
+              <label class="srOnly" for="freeInput">自由入力</label>
+              <input id="freeInput" class="input" type="text" placeholder="例：お母さんの手作りハンバーグ / 魔法の薬 / ふわふわパンケーキ…" maxlength="50" />
+              <button id="btnSend" class="btn primary" type="button">あげる</button>
+            </div>
+
+            <div class="hintRow">
+              <span class="hint">ヒント：変な食べ物でもOK！ただし危ない言葉はブロックされます。</span>
+            </div>
+          </div>
+
+          <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+          <div class="loadingOverlay" id="loadingOverlay" aria-hidden="true">
+            <div class="loadingCard">
+              <div class="spinner" aria-hidden="true"></div>
+              <div class="loadingText">
+                <strong>もぐもぐ…</strong>
+                <p id="loadingLine">動物が味わっています…</p>
+                <p class="small">（この間、動物アイコンが上下に揺れます）</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="appFooter">
+        <div class="small">© プロトタイプ / ローカルで動作（外部API未接続）</div>
+      </footer>
+    </section>
+
+    <!-- ============================
+         結果画面（別ページ/別画面）
+         ============================ -->
+    <section id="screenResult" class="screen" aria-label="結果画面" aria-hidden="true">
+      <header class="appHeader">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">🎉</div>
+          <div class="brandText">
+            <h1>結果</h1>
+            <p id="resultSub">まだごはんをあげていません</p>
+          </div>
+        </div>
+      </header>
+
+      <main class="resultStage">
+        <div class="resultCard" role="region" aria-label="結果カード">
+          <div class="resultTop">
+            <div class="resultAnimal" id="resultAnimal" aria-hidden="true">🐾</div>
+            <div class="resultEmoji" id="resultArt" aria-hidden="true">✨</div>
+          </div>
+
+          <div class="resultText" id="resultText">動物にごはんをあげると、ここに結果が出ます。</div>
+
+          <div class="resultActions">
+            <button id="btnResultNext" class="btn primary" type="button">つぎの動物へ</button>
+            <button id="btnResultToTitle" class="btn ghost" type="button">🏠 タイトルへ</button>
+          </div>
+        </div>
+      </main>
+
+      <footer class="appFooter">
+        <div class="small">ヒント：結果のあと「つぎの動物へ」で遊び続けられます。</div>
+      </footer>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
