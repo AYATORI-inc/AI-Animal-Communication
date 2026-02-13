@@ -28,7 +28,8 @@
         <div class="titleBody">
           <div class="titlePreview" aria-hidden="true">
             <div class="previewAnimal">🐾</div>
-            <div class="previewText">「肉」「魚」「草」「野菜」
+            <div class="previewText">まずは動物をえらんで、
+「肉」「魚」「草」「野菜」
 または自由入力でごはんをあげよう！</div>
           </div>
 
@@ -49,15 +50,84 @@
     </div>
 
     <!-- ============================
-         ゲーム画面（結果はここに出さない）
+         動物選択画面（新規）
          ============================ -->
-    <section id="screenGame" class="screen show" aria-label="ゲーム画面">
+    <section id="screenSelect" class="screen show" aria-label="動物選択画面">
+      <header class="appHeader">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">🐾</div>
+          <div class="brandText">
+            <h1>動物をえらぼう</h1>
+            <p>4種類から好きな動物を選んでスタート</p>
+          </div>
+        </div>
+      </header>
+
+      <main class="selectStage">
+        <div class="selectCard" role="region" aria-label="動物選択">
+          <div class="selectHint">えらんだ動物に、ごはんをあげよう！</div>
+
+          <div class="animalGrid" role="list">
+            <button class="animalPick" type="button" data-animal="lion" role="listitem">
+              <div class="pickEmoji" aria-hidden="true">🦁</div>
+              <div class="pickMeta">
+                <div class="pickName">ライオン</div>
+                <div class="pickTag">王様きどり</div>
+                <div class="pickLine">「王の食事にふさわしいものを頼むぞ。」</div>
+              </div>
+            </button>
+
+            <button class="animalPick" type="button" data-animal="penguin" role="listitem">
+              <div class="pickEmoji" aria-hidden="true">🐧</div>
+              <div class="pickMeta">
+                <div class="pickName">ペンギン</div>
+                <div class="pickTag">きまじめ</div>
+                <div class="pickLine">「できれば新鮮なお魚がいいです。」</div>
+              </div>
+            </button>
+
+            <button class="animalPick" type="button" data-animal="capybara" role="listitem">
+              <div class="pickEmoji" aria-hidden="true">🦫</div>
+              <div class="pickMeta">
+                <div class="pickName">カピバラ</div>
+                <div class="pickTag">のんびり</div>
+                <div class="pickLine">「急がないから、ゆっくり選んでねぇ…」</div>
+              </div>
+            </button>
+
+            <button class="animalPick" type="button" data-animal="panda" role="listitem">
+              <div class="pickEmoji" aria-hidden="true">🐼</div>
+              <div class="pickMeta">
+                <div class="pickName">パンダ</div>
+                <div class="pickTag">マイペース</div>
+                <div class="pickLine">「笹っぽいの、ある？（なんでも笹に見える…）」</div>
+              </div>
+            </button>
+          </div>
+
+          <div class="selectActions">
+            <button id="btnSelectToTitle" class="btn ghost" type="button">🏠 タイトルへ</button>
+          </div>
+
+          <div class="selectFoot">※ 好き嫌いのヒントは表示されません。いろいろ試してみよう！</div>
+        </div>
+      </main>
+
+      <footer class="appFooter">
+        <div class="small">© プロトタイプ / ローカルで動作（外部API未接続）</div>
+      </footer>
+    </section>
+
+    <!-- ============================
+         ゲーム画面（えさ選択）
+         ============================ -->
+    <section id="screenGame" class="screen" aria-label="ゲーム画面" aria-hidden="true">
       <header class="appHeader">
         <div class="brand">
           <div class="logo" aria-hidden="true">🦁</div>
           <div class="brandText">
-            <h1>動物えさやりチャット</h1>
-            <p>あなたの入力で、動物のリアクションが変わる！</p>
+            <h1>えさをあげよう</h1>
+            <p>クイック4択 or 自由入力でごはんをあげる</p>
           </div>
         </div>
       </header>
@@ -78,8 +148,6 @@
                 <div class="bubble" id="begLine">……おなかすいた……</div>
                 <div class="bubbleHint">（下のボタンか、自由入力でごはんをあげてね）</div>
               </div>
-
-              <!-- ✅ 好き嫌いヒントは非表示（撤去） -->
 
               <div class="miniTips">
                 <div class="tipTitle">🎯 コツ</div>
@@ -122,6 +190,10 @@
 
             <div class="hintRow">
               <span class="hint">ヒント：変な食べ物でもOK！ただし危ない言葉はブロックされます。</span>
+            </div>
+
+            <div class="backRow">
+              <button id="btnBackToSelect" class="btn ghost" type="button">⬅ 動物えらびへ</button>
             </div>
           </div>
 
@@ -176,7 +248,7 @@
       </main>
 
       <footer class="appFooter">
-        <div class="small">ヒント：結果のあと「つぎの動物へ」で遊び続けられます。</div>
+        <div class="small">ヒント：結果のあと「つぎの動物へ」で選択画面に戻ります。</div>
       </footer>
     </section>
 

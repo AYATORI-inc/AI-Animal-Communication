@@ -164,6 +164,26 @@ body.noScroll{ overflow:hidden; }
 .brandText h1{ margin:0; font-size:1.25rem; letter-spacing:.02em; }
 .brandText p{ margin:4px 0 0; color:var(--muted); }
 
+/* ボタン */
+.btn{
+  border:none;
+  cursor:pointer;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.08);
+  color: var(--text);
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+  transition: transform .08s ease, background .12s ease, opacity .12s ease;
+  user-select:none;
+}
+.btn:hover{ background: rgba(255,255,255,.12); }
+.btn:active{ transform: translateY(1px) scale(.99); }
+.btn:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+.btn.primary{ background: linear-gradient(135deg, rgba(49,230,191,.35), rgba(124,92,255,.35)); }
+.btn.ghost{ background: transparent; box-shadow:none; }
+.btn.big{ padding: 14px 14px; border-radius: 16px; font-weight:700; }
+
 /* レイアウト（ゲーム画面） */
 .layout{
   display:grid;
@@ -241,16 +261,6 @@ body.noScroll{ overflow:hidden; }
 }
 .bubbleHint{ margin-top:8px; color:var(--muted); font-size:.9rem; }
 
-.likes{ margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; }
-.chip{
-  display:inline-flex; gap:6px; align-items:center;
-  padding:6px 10px; border-radius:999px;
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.05);
-  color:var(--muted);
-  font-size:.85rem;
-}
-
 .miniTips{
   margin-top:12px;
   padding:10px 12px;
@@ -327,27 +337,10 @@ body.noScroll{ overflow:hidden; }
 .input::placeholder{ color: rgba(233,238,255,.55); }
 .input:focus{ border-color: rgba(49,230,191,.6); }
 
-.btn{
-  border:none;
-  cursor:pointer;
-  padding: 12px 12px;
-  border-radius: 14px;
-  border:1px solid var(--line);
-  background: rgba(255,255,255,.08);
-  color: var(--text);
-  box-shadow: 0 10px 22px rgba(0,0,0,.25);
-  transition: transform .08s ease, background .12s ease, opacity .12s ease;
-  user-select:none;
-}
-.btn:hover{ background: rgba(255,255,255,.12); }
-.btn:active{ transform: translateY(1px) scale(.99); }
-.btn:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
-.btn.primary{ background: linear-gradient(135deg, rgba(49,230,191,.35), rgba(124,92,255,.35)); }
-.btn.ghost{ background: transparent; box-shadow:none; }
-.btn.big{ padding: 14px 14px; border-radius: 16px; font-weight:700; }
-
 .hintRow{ margin-top:10px; }
 .hint{ color:var(--muted); font-size:.88rem; }
+
+.backRow{ margin-top:10px; display:flex; justify-content:flex-end; }
 
 .toast{
   position:absolute;
@@ -395,7 +388,77 @@ body.noScroll{ overflow:hidden; }
 }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
-/* ✅ 結果画面（別ページ） */
+/* ✅ 選択画面 */
+.selectStage{
+  display:grid;
+  place-items:center;
+  padding: 12px 18px 18px;
+}
+
+.selectCard{
+  width: min(880px, 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+  box-shadow: 0 26px 70px rgba(0,0,0,.45);
+  padding: 16px;
+}
+
+.selectHint{
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.animalGrid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.animalPick{
+  text-align:left;
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.10);
+  color: var(--text);
+  cursor:pointer;
+  transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+.animalPick:hover{ background: rgba(255,255,255,.06); }
+.animalPick:active{ transform: translateY(1px) scale(.99); }
+.animalPick:focus-visible{ outline: 2px solid rgba(49,230,191,.75); outline-offset: 2px; }
+
+.pickEmoji{
+  width:76px; height:76px;
+  border-radius: 22px;
+  display:grid; place-items:center;
+  font-size:42px;
+  background: radial-gradient(70px 70px at 25% 25%, rgba(255,255,255,.18), transparent 70%),
+              rgba(255,255,255,.06);
+  border:1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.pickMeta{ display:grid; gap: 4px; }
+.pickName{ font-size:1.08rem; font-weight:800; }
+.pickTag{ color: var(--muted); font-size:.9rem; }
+.pickLine{ color: rgba(233,238,255,.78); font-size:.92rem; line-height:1.4; }
+
+.selectActions{ margin-top: 12px; display:flex; justify-content:flex-end; }
+.selectFoot{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255,255,255,.18);
+  background: rgba(255,255,255,.03);
+  color: var(--muted);
+}
+
+/* ✅ 結果画面 */
 .resultStage{
   display:grid;
   place-items:center;
@@ -418,16 +481,7 @@ body.noScroll{ overflow:hidden; }
   justify-content:space-between;
 }
 
-.resultAnimal{
-  width:88px; height:88px;
-  border-radius: 26px;
-  display:grid; place-items:center;
-  font-size:48px;
-  background: radial-gradient(85px 85px at 25% 25%, rgba(255,255,255,.18), transparent 70%),
-              rgba(255,255,255,.06);
-  border:1px solid var(--line);
-}
-
+.resultAnimal,
 .resultEmoji{
   width:88px; height:88px;
   border-radius: 26px;
@@ -461,6 +515,10 @@ body.noScroll{ overflow:hidden; }
 @media (max-width: 980px){
   .layout{ grid-template-columns: 1fr; }
   .titleActions{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 740px){
+  .animalGrid{ grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce){

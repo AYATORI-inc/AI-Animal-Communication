@@ -1,14 +1,12 @@
 'use strict';
 
 /*
-  v8
-  - ✅ 好き嫌いヒント（👍好き/👎苦手）を非表示（UI撤去）
-  - ✅ えさ選択中のおねだりセリフが時間経過で切り替わる（動物ごと）
-     - 4.2〜7.0秒ごと／同じセリフ連続なし
-     - もぐもぐ中・結果画面・タイトル画面では止める
-  - ✅ 結果は別ページ（screenResult）
-  - ✅ タイトル表示中はスクロールしない（body.noScroll）
-  - 効果音あり／待機中上下揺れ／結果SEは1種類
+  v9
+  - ✅ 動物はランダムではなく「選ぶ式」
+    タイトル → 動物選択 → えさ選択（ゲーム）
+  - ✅ 結果「つぎの動物へ」→ 選択画面へ
+  - ✅ おねだりセリフは時間で自動切替（動物ごと）
+  - ✅ 好き嫌いヒントはUIに出さない
 */
 
 const NG_WORDS = [
@@ -83,6 +81,7 @@ const QUICK_OPTIONS = ['肉','魚','草','野菜'];
 
 const el = {
   // screens
+  screenSelect: document.getElementById('screenSelect'),
   screenGame: document.getElementById('screenGame'),
   screenResult: document.getElementById('screenResult'),
 
@@ -90,6 +89,10 @@ const el = {
   titleOverlay: document.getElementById('titleOverlay'),
   btnStart: document.getElementById('btnStart'),
   btnStartMuted: document.getElementById('btnStartMuted'),
+
+  // select
+  btnSelectToTitle: document.getElementById('btnSelectToTitle'),
+  pickButtons: Array.from(document.querySelectorAll('[data-animal]')),
 
   // gameplay
   animalArt: document.getElementById('animalArt'),
@@ -100,12 +103,13 @@ const el = {
   chatLog: document.getElementById('chatLog'),
   freeInput: document.getElementById('freeInput'),
   btnSend: document.getElementById('btnSend'),
+  btnBackToSelect: document.getElementById('btnBackToSelect'),
 
   toast: document.getElementById('toast'),
   loadingOverlay: document.getElementById('loadingOverlay'),
   loadingLine: document.getElementById('loadingLine'),
 
-  // result screen
+  // result
   resultSub: document.getElementById('resultSub'),
   resultAnimal: document.getElementById('resultAnimal'),
   resultArt: document.getElementById('resultArt'),
@@ -120,7 +124,7 @@ const state = {
   sfxEnabled: true,
   lastResult: null,
 
-  // ✅ おねだりセリフの自動切替
+  // おねだり自動切替
   begTimeout: null,
   currentBeg: '',
 };
@@ -166,7 +170,7 @@ function sfxMunchOnce(){
   playTone(440 + randInt(-35, 35), 50, 'sine', 0.03);
 }
 function sfxResult(){
-  // ✅ 成功/失敗でも同じ（1種類）
+  // 成功/失敗でも同じ（1種類）
   const seq = [523, 659];
   seq.forEach((f, i) => setTimeout(() => playTone(f, 110, 'sine', 0.07), i * 120));
 }
@@ -186,12 +190,19 @@ function stopMunchLoop(){
 // 画面切り替え
 // ================================
 function showScreen(name){
+  const isSelect = name === 'select';
   const isGame = name === 'game';
-  el.screenGame.classList.toggle('show', isGame);
-  el.screenResult.classList.toggle('show', !isGame);
-  el.screenResult.setAttribute('aria-hidden', String(isGame));
+  const isResult = name === 'result';
 
-  // ✅ 画面に応じておねだりループ制御
+  el.screenSelect.classList.toggle('show', isSelect);
+  el.screenGame.classList.toggle('show', isGame);
+  el.screenResult.classList.toggle('show', isResult);
+
+  el.screenSelect.setAttribute('aria-hidden', String(!isSelect));
+  el.screenGame.setAttribute('aria-hidden', String(!isGame));
+  el.screenResult.setAttribute('aria-hidden', String(!isResult));
+
+  // おねだりループはゲーム画面だけ
   if(isGame) startBegLoop();
   else stopBegLoop();
 }
@@ -234,7 +245,7 @@ function setLoading(isOn, line){
     el.loadingLine.textContent = line || '動物が味わっています…';
     el.loadingOverlay.classList.add('show');
     el.loadingOverlay.setAttribute('aria-hidden', 'false');
-    // ✅ 動物アイコンを上下に揺らす
+    // 動物アイコンを上下に揺らす
     el.animalArt.classList.add('bob');
     startMunchLoop();
   }else{
@@ -244,13 +255,13 @@ function setLoading(isOn, line){
     stopMunchLoop();
   }
 
-  // ✅ もぐもぐ中はおねだりセリフの自動切替を止める（落ち着いた演出）
+  // もぐもぐ中はおねだりを止める
   if(isOn) stopBegLoop();
   else startBegLoop();
 }
 
 // ================================
-// ✅ おねだりセリフ自動切替
+// おねだりセリフ自動切替
 // ================================
 function stopBegLoop(){
   if(state.begTimeout){
@@ -260,15 +271,10 @@ function stopBegLoop(){
 }
 
 function canRotateBeg(){
-  // タイトル表示中は止める
   if(el.titleOverlay.classList.contains('show')) return false;
-  // ゲーム画面じゃなければ止める
   if(!el.screenGame.classList.contains('show')) return false;
-  // もぐもぐ中は止める
   if(el.loadingOverlay.classList.contains('show')) return false;
-  // 動物がいなければ止める
   if(!state.animal) return false;
-  // 結果表示待ち（locked true）でも止める
   if(state.locked) return false;
   return true;
 }
@@ -281,13 +287,11 @@ function setBegLine(text){
 function nextBegLine(){
   const lines = state.animal?.begLines || [];
   if(lines.length === 0) return;
-
   if(lines.length === 1){
     setBegLine(lines[0]);
     return;
   }
 
-  // 同じセリフ連続なし
   let candidate = pick(lines);
   let guard = 0;
   while(candidate === state.currentBeg && guard < 8){
@@ -299,16 +303,12 @@ function nextBegLine(){
 
 function startBegLoop(){
   stopBegLoop();
-
-  // 条件を満たすまで「予約だけして様子見」する（画面遷移直後に安定）
   const schedule = () => {
     state.begTimeout = window.setTimeout(() => {
       if(canRotateBeg()) nextBegLine();
-      // 継続（ゲーム中のみ回る）
       if(el.screenGame.classList.contains('show')) schedule();
     }, randInt(4200, 7000));
   };
-
   if(el.screenGame.classList.contains('show')) schedule();
 }
 
@@ -320,24 +320,58 @@ function showTitle(){
   state.locked = true;
   document.body.classList.add('noScroll');
   el.titleOverlay.classList.add('show');
-
-  // ✅ タイトル中はおねだりループ停止
   stopBegLoop();
-
-  // タイトルに戻った時点ではゲーム画面にしておく（開始でスムーズ）
-  showScreen('game');
+  showScreen('select');
 }
 function hideTitle(){
   el.titleOverlay.classList.remove('show');
   document.body.classList.remove('noScroll');
-  state.locked = false;
-  // ✅ ゲームに戻ったら再開
-  startBegLoop();
 }
 
 // ================================
-// ロジック
+// ゲームロジック
 // ================================
+function findAnimal(id){
+  return ANIMALS.find(a => a.id === id) || null;
+}
+
+function renderAnimal(){
+  const a = state.animal;
+  el.animalArt.textContent = a.art;
+  el.animalName.textContent = a.name;
+  el.animalTag.textContent = a.personality;
+}
+
+function gotoSelect(){
+  setLoading(false);
+  state.locked = true;
+  state.animal = null;
+  stopBegLoop();
+  showScreen('select');
+}
+
+function startGameWithAnimal(animalId){
+  const a = findAnimal(animalId);
+  if(!a) return;
+
+  state.animal = a;
+  state.locked = false;
+  state.lastResult = null;
+
+  // チャットは毎回クリア（迷わない）
+  el.chatLog.innerHTML = '';
+
+  showScreen('game');
+  renderAnimal();
+
+  // 初回おねだり
+  setBegLine(pick(a.begLines));
+  startBegLoop();
+
+  addChatMessage({ who:'npc', avatar: a.art, text: `【${a.name}】をえらんだ！` });
+  addChatMessage({ who:'npc', avatar: a.art, text: state.currentBeg });
+}
+
 function classifyItem(input){
   const raw = (input || '').trim();
   if(!raw) return { raw: '', category: '不明', vibe: 'ふつう' };
@@ -453,27 +487,6 @@ function generateLocalReaction(animal, itemInfo, judged){
   return { text: line, commentary: pick(commentator) };
 }
 
-function renderAnimal(){
-  const a = state.animal;
-  el.animalArt.textContent = a.art;
-  el.animalName.textContent = a.name;
-  el.animalTag.textContent = a.personality;
-}
-
-function startRound(){
-  state.animal = pick(ANIMALS);
-  state.locked = false;
-
-  renderAnimal();
-
-  // ✅ 初回セリフをセット（自動切替の起点）
-  setBegLine(pick(state.animal.begLines));
-  startBegLoop();
-
-  addChatMessage({ who:'npc', avatar: state.animal.art, text: `【${state.animal.name}】があらわれた！` });
-  addChatMessage({ who:'npc', avatar: state.animal.art, text: state.currentBeg });
-}
-
 function buildResultText(animal, itemInfo, judged){
   const base = {
     'だいせいこう': '超大成功！まんぞくそう！',
@@ -483,7 +496,6 @@ function buildResultText(animal, itemInfo, judged){
   }[judged.outcome];
 
   const extra = [];
-  // ヒントはUIで隠しているが、結果の解説としては残す
   if(animal.likes.includes(itemInfo.category)) extra.push('（たぶん好みっぽい！）');
   if(animal.dislikes.includes(itemInfo.category)) extra.push('（たぶん苦手っぽい…）');
   if(itemInfo.category === '不明') extra.push('（自由入力の想像力がカギ！）');
@@ -499,7 +511,6 @@ function showResultPage({ animal, itemInfo, judged, reaction }){
   const summary = buildResultText(animal, itemInfo, judged);
   el.resultText.textContent = `${summary}\n\n${reaction.text}\n\n${reaction.commentary}`;
 
-  // ✅ 結果ページへ移動する時におねだりを止める
   stopBegLoop();
   showScreen('result');
 }
@@ -513,6 +524,11 @@ async function handleFeed(rawInput){
   }
   if(state.locked){
     showToast('いまは操作できないよ');
+    return;
+  }
+  if(!state.animal){
+    showToast('先に動物をえらんでね');
+    gotoSelect();
     return;
   }
 
@@ -552,18 +568,9 @@ async function handleFeed(rawInput){
 
   state.lastResult = { animal: a, itemInfo, judged, reaction };
 
-  // ✅ 結果ページへ
+  // 結果へ
   showResultPage(state.lastResult);
   state.locked = true;
-}
-
-function resetAll(){
-  state.locked = false;
-  state.lastResult = null;
-  el.chatLog.innerHTML = '';
-  showScreen('game');
-  startRound();
-  showToast('最初からはじめるよ');
 }
 
 function wireEvents(){
@@ -574,14 +581,41 @@ function wireEvents(){
     await resumeAudio();
     sfxClick();
     hideTitle();
-    resetAll();
+    gotoSelect();
   });
 
   // タイトル：音なし開始
   el.btnStartMuted.addEventListener('click', () => {
     state.sfxEnabled = false;
     hideTitle();
-    resetAll();
+    gotoSelect();
+  });
+
+  // 選択：タイトルへ
+  el.btnSelectToTitle.addEventListener('click', async () => {
+    ensureAudio();
+    await resumeAudio();
+    sfxClick();
+    showTitle();
+  });
+
+  // 動物選択
+  el.pickButtons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      ensureAudio();
+      await resumeAudio();
+      sfxClick();
+      const id = btn.getAttribute('data-animal');
+      startGameWithAnimal(id);
+    });
+  });
+
+  // ゲーム：動物選択へ戻る
+  el.btnBackToSelect.addEventListener('click', async () => {
+    ensureAudio();
+    await resumeAudio();
+    sfxClick();
+    gotoSelect();
   });
 
   // クイック
@@ -607,14 +641,12 @@ function wireEvents(){
     }
   });
 
-  // 結果：次の動物へ
+  // 結果：次の動物へ（= 選択画面へ）
   el.btnResultNext.addEventListener('click', async () => {
     ensureAudio();
     await resumeAudio();
     sfxClick();
-    showScreen('game');
-    startRound();
-    state.locked = false;
+    gotoSelect();
   });
 
   // 結果：タイトルへ
