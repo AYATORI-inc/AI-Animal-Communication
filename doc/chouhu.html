@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="山口県下関市・城下町長府の散策スポット紹介。功山寺の静寂をイメージしたデザイン。" />
+  <title>城下町 長府 散策ガイド</title>
+
+  <style>
+    :root {
+      --bg-color: #f2f0e9;
+      --moss-green: #4a5d4e;
+      --text-color: #2c2c2c;
+      --accent-color: #5d4037;
+      --sub-color: #6d6d6d;
+      --border-color: #d1cdc2;
+      --paper-white: rgba(255, 255, 255, 0.9);
+      --clay-wall: #c4b18c; /* 土塀の色 */
+      --max-width: 800px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      /* 和紙のようなテクスチャ */
+      background-image: 
+        url("https://www.transparenttextures.com/patterns/p6.png"),
+        linear-gradient(to bottom, #f2f0e9, #e5e2d5);
+      color: var(--text-color);
+      font-family: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+      line-height: 2.2;
+      overflow-x: hidden;
+    }
+
+    /* 城下町の街並みをイメージしたサイド背景装飾 */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        /* 左側の石垣イメージ */
+        linear-gradient(90deg, rgba(100,100,100,0.05) 0%, transparent 15%),
+        /* 右側の土塀イメージ */
+        linear-gradient(-90deg, rgba(196,177,140,0.1) 0%, transparent 15%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* 散る花びら/紅葉のアニメーション用 */
+    .falling-leaf {
+      position: fixed;
+      top: -10%;
+      color: rgba(93, 64, 55, 0.2);
+      font-size: 20px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); }
+    }
+
+    .container {
+      width: min(var(--max-width), calc(100% - 60px));
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Header with Roof Motif */
+    header {
+      padding: 100px 0 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    /* 瓦屋根のような装飾 */
+    .roof-line {
+      width: 200px;
+      height: 10px;
+      margin: 0 auto;
+      border-top: 3px solid var(--moss-green);
+      border-radius: 50% / 100% 100% 0 0;
+      opacity: 0.6;
+    }
+
+    .site-title {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 0.6em;
+      margin: 20px 0;
+      color: var(--moss-green);
+      text-indent: 0.6em;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .site-subtitle {
+      font-size: 1rem;
+      letter-spacing: 0.4em;
+      color: var(--sub-color);
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      display: inline-block;
+      padding: 5px 20px;
+    }
+
+    /* Navigation */
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 50px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-color);
+      font-size: 0.95rem;
+      padding: 5px 15px;
+      background: rgba(255,255,255,0.3);
+      border: 1px solid var(--border-color);
+      transition: all 0.4s;
+    }
+
+    .nav-links a:hover {
+      background: var(--moss-green);
+      color: #fff;
+    }
+
+    /* Sections */
+    .section { padding: 120px 0; position: relative; }
+
+    .section-bg-accent {
+      background: var(--paper-white);
+      box-shadow: 0 0 50px rgba(0,0,0,0.03);
+      border-top: 4px double var(--border-color);
+      border-bottom: 4px double var(--border-color);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 80px;
+      letter-spacing: 0.5em;
+      color: var(--moss-green);
+    }
+
+    /* Spot Item - 石垣と土塀のイメージをカードに反映 */
+    .spot {
+      margin-bottom: 100px;
+      padding: 50px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+      border: 1px solid var(--border-color);
+      border-left: 8px solid var(--moss-green);
+      position: relative;
+    }
+
+    /* 練り塀の横縞模様を模した装飾 */
+    .spot::after {
+      content: "";
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background-image: repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(0,0,0,0.02) 20px);
+      pointer-events: none;
+    }
+
+    .spot-header { margin-bottom: 30px; border-bottom: 1px solid var(--border-color); display: inline-block; padding-bottom: 10px; }
+    .spot-name { font-size: 1.7rem; color: var(--accent-color); }
+    .spot-kana { font-size: 0.9rem; color: var(--sub-color); margin-left: 15px; }
+
+    /* Map */
+    .map-container {
+      width: 100%;
+      height: 500px;
+      border: 1px solid var(--border-color);
+      filter: sepia(30%) grayscale(40%);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    /* Animation Section */
+    .walking-animation {
+      width: 100%;
+      height: 150px;
+      position: relative;
+      margin-top: 40px;
+      background: url("https://www.transparenttextures.com/patterns/brushed-alum.png"); /* 石畳風 */
+    }
+
+    .walker {
+      position: absolute;
+      bottom: 20px;
+      animation: walkAcross 30s linear infinite;
+    }
+    .walker svg { fill: var(--moss-green); filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2)); }
+
+    @keyframes walkAcross {
+      0% { left: -50px; transform: scaleX(1); }
+      49% { left: 100%; transform: scaleX(1); }
+      50% { left: 100%; transform: scaleX(-1); }
+      99% { left: -50px; transform: scaleX(-1); }
+      100% { left: -50px; transform: scaleX(1); }
+    }
+
+    footer {
+      padding: 100px 0;
+      background-color: var(--moss-green);
+      background-image: url("https://www.transparenttextures.com/patterns/p6.png");
+      color: #edeae0;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .site-title { font-size: 2rem; }
+      .spot { padding: 30px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="leaf-container"></div>
+
+  <header>
+    <div class="container">
+      <div class="roof-line"></div>
+      <div class="site-title">城下町 長府</div>
+      <div class="site-subtitle">山口県下関市・悠久の時を刻む街</div>
+      <nav class="nav-links">
+        <a href="#about">由緒</a>
+        <a href="#spots">散策スポット</a>
+        <a href="#map">地図</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="about" class="section">
+      <div class="container" style="max-width: 700px; background: rgba(255,255,255,0.6); padding: 40px; border-radius: 4px;">
+        <h2 class="section-title">維新回天、祈りの地</h2>
+        <p>
+          下関市長府。かつて長府毛利藩五万石の城下町として栄えたこの地には、土塀が続く小路や、重厚な門構えの武家屋敷が今も静かに息づいています。<br><br>
+          幕末、この功山寺から始まった「挙兵」が日本の形を変えました。静かな石畳の道を歩きながら、当時の志士たちが眺めたであろう空の色や、練り塀越しに聞こえる風の音に耳を傾けてみてください。
+        </p>
+      </div>
+    </section>
+
+    <section id="spots" class="section section-bg-accent">
+      <div class="container">
+        <h2 class="section-title">散策の名所</h2>
+
+        <div class="spot">
+          <div class="spot-header">
+            <span class="spot-name">功山寺</span>
+            <span class="spot-kana">こうざんじ</span>
+          </div>
+          <p class="spot-desc">
+            曹洞宗の名刹であり、仏殿は国宝に指定されています。高杉晋作が明治維新の先駆けとなる挙兵を行った場所として、歴史愛好家にとって欠かせない場所です。春は桜、秋は紅葉が美しく、境内の至る所で歴史と自然の融合を感じることができます。
+          </p>
+        </div>
+
+        <div class="spot">
+          <div class="spot-header">
+            <span class="spot-name">長府毛利邸</span>
+            <span class="spot-kana">ちょうふもうりてい</span>
+          </div>
+          <p class="spot-desc">
+            長府毛利家十四代元敏公によって建てられた邸宅。美しい池泉回遊式庭園を眺めながら、抹茶をいただく時間は至福のひとときです。明治天皇の宿泊所としても使用された格式高い空間で、当時の貴族の暮らしを追体験できます。
+          </p>
+        </div>
+
+        <div class="spot">
+          <div class="spot-header">
+            <span class="spot-name">古江小路</span>
+            <span class="spot-kana">ふるえしょうじ</span>
+          </div>
+          <p class="spot-desc">
+            長府の象徴とも言える、練り塀と石垣が織りなす美しい路地。藩士たちの屋敷が並んでいた当時の景観が保存されており、まるで江戸時代にタイムスリップしたかのような錯覚を覚えます。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="map" class="section">
+      <div class="container">
+        <h2 class="section-title">案内図</h2>
+        <div class="map-container">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3301.7659551105155!2d130.9834575765516!3d34.00030507317765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x354394038a846f97%3A0x7000e470d03b070!2z5Yqf5bGx5a-6!5e0!3m2!1sja!2sjp!4v1707115000000!5m2!1sja!2sjp" 
+            allowfullscreen="" 
+            loading="lazy">
+          </iframe>
+        </div>
+        
+        <div class="walking-animation">
+          <div class="walker">
+            <svg width="40" height="60" viewBox="0 0 100 150">
+              <circle cx="50" cy="25" r="12" />
+              <rect x="42" y="37" width="16" height="55" rx="8" />
+              <path d="M50,45 L30,80 M50,45 L70,80" stroke-width="10" stroke-linecap="round" stroke="currentColor" fill="none" />
+              <rect x="44" y="90" width="12" height="40" rx="6" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="font-size: 1.5rem; letter-spacing: 0.5em; margin-bottom: 20px;">城下町 長府</div>
+      <p>山口県下関市</p>
+      <div style="margin-top: 30px; opacity: 0.6; font-size: 0.8rem;">© Shimonoseki Chofu Tourism Association.</div>
+    </div>
+  </footer>
+
+  <script>
+    // 紅葉/桜を降らせるスクリプト
+    function createLeaf() {
+      const leaf = document.createElement('div');
+      leaf.className = 'falling-leaf';
+      leaf.innerHTML = '🍂'; // 秋は 🍂 、春は 🌸 に。
+      leaf.style.left = Math.random() * 100 + 'vw';
+      leaf.style.animationDuration = Math.random() * 5 + 10 + 's';
+      leaf.style.opacity = Math.random() * 0.5;
+      document.getElementById('leaf-container').appendChild(leaf);
+      
+      setTimeout(() => { leaf.remove(); }, 15000);
+    }
+    setInterval(createLeaf, 3000);
+  </script>
+</body>
+</html>
