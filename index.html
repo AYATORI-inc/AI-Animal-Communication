@@ -36,22 +36,30 @@
           <!-- ✅ 横一列（4つ） -->
           <div class="animalRow" role="list" aria-label="動物のえらび">
             <button class="pickTile" type="button" data-animal="lion" role="listitem" aria-label="ライオン">
-              <div class="tileEmoji" aria-hidden="true">🦁</div>
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/raion.jpg" alt="" />
+              </div>
               <div class="tileName">ライオン</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="penguin" role="listitem" aria-label="ペンギン">
-              <div class="tileEmoji" aria-hidden="true">🐧</div>
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/pengin.jpg" alt="" />
+              </div>
               <div class="tileName">ペンギン</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="capybara" role="listitem" aria-label="カピバラ">
-              <div class="tileEmoji" aria-hidden="true">🦫</div>
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/kapipara.jpg" alt="" />
+              </div>
               <div class="tileName">カピバラ</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="panda" role="listitem" aria-label="パンダ">
-              <div class="tileEmoji" aria-hidden="true">🐼</div>
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/panda.jpg" alt="" />
+              </div>
               <div class="tileName">パンダ</div>
             </button>
           </div>
@@ -73,7 +81,9 @@
     <section id="screenGame" class="screen" aria-label="ゲーム画面" aria-hidden="true">
       <header class="appHeader">
         <div class="brand">
-          <div class="logo" id="gameLogo" aria-hidden="true">🐾</div>
+          <div class="logo" aria-hidden="true">
+            <img id="gameLogoImg" class="logoImg" src="" alt="" />
+          </div>
           <div class="brandText">
             <h1>えさを あげよう</h1>
             <p>ボタン 4つ or じゆうに いれてね</p>
@@ -85,7 +95,9 @@
         <!-- 左：動物 -->
         <section class="panel animalPanel" aria-label="動物エリア">
           <div class="animalCard">
-            <div class="animalArt" id="animalArt" aria-hidden="true">🐾</div>
+            <div class="animalArt" aria-hidden="true">
+              <img id="animalImg" class="animalImg" src="" alt="" />
+            </div>
 
             <div class="animalMeta">
               <div class="animalNameRow">
@@ -184,7 +196,9 @@
       <main class="resultStage">
         <div class="resultCard" role="region" aria-label="結果カード">
           <div class="resultTop">
-            <div class="resultAnimal" id="resultAnimal" aria-hidden="true">🐾</div>
+            <div class="resultAnimal" aria-hidden="true">
+              <img id="resultAnimalImg" class="resultAnimalImg" src="" alt="" />
+            </div>
             <div class="resultEmoji" id="resultArt" aria-hidden="true">✨</div>
           </div>
 

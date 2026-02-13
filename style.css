@@ -23,7 +23,7 @@ body{
     linear-gradient(180deg, #0b2b62 0%, #073a4f 34%, #062218 100%);
 
   color: var(--text);
-  overflow: hidden; /* 画面スクロールは基本しない */
+  overflow: hidden; /* スクロールさせない */
 }
 
 /* 雲っぽいゆらぎ */
@@ -131,8 +131,10 @@ body.noScroll{ overflow:hidden; }
   background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  font-size:24px;
+  overflow:hidden;
 }
+.logoImg{ width:100%; height:100%; object-fit:cover; display:block; }
+
 .brandText h1{ margin:0; font-size:1.25rem; letter-spacing:.02em; }
 .brandText p{ margin:4px 0 0; color:var(--muted); }
 
@@ -191,15 +193,15 @@ body.noScroll{ overflow:hidden; }
 .pickTile:focus-visible{ outline: 2px solid rgba(49,230,191,.75); outline-offset: 2px; }
 
 .tileEmoji{
-  width: 72px;
-  height: 72px;
-  border-radius: 22px;
-  display:grid;
-  place-items:center;
-  font-size: 44px;
-  background: radial-gradient(70px 70px at 25% 25%, rgba(255,255,255,.18), transparent 70%), rgba(255,255,255,.06);
+  width: 78px;
+  height: 78px;
+  border-radius: 24px;
+  overflow:hidden;
   border: 1px solid var(--line);
+  background: rgba(255,255,255,.06);
+  box-shadow: 0 16px 34px rgba(0,0,0,.25);
 }
+.tileImg{ width:100%; height:100%; object-fit:cover; display:block; }
 .tileName{ font-weight: 900; letter-spacing: .04em; }
 
 .selectFoot{
@@ -217,17 +219,23 @@ body.noScroll{ overflow:hidden; }
   justify-items:center;
   padding: 0 18px 18px;
 }
+
+/* ✅ 文章を見えやすく（濃い背景＋太い枠＋文字影＋グロー） */
 .bottomQuestion{
   width: min(920px, 100%);
   text-align:center;
-  padding: 10px 12px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.16);
-  background: rgba(0,0,0,.12);
-  box-shadow: 0 18px 40px rgba(0,0,0,.25);
-  font-weight: 900;
-  letter-spacing: .06em;
-  font-size: 1.18rem;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 2px solid rgba(255,255,255,.32);
+  background: linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.22));
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 22px 52px rgba(0,0,0,.45),
+    0 0 0 6px rgba(255,255,255,.06);
+  font-weight: 950;
+  letter-spacing: .08em;
+  font-size: 1.22rem;
+  text-shadow: 0 2px 14px rgba(0,0,0,.75);
 }
 
 /* ゲーム画面 */
@@ -270,15 +278,17 @@ body.noScroll{ overflow:hidden; }
   background: radial-gradient(circle at 30% 30%, rgba(49,230,191,.18), transparent 60%);
   pointer-events:none;
 }
+
 .animalArt{
   width:110px; height:110px;
   border-radius: 24px;
   display:grid; place-items:center;
-  font-size:56px;
-  background: radial-gradient(90px 90px at 30% 30%, rgba(255,255,255,.20), transparent 70%), rgba(255,255,255,.06);
+  background: rgba(255,255,255,.06);
   border: 1px solid var(--line);
+  overflow:hidden;
   will-change: transform;
 }
+.animalImg{ width:100%; height:100%; object-fit:cover; display:block; }
 
 .bob{ animation: bob 0.42s ease-in-out infinite; }
 @keyframes bob{ 0%{ transform: translateY(0); } 50%{ transform: translateY(-10px); } 100%{ transform: translateY(0); } }
@@ -349,7 +359,10 @@ body.noScroll{ overflow:hidden; }
   background: rgba(255,255,255,.07);
   border:1px solid var(--line);
   flex: 0 0 auto;
+  overflow:hidden;
 }
+.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
 .msgBubble{
   padding:10px 12px;
   border-radius: 16px;
@@ -443,15 +456,18 @@ body.noScroll{ overflow:hidden; }
   padding: 16px;
 }
 .resultTop{ display:flex; gap:12px; align-items:center; justify-content:space-between; }
+
 .resultAnimal,
 .resultEmoji{
   width:88px; height:88px;
   border-radius: 26px;
   display:grid; place-items:center;
-  font-size:48px;
-  background: radial-gradient(85px 85px at 25% 25%, rgba(255,255,255,.18), transparent 70%), rgba(255,255,255,.06);
+  background: rgba(255,255,255,.06);
   border:1px solid var(--line);
+  overflow:hidden;
 }
+.resultAnimalImg{ width:100%; height:100%; object-fit:cover; display:block; }
+
 .resultText{
   margin-top: 12px;
   padding: 12px 12px;
@@ -470,10 +486,10 @@ body.noScroll{ overflow:hidden; }
 }
 
 @media (max-width: 520px){
-  .tileEmoji{ width: 60px; height: 60px; font-size: 38px; border-radius: 20px; }
+  .tileEmoji{ width: 62px; height: 62px; border-radius: 20px; }
   .pickTile{ padding: 10px 8px; border-radius: 20px; }
-  .tileName{ font-size: .95rem; }
-  .bottomQuestion{ font-size: 1.05rem; }
+  .tileName{ font-size: .92rem; }
+  .bottomQuestion{ font-size: 1.06rem; }
 }
 
 @media (prefers-reduced-motion: reduce){

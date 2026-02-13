@@ -1,14 +1,10 @@
 'use strict';
 
 /*
-  v11
-  - ✅ トップページは動物選択画面（タイトル画面なし）
-  - ✅ 動物選択は横一列（4つ）
-  - ✅ 画面下側に「どの どうぶつに えさを あげる？」（HTML/CSS側）
-  - ✅ 好き嫌いのヒントは表示しない（内部ロジックだけで使用）
-  - ✅ おねだりセリフは時間で自動切替（動物ごと）
-  - ✅ 待機中は動物アイコンを上下に揺らす（もぐもぐ演出）
-  - ✅ 効果音追加（クリック / もぐもぐ / 結果 ※結果は1種類）
+  v12
+  - ✅ 動物アイコンを画像に変更（トップ・ゲーム・結果・チャットのアバター）
+  - ✅ トップページ下の文言を見えやすく（CSS側で強調）
+  - ✅ おねだりセリフ自動切替 / もぐもぐ揺れ / 効果音あり（結果音は1種類）
 */
 
 const NG_WORDS = [
@@ -23,7 +19,8 @@ const ANIMALS = [
   {
     id: 'lion',
     name: 'ライオン',
-    art: '🦁',
+    img: 'raion.jpg',
+    emoji: '🦁',
     personality: '王様きどり',
     likes: ['肉'],
     dislikes: ['草'],
@@ -37,7 +34,8 @@ const ANIMALS = [
   {
     id: 'penguin',
     name: 'ペンギン',
-    art: '🐧',
+    img: 'pengin.jpg',
+    emoji: '🐧',
     personality: 'きまじめ',
     likes: ['魚'],
     dislikes: ['肉'],
@@ -51,7 +49,8 @@ const ANIMALS = [
   {
     id: 'capybara',
     name: 'カピバラ',
-    art: '🦫',
+    img: 'kapipara.jpg',
+    emoji: '🦫',
     personality: 'のんびり',
     likes: ['草','野菜'],
     dislikes: ['肉'],
@@ -65,7 +64,8 @@ const ANIMALS = [
   {
     id: 'panda',
     name: 'パンダ',
-    art: '🐼',
+    img: 'panda.jpg',
+    emoji: '🐼',
     personality: 'マイペース',
     likes: ['草'],
     dislikes: ['魚'],
@@ -90,10 +90,11 @@ const el = {
   pickButtons: Array.from(document.querySelectorAll('[data-animal]')),
 
   // game header
-  gameLogo: document.getElementById('gameLogo'),
+  gameLogoImg: document.getElementById('gameLogoImg'),
 
   // gameplay
-  animalArt: document.getElementById('animalArt'),
+  animalArtBox: document.querySelector('.animalArt'),
+  animalImg: document.getElementById('animalImg'),
   animalName: document.getElementById('animalName'),
   animalTag: document.getElementById('animalTag'),
   begLine: document.getElementById('begLine'),
@@ -109,7 +110,7 @@ const el = {
 
   // result
   resultSub: document.getElementById('resultSub'),
-  resultAnimal: document.getElementById('resultAnimal'),
+  resultAnimalImg: document.getElementById('resultAnimalImg'),
   resultArt: document.getElementById('resultArt'),
   resultText: document.getElementById('resultText'),
   btnResultNext: document.getElementById('btnResultNext'),
@@ -229,13 +230,35 @@ function scrollChatToBottom(){
   el.chatLog.scrollTop = el.chatLog.scrollHeight;
 }
 
+function setAvatarContent(avatarEl, avatar){
+  avatarEl.innerHTML = '';
+  if(!avatar){
+    avatarEl.textContent = '🐾';
+    return;
+  }
+  // avatar: { type:'img', src:'...', alt:'...' } or string
+  if(typeof avatar === 'string'){
+    avatarEl.textContent = avatar;
+    return;
+  }
+  if(avatar.type === 'img'){
+    const img = document.createElement('img');
+    img.src = avatar.src;
+    img.alt = avatar.alt || '';
+    img.loading = 'lazy';
+    avatarEl.appendChild(img);
+    return;
+  }
+  avatarEl.textContent = '🐾';
+}
+
 function addChatMessage({who, text, avatar}){
   const msg = document.createElement('div');
   msg.className = `msg ${who === 'me' ? 'me' : 'npc'}`;
 
   const av = document.createElement('div');
   av.className = 'avatar';
-  av.textContent = avatar || (who === 'me' ? '🙂' : '🐾');
+  setAvatarContent(av, avatar || (who === 'me' ? '🙂' : '🐾'));
 
   const bubble = document.createElement('div');
   bubble.className = 'msgBubble';
@@ -253,14 +276,14 @@ function setLoading(isOn, line){
     el.loadingOverlay.classList.add('show');
     el.loadingOverlay.setAttribute('aria-hidden', 'false');
 
-    // もぐもぐ中：上下に揺らす
-    el.animalArt.classList.add('bob');
+    // もぐもぐ中：上下に揺らす（枠ごと）
+    el.animalArtBox.classList.add('bob');
     startMunchLoop();
   }else{
     el.loadingOverlay.classList.remove('show');
     el.loadingOverlay.setAttribute('aria-hidden', 'true');
 
-    el.animalArt.classList.remove('bob');
+    el.animalArtBox.classList.remove('bob');
     stopMunchLoop();
   }
 
@@ -328,8 +351,12 @@ function findAnimal(id){
 
 function renderAnimal(){
   const a = state.animal;
-  el.gameLogo.textContent = a.art;
-  el.animalArt.textContent = a.art;
+  el.gameLogoImg.src = a.img;
+  el.gameLogoImg.alt = a.name;
+
+  el.animalImg.src = a.img;
+  el.animalImg.alt = a.name;
+
   el.animalName.textContent = a.name;
   el.animalTag.textContent = a.personality;
 }
@@ -360,8 +387,9 @@ function startGameWithAnimal(animalId){
   setBegLine(pick(a.begLines));
   startBegLoop();
 
-  addChatMessage({ who:'npc', avatar: a.art, text: `【${a.name}】をえらんだ！` });
-  addChatMessage({ who:'npc', avatar: a.art, text: state.currentBeg });
+  const avatar = { type:'img', src: a.img, alt: a.name };
+  addChatMessage({ who:'npc', avatar, text: `【${a.name}】をえらんだ！` });
+  addChatMessage({ who:'npc', avatar, text: state.currentBeg });
 }
 
 function classifyItem(input){
@@ -496,7 +524,8 @@ function buildResultText(animal, itemInfo, judged){
 
 function showResultPage({ animal, itemInfo, judged, reaction }){
   el.resultSub.textContent = `入力：${itemInfo.raw}（分類：${itemInfo.category} / 雰囲気：${itemInfo.vibe}）`;
-  el.resultAnimal.textContent = animal.art;
+  el.resultAnimalImg.src = animal.img;
+  el.resultAnimalImg.alt = animal.name;
   el.resultArt.textContent = judged.art;
 
   const summary = buildResultText(animal, itemInfo, judged);
@@ -554,7 +583,8 @@ async function handleFeed(rawInput){
   setLoading(false);
   sfxResult();
 
-  addChatMessage({ who:'npc', avatar: a.art, text: reaction.text });
+  const avatar = { type:'img', src: a.img, alt: a.name };
+  addChatMessage({ who:'npc', avatar, text: reaction.text });
   addChatMessage({ who:'npc', avatar:'🎙️', text: reaction.commentary });
 
   // 結果へ
