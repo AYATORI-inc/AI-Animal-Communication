@@ -1,10 +1,13 @@
 'use strict';
 
 /*
-  v7
-  - ✅ 結果を別ページ（screenResult）に表示
-  - ✅ えさやり → もぐもぐ → 結果ページへ遷移
-  - ✅ タイトル表示中は body.noScroll
+  v8
+  - ✅ 好き嫌いヒント（👍好き/👎苦手）を非表示（UI撤去）
+  - ✅ えさ選択中のおねだりセリフが時間経過で切り替わる（動物ごと）
+     - 4.2〜7.0秒ごと／同じセリフ連続なし
+     - もぐもぐ中・結果画面・タイトル画面では止める
+  - ✅ 結果は別ページ（screenResult）
+  - ✅ タイトル表示中はスクロールしない（body.noScroll）
   - 効果音あり／待機中上下揺れ／結果SEは1種類
 */
 
@@ -29,6 +32,7 @@ const ANIMALS = [
       'おい、人間。おれさまのために、うまい肉を持ってこい。',
       'ぐぅ…おなかがなる…。肉！いますぐ肉！',
       '王の食事にふさわしいものを頼むぞ。',
+      'ふむ…そろそろ献上品の時間だな。',
     ],
   },
   {
@@ -42,6 +46,7 @@ const ANIMALS = [
       'えっと…できれば新鮮なお魚がいいです。',
       'ぼく、魚が大好きなんだ。よろしくね。',
       '氷の上でも食べやすいごはんだとうれしいな。',
+      'できれば骨が少ないタイプだと助かります…！',
     ],
   },
   {
@@ -55,6 +60,7 @@ const ANIMALS = [
       'ふぁ〜…おなかすいた。やさしい味がいいなぁ。',
       'のんびり食べられるやつ…ある？',
       'あったかいお風呂のあとに…野菜とか…いいな…',
+      '急がないから、ゆっくり選んでねぇ…',
     ],
   },
   {
@@ -68,6 +74,7 @@ const ANIMALS = [
       'もぐもぐする準備はできてるよ。',
       '笹っぽいの、ある？（なんでも笹に見える…）',
       'あんまり急かさないでね〜。',
+      'ぼくのペースで食べたいな〜。',
     ],
   },
 ];
@@ -89,7 +96,6 @@ const el = {
   animalName: document.getElementById('animalName'),
   animalTag: document.getElementById('animalTag'),
   begLine: document.getElementById('begLine'),
-  likes: document.getElementById('likes'),
 
   chatLog: document.getElementById('chatLog'),
   freeInput: document.getElementById('freeInput'),
@@ -113,6 +119,10 @@ const state = {
   locked: true,
   sfxEnabled: true,
   lastResult: null,
+
+  // ✅ おねだりセリフの自動切替
+  begTimeout: null,
+  currentBeg: '',
 };
 
 // ================================
@@ -180,6 +190,10 @@ function showScreen(name){
   el.screenGame.classList.toggle('show', isGame);
   el.screenResult.classList.toggle('show', !isGame);
   el.screenResult.setAttribute('aria-hidden', String(isGame));
+
+  // ✅ 画面に応じておねだりループ制御
+  if(isGame) startBegLoop();
+  else stopBegLoop();
 }
 
 // ================================
@@ -229,6 +243,73 @@ function setLoading(isOn, line){
     el.animalArt.classList.remove('bob');
     stopMunchLoop();
   }
+
+  // ✅ もぐもぐ中はおねだりセリフの自動切替を止める（落ち着いた演出）
+  if(isOn) stopBegLoop();
+  else startBegLoop();
+}
+
+// ================================
+// ✅ おねだりセリフ自動切替
+// ================================
+function stopBegLoop(){
+  if(state.begTimeout){
+    window.clearTimeout(state.begTimeout);
+    state.begTimeout = null;
+  }
+}
+
+function canRotateBeg(){
+  // タイトル表示中は止める
+  if(el.titleOverlay.classList.contains('show')) return false;
+  // ゲーム画面じゃなければ止める
+  if(!el.screenGame.classList.contains('show')) return false;
+  // もぐもぐ中は止める
+  if(el.loadingOverlay.classList.contains('show')) return false;
+  // 動物がいなければ止める
+  if(!state.animal) return false;
+  // 結果表示待ち（locked true）でも止める
+  if(state.locked) return false;
+  return true;
+}
+
+function setBegLine(text){
+  state.currentBeg = text;
+  el.begLine.textContent = text;
+}
+
+function nextBegLine(){
+  const lines = state.animal?.begLines || [];
+  if(lines.length === 0) return;
+
+  if(lines.length === 1){
+    setBegLine(lines[0]);
+    return;
+  }
+
+  // 同じセリフ連続なし
+  let candidate = pick(lines);
+  let guard = 0;
+  while(candidate === state.currentBeg && guard < 8){
+    candidate = pick(lines);
+    guard++;
+  }
+  setBegLine(candidate);
+}
+
+function startBegLoop(){
+  stopBegLoop();
+
+  // 条件を満たすまで「予約だけして様子見」する（画面遷移直後に安定）
+  const schedule = () => {
+    state.begTimeout = window.setTimeout(() => {
+      if(canRotateBeg()) nextBegLine();
+      // 継続（ゲーム中のみ回る）
+      if(el.screenGame.classList.contains('show')) schedule();
+    }, randInt(4200, 7000));
+  };
+
+  if(el.screenGame.classList.contains('show')) schedule();
 }
 
 // ================================
@@ -239,6 +320,10 @@ function showTitle(){
   state.locked = true;
   document.body.classList.add('noScroll');
   el.titleOverlay.classList.add('show');
+
+  // ✅ タイトル中はおねだりループ停止
+  stopBegLoop();
+
   // タイトルに戻った時点ではゲーム画面にしておく（開始でスムーズ）
   showScreen('game');
 }
@@ -246,6 +331,8 @@ function hideTitle(){
   el.titleOverlay.classList.remove('show');
   document.body.classList.remove('noScroll');
   state.locked = false;
+  // ✅ ゲームに戻ったら再開
+  startBegLoop();
 }
 
 // ================================
@@ -371,17 +458,6 @@ function renderAnimal(){
   el.animalArt.textContent = a.art;
   el.animalName.textContent = a.name;
   el.animalTag.textContent = a.personality;
-  el.begLine.textContent = pick(a.begLines);
-
-  el.likes.innerHTML = '';
-  const likeChip = document.createElement('span');
-  likeChip.className = 'chip';
-  likeChip.textContent = `👍 好き：${a.likes.join(' / ')}`;
-  const dislikeChip = document.createElement('span');
-  dislikeChip.className = 'chip';
-  dislikeChip.textContent = `👎 苦手：${a.dislikes.join(' / ')}`;
-  el.likes.appendChild(likeChip);
-  el.likes.appendChild(dislikeChip);
 }
 
 function startRound(){
@@ -390,8 +466,12 @@ function startRound(){
 
   renderAnimal();
 
+  // ✅ 初回セリフをセット（自動切替の起点）
+  setBegLine(pick(state.animal.begLines));
+  startBegLoop();
+
   addChatMessage({ who:'npc', avatar: state.animal.art, text: `【${state.animal.name}】があらわれた！` });
-  addChatMessage({ who:'npc', avatar: state.animal.art, text: pick(state.animal.begLines) });
+  addChatMessage({ who:'npc', avatar: state.animal.art, text: state.currentBeg });
 }
 
 function buildResultText(animal, itemInfo, judged){
@@ -403,23 +483,24 @@ function buildResultText(animal, itemInfo, judged){
   }[judged.outcome];
 
   const extra = [];
-  if(animal.likes.includes(itemInfo.category)) extra.push('（好きなタイプにヒット！）');
-  if(animal.dislikes.includes(itemInfo.category)) extra.push('（苦手を出しちゃったかも…）');
+  // ヒントはUIで隠しているが、結果の解説としては残す
+  if(animal.likes.includes(itemInfo.category)) extra.push('（たぶん好みっぽい！）');
+  if(animal.dislikes.includes(itemInfo.category)) extra.push('（たぶん苦手っぽい…）');
   if(itemInfo.category === '不明') extra.push('（自由入力の想像力がカギ！）');
 
   return `${base}\n${extra.join(' ')}`.trim();
 }
 
 function showResultPage({ animal, itemInfo, judged, reaction }){
-  // 結果ページに表示
   el.resultSub.textContent = `入力：${itemInfo.raw}（分類：${itemInfo.category} / 雰囲気：${itemInfo.vibe}）`;
   el.resultAnimal.textContent = animal.art;
   el.resultArt.textContent = judged.art;
 
-  // ✅ 結果テキストは「評価＋動物の感想」をまとめて
   const summary = buildResultText(animal, itemInfo, judged);
   el.resultText.textContent = `${summary}\n\n${reaction.text}\n\n${reaction.commentary}`;
 
+  // ✅ 結果ページへ移動する時におねだりを止める
+  stopBegLoop();
   showScreen('result');
 }
 
@@ -466,7 +547,6 @@ async function handleFeed(rawInput){
   setLoading(false);
   sfxResult();
 
-  // チャットにも残す（あとで読み返せる）
   addChatMessage({ who:'npc', avatar: a.art, text: reaction.text });
   addChatMessage({ who:'npc', avatar:'🎙️', text: reaction.commentary });
 
@@ -474,8 +554,6 @@ async function handleFeed(rawInput){
 
   // ✅ 結果ページへ
   showResultPage(state.lastResult);
-
-  // 以降ロック（結果ページで次へ押すまで）
   state.locked = true;
 }
 
