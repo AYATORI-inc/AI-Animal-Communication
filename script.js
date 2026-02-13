@@ -1,10 +1,10 @@
 'use strict';
 
 /*
-  v12
-  - ✅ 動物アイコンを画像に変更（トップ・ゲーム・結果・チャットのアバター）
-  - ✅ トップページ下の文言を見えやすく（CSS側で強調）
-  - ✅ おねだりセリフ自動切替 / もぐもぐ揺れ / 効果音あり（結果音は1種類）
+  v13
+  - ✅ 画像参照を ./img/*.jpg に統一
+  - ✅ 動物選択以外（ゲーム/結果/チャット）でも画像が確実に表示されるように修正
+  - ✅ 画像が読み込めない場合のフォールバック（絵文字表示）
 */
 
 const NG_WORDS = [
@@ -19,7 +19,7 @@ const ANIMALS = [
   {
     id: 'lion',
     name: 'ライオン',
-    img: 'raion.jpg',
+    img: './img/raion.jpg',
     emoji: '🦁',
     personality: '王様きどり',
     likes: ['肉'],
@@ -34,7 +34,7 @@ const ANIMALS = [
   {
     id: 'penguin',
     name: 'ペンギン',
-    img: 'pengin.jpg',
+    img: './img/pengin.jpg',
     emoji: '🐧',
     personality: 'きまじめ',
     likes: ['魚'],
@@ -49,7 +49,7 @@ const ANIMALS = [
   {
     id: 'capybara',
     name: 'カピバラ',
-    img: 'kapipara.jpg',
+    img: './img/kapipara.jpg',
     emoji: '🦫',
     personality: 'のんびり',
     likes: ['草','野菜'],
@@ -64,7 +64,7 @@ const ANIMALS = [
   {
     id: 'panda',
     name: 'パンダ',
-    img: 'panda.jpg',
+    img: './img/panda.jpg',
     emoji: '🐼',
     personality: 'マイペース',
     likes: ['草'],
@@ -136,18 +136,15 @@ function ensureAudio(){
   if(!AudioContext) return;
   sfx.ctx = new AudioContext();
 }
-
 async function resumeAudio(){
   if(!sfx.ctx) return;
   if(sfx.ctx.state === 'suspended'){
     try{ await sfx.ctx.resume(); }catch(_e){}
   }
 }
-
 function randInt(min, max){
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 function playTone(freq, ms, type='sine', gain=0.08){
   if(!sfx.ctx || !state.sfxEnabled) return;
   const t0 = sfx.ctx.currentTime;
@@ -165,26 +162,20 @@ function playTone(freq, ms, type='sine', gain=0.08){
   osc.start(t0);
   osc.stop(t0 + ms/1000 + 0.02);
 }
-
 function sfxClick(){ playTone(660, 70, 'square', 0.05); }
-
 function sfxMunchOnce(){
   playTone(220 + randInt(-25, 25), 90, 'triangle', 0.06);
   playTone(440 + randInt(-35, 35), 50, 'sine', 0.03);
 }
-
 function sfxResult(){
-  // 成功/失敗で同じ（1種類）
-  const seq = [523, 659];
+  const seq = [523, 659]; // 成功/失敗で同じ（1種類）
   seq.forEach((f, i) => setTimeout(() => playTone(f, 110, 'sine', 0.07), i * 120));
 }
-
 function startMunchLoop(){
   stopMunchLoop();
   if(!state.sfxEnabled) return;
   sfx.munchTimer = window.setInterval(() => sfxMunchOnce(), 320);
 }
-
 function stopMunchLoop(){
   if(sfx.munchTimer){
     window.clearInterval(sfx.munchTimer);
@@ -225,7 +216,6 @@ function showToast(message){
   window.clearTimeout(showToast._t);
   showToast._t = window.setTimeout(() => el.toast.classList.remove('show'), 1800);
 }
-
 function scrollChatToBottom(){
   el.chatLog.scrollTop = el.chatLog.scrollHeight;
 }
@@ -236,7 +226,6 @@ function setAvatarContent(avatarEl, avatar){
     avatarEl.textContent = '🐾';
     return;
   }
-  // avatar: { type:'img', src:'...', alt:'...' } or string
   if(typeof avatar === 'string'){
     avatarEl.textContent = avatar;
     return;
@@ -246,6 +235,7 @@ function setAvatarContent(avatarEl, avatar){
     img.src = avatar.src;
     img.alt = avatar.alt || '';
     img.loading = 'lazy';
+    img.onerror = () => { avatarEl.textContent = avatar.fallback || '🐾'; };
     avatarEl.appendChild(img);
     return;
   }
@@ -277,17 +267,16 @@ function setLoading(isOn, line){
     el.loadingOverlay.setAttribute('aria-hidden', 'false');
 
     // もぐもぐ中：上下に揺らす（枠ごと）
-    el.animalArtBox.classList.add('bob');
+    el.animalArtBox?.classList.add('bob');
     startMunchLoop();
   }else{
     el.loadingOverlay.classList.remove('show');
     el.loadingOverlay.setAttribute('aria-hidden', 'true');
 
-    el.animalArtBox.classList.remove('bob');
+    el.animalArtBox?.classList.remove('bob');
     stopMunchLoop();
   }
 
-  // もぐもぐ中はおねだりを止める
   if(isOn) stopBegLoop();
   else startBegLoop();
 }
@@ -301,7 +290,6 @@ function stopBegLoop(){
     state.begTimeout = null;
   }
 }
-
 function canRotateBeg(){
   if(!el.screenGame.classList.contains('show')) return false;
   if(el.loadingOverlay.classList.contains('show')) return false;
@@ -309,19 +297,14 @@ function canRotateBeg(){
   if(state.locked) return false;
   return true;
 }
-
 function setBegLine(text){
   state.currentBeg = text;
   el.begLine.textContent = text;
 }
-
 function nextBegLine(){
   const lines = state.animal?.begLines || [];
   if(lines.length === 0) return;
-  if(lines.length === 1){
-    setBegLine(lines[0]);
-    return;
-  }
+  if(lines.length === 1){ setBegLine(lines[0]); return; }
   let candidate = pick(lines);
   let guard = 0;
   while(candidate === state.currentBeg && guard < 8){
@@ -330,7 +313,6 @@ function nextBegLine(){
   }
   setBegLine(candidate);
 }
-
 function startBegLoop(){
   stopBegLoop();
   const schedule = () => {
@@ -343,6 +325,22 @@ function startBegLoop(){
 }
 
 // ================================
+// 画像の確実反映（ここが修正ポイント）
+// ================================
+function setImgSafe(imgEl, src, alt, fallbackEmoji='🐾'){
+  if(!imgEl) return;
+  imgEl.alt = alt || '';
+  imgEl.onerror = () => {
+    // 画像読み込み失敗時：親の中を絵文字に置換（空白防止）
+    const parent = imgEl.parentElement;
+    if(parent){
+      parent.innerHTML = `<div style="font-size:48px;line-height:1">${fallbackEmoji}</div>`;
+    }
+  };
+  imgEl.src = src;
+}
+
+// ================================
 // ゲームロジック
 // ================================
 function findAnimal(id){
@@ -351,14 +349,19 @@ function findAnimal(id){
 
 function renderAnimal(){
   const a = state.animal;
-  el.gameLogoImg.src = a.img;
-  el.gameLogoImg.alt = a.name;
+  if(!a) return;
 
-  el.animalImg.src = a.img;
-  el.animalImg.alt = a.name;
+  // ✅ ゲーム上部ロゴ
+  setImgSafe(el.gameLogoImg, a.img, a.name, a.emoji);
+
+  // ✅ ゲーム内メイン表示
+  setImgSafe(el.animalImg, a.img, a.name, a.emoji);
 
   el.animalName.textContent = a.name;
   el.animalTag.textContent = a.personality;
+
+  // ✅ 結果画面の動物画像も先に仕込んでおく（表示漏れ防止）
+  setImgSafe(el.resultAnimalImg, a.img, a.name, a.emoji);
 }
 
 function gotoSelect(){
@@ -381,13 +384,15 @@ function startGameWithAnimal(animalId){
   el.freeInput.value = '';
 
   showScreen('game');
+
+  // ✅ 画面切替後に確実に反映
   renderAnimal();
 
   // 初回おねだり
   setBegLine(pick(a.begLines));
   startBegLoop();
 
-  const avatar = { type:'img', src: a.img, alt: a.name };
+  const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
   addChatMessage({ who:'npc', avatar, text: `【${a.name}】をえらんだ！` });
   addChatMessage({ who:'npc', avatar, text: state.currentBeg });
 }
@@ -488,13 +493,10 @@ function generateLocalReaction(animal, itemInfo, judged){
     ],
   };
 
-  const extra = (itemInfo.vibe === 'ファンタジー')
-    ? '（なにか不思議なオーラが漂っている…）'
-    : (itemInfo.vibe === 'ほっこり')
-      ? '（やさしい匂いがする…）'
-      : (itemInfo.vibe === 'スパイシー')
-        ? '（鼻がツーン！）'
-        : '';
+  const extra =
+    (itemInfo.vibe === 'ファンタジー') ? '（なにか不思議なオーラが漂っている…）' :
+    (itemInfo.vibe === 'ほっこり') ? '（やさしい匂いがする…）' :
+    (itemInfo.vibe === 'スパイシー') ? '（鼻がツーン！）' : '';
 
   const line = pick(templates[outcome]) + (extra ? `\n${extra}` : '');
   const commentator = pick([
@@ -524,10 +526,11 @@ function buildResultText(animal, itemInfo, judged){
 
 function showResultPage({ animal, itemInfo, judged, reaction }){
   el.resultSub.textContent = `入力：${itemInfo.raw}（分類：${itemInfo.category} / 雰囲気：${itemInfo.vibe}）`;
-  el.resultAnimalImg.src = animal.img;
-  el.resultAnimalImg.alt = animal.name;
-  el.resultArt.textContent = judged.art;
 
+  // ✅ 結果画面も確実に画像を差し込む
+  setImgSafe(el.resultAnimalImg, animal.img, animal.name, animal.emoji);
+
+  el.resultArt.textContent = judged.art;
   const summary = buildResultText(animal, itemInfo, judged);
   el.resultText.textContent = `${summary}\n\n${reaction.text}\n\n${reaction.commentary}`;
 
@@ -583,11 +586,10 @@ async function handleFeed(rawInput){
   setLoading(false);
   sfxResult();
 
-  const avatar = { type:'img', src: a.img, alt: a.name };
+  const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
   addChatMessage({ who:'npc', avatar, text: reaction.text });
   addChatMessage({ who:'npc', avatar:'🎙️', text: reaction.commentary });
 
-  // 結果へ
   showResultPage({ animal: a, itemInfo, judged, reaction });
   state.locked = true;
 }
