@@ -1,5 +1,6 @@
 :root{
-  --bg:#0b1020;
+  /* ✅ 動物園っぽい空と緑をベースに */
+  --bg:#062218;
   --text:#e9eeff;
   --muted:#a8b1d6;
   --line:rgba(255,255,255,.12);
@@ -12,14 +13,73 @@ html,body{ height:100%; }
 
 body{
   margin:0;
+  position:relative;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+
+  /* ✅ 「動物園の空＋木々」の雰囲気（暗めでUIは読みやすいまま） */
   background:
-    radial-gradient(1200px 700px at 20% 0%, rgba(124,92,255,.28), transparent 60%),
-    radial-gradient(1000px 700px at 80% 10%, rgba(49,230,191,.20), transparent 55%),
-    radial-gradient(900px 600px at 40% 90%, rgba(255,214,102,.12), transparent 60%),
-    var(--bg);
+    radial-gradient(520px 420px at 82% 10%, rgba(255,214,102,.16), transparent 62%),
+    radial-gradient(700px 520px at 18% 0%, rgba(120,201,255,.18), transparent 60%),
+    radial-gradient(860px 560px at 60% 20%, rgba(49,230,191,.12), transparent 60%),
+    radial-gradient(1200px 700px at 50% 110%, rgba(80,200,120,.18), transparent 62%),
+    linear-gradient(180deg, #0b2b62 0%, #073a4f 34%, #062218 100%);
+
   color: var(--text);
   overflow: hidden; /* ✅ 画面スクロールは基本しない */
+}
+
+/* ✅ 雲っぽいゆらぎ */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  opacity:.55;
+  background:
+    radial-gradient(160px 70px at 12% 14%, rgba(255,255,255,.12), transparent 65%),
+    radial-gradient(220px 90px at 30% 18%, rgba(255,255,255,.10), transparent 68%),
+    radial-gradient(180px 80px at 52% 12%, rgba(255,255,255,.12), transparent 66%),
+    radial-gradient(240px 100px at 74% 16%, rgba(255,255,255,.10), transparent 70%),
+    radial-gradient(190px 85px at 88% 10%, rgba(255,255,255,.11), transparent 70%);
+  transform: translateX(0);
+  animation: cloudDrift 42s linear infinite;
+}
+
+@keyframes cloudDrift{
+  0%{ transform: translateX(0); }
+  50%{ transform: translateX(18px); }
+  100%{ transform: translateX(0); }
+}
+
+/* ✅ 手前の柵＋草（動物園感） */
+body::after{
+  content:"";
+  position:fixed;
+  left:0; right:0; bottom:0;
+  height: 190px;
+  pointer-events:none;
+  z-index:0;
+  opacity: .85;
+  background:
+    /* フェンス上の横棒 */
+    linear-gradient(180deg,
+      rgba(255,255,255,.18) 0 10px,
+      rgba(0,0,0,0) 10px 26px,
+      rgba(255,255,255,.12) 26px 30px,
+      rgba(0,0,0,0) 30px 100%
+    ),
+    /* 縦の柵 */
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.13) 0 10px,
+      rgba(0,0,0,0) 10px 28px
+    ),
+    /* 草のゆらぎ */
+    radial-gradient(140px 70px at 16% 78%, rgba(49,230,191,.12), transparent 70%),
+    radial-gradient(160px 80px at 52% 86%, rgba(255,214,102,.10), transparent 72%),
+    radial-gradient(160px 80px at 84% 80%, rgba(124,92,255,.10), transparent 72%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(11,55,36,.30) 30%, rgba(5,34,22,.92) 100%);
+  filter: drop-shadow(0 -10px 25px rgba(0,0,0,.35));
 }
 
 body.noScroll{ overflow:hidden; }
@@ -32,7 +92,7 @@ body.noScroll{ overflow:hidden; }
 }
 
 /* 背景の浮遊アイコン */
-.bgFloat{ position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.65; }
+.bgFloat{ position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.65; }
 .bgFloat .f{
   position:absolute;
   font-size:22px;
@@ -54,7 +114,7 @@ body.noScroll{ overflow:hidden; }
 }
 
 /* アプリ */
-.appShell{ position:relative; z-index:1; min-height:100vh; }
+.appShell{ position:relative; z-index:2; min-height:100vh; }
 
 /* 画面切り替え */
 .screen{
@@ -388,7 +448,7 @@ body.noScroll{ overflow:hidden; }
 }
 @keyframes spin{ to{ transform: rotate(360deg); } }
 
-/* ✅ 選択画面 */
+/* 選択画面 */
 .selectStage{
   display:grid;
   place-items:center;
@@ -458,7 +518,7 @@ body.noScroll{ overflow:hidden; }
   color: var(--muted);
 }
 
-/* ✅ 結果画面 */
+/* 結果画面 */
 .resultStage{
   display:grid;
   place-items:center;
@@ -522,6 +582,7 @@ body.noScroll{ overflow:hidden; }
 }
 
 @media (prefers-reduced-motion: reduce){
+  body::before{ animation:none; }
   .bgFloat .f{ animation:none; }
   .bob{ animation:none; }
   .spinner{ animation:none; }
