@@ -1,17 +1,18 @@
 'use strict';
 
 /*
-  v9
-  - ✅ 動物はランダムではなく「選ぶ式」
-    タイトル → 動物選択 → えさ選択（ゲーム）
-  - ✅ 結果「つぎの動物へ」→ 選択画面へ
+  v11
+  - ✅ トップページは動物選択画面（タイトル画面なし）
+  - ✅ 動物選択は横一列（4つ）
+  - ✅ 画面下側に「どの どうぶつに えさを あげる？」（HTML/CSS側）
+  - ✅ 好き嫌いのヒントは表示しない（内部ロジックだけで使用）
   - ✅ おねだりセリフは時間で自動切替（動物ごと）
-  - ✅ 好き嫌いヒントはUIに出さない
+  - ✅ 待機中は動物アイコンを上下に揺らす（もぐもぐ演出）
+  - ✅ 効果音追加（クリック / もぐもぐ / 結果 ※結果は1種類）
 */
 
 const NG_WORDS = [
-  '死', '殺', '爆', '麻薬', 'ドラッグ', '下ネタ', 'エロ', 'セックス', '裸',
-  '差別', 'ヘイト', '暴力', 'グロ',
+  '死','殺','爆','麻薬','ドラッグ','下ネタ','エロ','セックス','裸','差別','ヘイト','暴力','グロ'
 ];
 function hasNgWord(text){
   const t = (text || '').toLowerCase();
@@ -30,7 +31,7 @@ const ANIMALS = [
       'おい、人間。おれさまのために、うまい肉を持ってこい。',
       'ぐぅ…おなかがなる…。肉！いますぐ肉！',
       '王の食事にふさわしいものを頼むぞ。',
-      'ふむ…そろそろ献上品の時間だな。',
+      'ふむ…そろそろ献上品の時間だな。'
     ],
   },
   {
@@ -44,7 +45,7 @@ const ANIMALS = [
       'えっと…できれば新鮮なお魚がいいです。',
       'ぼく、魚が大好きなんだ。よろしくね。',
       '氷の上でも食べやすいごはんだとうれしいな。',
-      'できれば骨が少ないタイプだと助かります…！',
+      'できれば骨が少ないタイプだと助かります…！'
     ],
   },
   {
@@ -52,13 +53,13 @@ const ANIMALS = [
     name: 'カピバラ',
     art: '🦫',
     personality: 'のんびり',
-    likes: ['草', '野菜'],
+    likes: ['草','野菜'],
     dislikes: ['肉'],
     begLines: [
       'ふぁ〜…おなかすいた。やさしい味がいいなぁ。',
       'のんびり食べられるやつ…ある？',
       'あったかいお風呂のあとに…野菜とか…いいな…',
-      '急がないから、ゆっくり選んでねぇ…',
+      '急がないから、ゆっくり選んでねぇ…'
     ],
   },
   {
@@ -72,7 +73,7 @@ const ANIMALS = [
       'もぐもぐする準備はできてるよ。',
       '笹っぽいの、ある？（なんでも笹に見える…）',
       'あんまり急かさないでね〜。',
-      'ぼくのペースで食べたいな〜。',
+      'ぼくのペースで食べたいな〜。'
     ],
   },
 ];
@@ -85,14 +86,11 @@ const el = {
   screenGame: document.getElementById('screenGame'),
   screenResult: document.getElementById('screenResult'),
 
-  // title
-  titleOverlay: document.getElementById('titleOverlay'),
-  btnStart: document.getElementById('btnStart'),
-  btnStartMuted: document.getElementById('btnStartMuted'),
-
   // select
-  btnSelectToTitle: document.getElementById('btnSelectToTitle'),
   pickButtons: Array.from(document.querySelectorAll('[data-animal]')),
+
+  // game header
+  gameLogo: document.getElementById('gameLogo'),
 
   // gameplay
   animalArt: document.getElementById('animalArt'),
@@ -115,16 +113,13 @@ const el = {
   resultArt: document.getElementById('resultArt'),
   resultText: document.getElementById('resultText'),
   btnResultNext: document.getElementById('btnResultNext'),
-  btnResultToTitle: document.getElementById('btnResultToTitle'),
 };
 
 const state = {
   animal: null,
   locked: true,
   sfxEnabled: true,
-  lastResult: null,
 
-  // おねだり自動切替
   begTimeout: null,
   currentBeg: '',
 };
@@ -140,15 +135,18 @@ function ensureAudio(){
   if(!AudioContext) return;
   sfx.ctx = new AudioContext();
 }
+
 async function resumeAudio(){
   if(!sfx.ctx) return;
   if(sfx.ctx.state === 'suspended'){
-    try{ await sfx.ctx.resume(); }catch(e){}
+    try{ await sfx.ctx.resume(); }catch(_e){}
   }
 }
+
 function randInt(min, max){
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
 function playTone(freq, ms, type='sine', gain=0.08){
   if(!sfx.ctx || !state.sfxEnabled) return;
   const t0 = sfx.ctx.currentTime;
@@ -156,29 +154,36 @@ function playTone(freq, ms, type='sine', gain=0.08){
   const g = sfx.ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, t0);
+
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + ms/1000);
+
   osc.connect(g);
   g.connect(sfx.ctx.destination);
   osc.start(t0);
   osc.stop(t0 + ms/1000 + 0.02);
 }
+
 function sfxClick(){ playTone(660, 70, 'square', 0.05); }
+
 function sfxMunchOnce(){
   playTone(220 + randInt(-25, 25), 90, 'triangle', 0.06);
   playTone(440 + randInt(-35, 35), 50, 'sine', 0.03);
 }
+
 function sfxResult(){
-  // 成功/失敗でも同じ（1種類）
+  // 成功/失敗で同じ（1種類）
   const seq = [523, 659];
   seq.forEach((f, i) => setTimeout(() => playTone(f, 110, 'sine', 0.07), i * 120));
 }
+
 function startMunchLoop(){
   stopMunchLoop();
   if(!state.sfxEnabled) return;
   sfx.munchTimer = window.setInterval(() => sfxMunchOnce(), 320);
 }
+
 function stopMunchLoop(){
   if(sfx.munchTimer){
     window.clearInterval(sfx.munchTimer);
@@ -202,13 +207,12 @@ function showScreen(name){
   el.screenGame.setAttribute('aria-hidden', String(!isGame));
   el.screenResult.setAttribute('aria-hidden', String(!isResult));
 
-  // おねだりループはゲーム画面だけ
   if(isGame) startBegLoop();
   else stopBegLoop();
 }
 
 // ================================
-// UIユーティリティ
+// ユーティリティ
 // ================================
 function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
@@ -220,7 +224,10 @@ function showToast(message){
   window.clearTimeout(showToast._t);
   showToast._t = window.setTimeout(() => el.toast.classList.remove('show'), 1800);
 }
-function scrollChatToBottom(){ el.chatLog.scrollTop = el.chatLog.scrollHeight; }
+
+function scrollChatToBottom(){
+  el.chatLog.scrollTop = el.chatLog.scrollHeight;
+}
 
 function addChatMessage({who, text, avatar}){
   const msg = document.createElement('div');
@@ -245,12 +252,14 @@ function setLoading(isOn, line){
     el.loadingLine.textContent = line || '動物が味わっています…';
     el.loadingOverlay.classList.add('show');
     el.loadingOverlay.setAttribute('aria-hidden', 'false');
-    // 動物アイコンを上下に揺らす
+
+    // もぐもぐ中：上下に揺らす
     el.animalArt.classList.add('bob');
     startMunchLoop();
   }else{
     el.loadingOverlay.classList.remove('show');
     el.loadingOverlay.setAttribute('aria-hidden', 'true');
+
     el.animalArt.classList.remove('bob');
     stopMunchLoop();
   }
@@ -271,7 +280,6 @@ function stopBegLoop(){
 }
 
 function canRotateBeg(){
-  if(el.titleOverlay.classList.contains('show')) return false;
   if(!el.screenGame.classList.contains('show')) return false;
   if(el.loadingOverlay.classList.contains('show')) return false;
   if(!state.animal) return false;
@@ -291,7 +299,6 @@ function nextBegLine(){
     setBegLine(lines[0]);
     return;
   }
-
   let candidate = pick(lines);
   let guard = 0;
   while(candidate === state.currentBeg && guard < 8){
@@ -313,22 +320,6 @@ function startBegLoop(){
 }
 
 // ================================
-// タイトル制御
-// ================================
-function showTitle(){
-  setLoading(false);
-  state.locked = true;
-  document.body.classList.add('noScroll');
-  el.titleOverlay.classList.add('show');
-  stopBegLoop();
-  showScreen('select');
-}
-function hideTitle(){
-  el.titleOverlay.classList.remove('show');
-  document.body.classList.remove('noScroll');
-}
-
-// ================================
 // ゲームロジック
 // ================================
 function findAnimal(id){
@@ -337,6 +328,7 @@ function findAnimal(id){
 
 function renderAnimal(){
   const a = state.animal;
+  el.gameLogo.textContent = a.art;
   el.animalArt.textContent = a.art;
   el.animalName.textContent = a.name;
   el.animalTag.textContent = a.personality;
@@ -356,10 +348,10 @@ function startGameWithAnimal(animalId){
 
   state.animal = a;
   state.locked = false;
-  state.lastResult = null;
 
-  // チャットは毎回クリア（迷わない）
+  // チャットは毎回クリア
   el.chatLog.innerHTML = '';
+  el.freeInput.value = '';
 
   showScreen('game');
   renderAnimal();
@@ -447,25 +439,24 @@ function generateLocalReaction(animal, itemInfo, judged){
     'パンダ': { good: ['もぐもぐ…最高。','いい感じ。','ぼくこれ好き。'], bad: ['ん？','これは…そうでもない。','ちょっと謎。'] }
   };
 
-  const name = animal.name;
-  const t = tone[name] || {good:['やった！'], bad:['うーん…']};
+  const t = tone[animal.name] || {good:['やった！'], bad:['うーん…']};
 
   const templates = {
     'だいせいこう': [
       `${pick(t.good)} 「${item}」を食べた瞬間、目がキラキラ！\nおなかも心も大満足みたい。`,
-      `「${item}」…これは当たり！\n${name}は大喜びで、しっぽ（あるいは気分）をふりふりしている。`,
+      `「${item}」…これは当たり！\n${animal.name}は大喜びで、しっぽ（あるいは気分）をふりふりしている。`,
     ],
     'せいこう': [
       `${pick(t.good)} 「${item}」はおいしい！\nほどよく満腹になってごきげん。`,
-      `${name}は「${item}」をもぐもぐ…\n“また今度もこれがいいな”って顔をしている。`,
+      `${animal.name}は「${item}」をもぐもぐ…\n“また今度もこれがいいな”って顔をしている。`,
     ],
     'びみょう': [
       `${pick(t.bad)} 「${item}」を一口…\n悪くはないけど、ちょっと首をかしげている。`,
-      `「${item}」は…ふしぎな味！\n${name}はニコニコしつつも、なぜか遠い目。`,
+      `「${item}」は…ふしぎな味！\n${animal.name}はニコニコしつつも、なぜか遠い目。`,
     ],
     'しっぱい': [
       `${pick(t.bad)} 「${item}」を見た瞬間、表情が固まった…！\nどうやら好みじゃなかったみたい。`,
-      `${name}は「${item}」を…頭にのせた！\n食べるより、別の使い方を思いついたらしい。`,
+      `${animal.name}は「${item}」を…頭にのせた！\n食べるより、別の使い方を思いついたらしい。`,
     ],
   };
 
@@ -478,13 +469,13 @@ function generateLocalReaction(animal, itemInfo, judged){
         : '';
 
   const line = pick(templates[outcome]) + (extra ? `\n${extra}` : '');
-  const commentator = [
+  const commentator = pick([
     `実況：満足度は ${score}/100！`,
     `実況：この反応…満足度 ${score}/100！`,
     `実況：評価は ${score}/100 でした！`,
-  ];
+  ]);
 
-  return { text: line, commentary: pick(commentator) };
+  return { text: line, commentary: commentator };
 }
 
 function buildResultText(animal, itemInfo, judged){
@@ -552,7 +543,7 @@ async function handleFeed(rawInput){
   setLoading(true, pick([
     '動物がくんくんにおいをかいでいる…',
     'もぐもぐ…味をたしかめ中…',
-    'しばらく観察している…',
+    'しばらく観察している…'
   ]));
 
   await sleep(randInt(900, 1600));
@@ -566,47 +557,19 @@ async function handleFeed(rawInput){
   addChatMessage({ who:'npc', avatar: a.art, text: reaction.text });
   addChatMessage({ who:'npc', avatar:'🎙️', text: reaction.commentary });
 
-  state.lastResult = { animal: a, itemInfo, judged, reaction };
-
   // 結果へ
-  showResultPage(state.lastResult);
+  showResultPage({ animal: a, itemInfo, judged, reaction });
   state.locked = true;
 }
 
 function wireEvents(){
-  // タイトル：開始
-  el.btnStart.addEventListener('click', async () => {
-    state.sfxEnabled = true;
-    ensureAudio();
-    await resumeAudio();
-    sfxClick();
-    hideTitle();
-    gotoSelect();
-  });
-
-  // タイトル：音なし開始
-  el.btnStartMuted.addEventListener('click', () => {
-    state.sfxEnabled = false;
-    hideTitle();
-    gotoSelect();
-  });
-
-  // 選択：タイトルへ
-  el.btnSelectToTitle.addEventListener('click', async () => {
-    ensureAudio();
-    await resumeAudio();
-    sfxClick();
-    showTitle();
-  });
-
   // 動物選択
   el.pickButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
       ensureAudio();
       await resumeAudio();
       sfxClick();
-      const id = btn.getAttribute('data-animal');
-      startGameWithAnimal(id);
+      startGameWithAnimal(btn.getAttribute('data-animal'));
     });
   });
 
@@ -648,17 +611,9 @@ function wireEvents(){
     sfxClick();
     gotoSelect();
   });
-
-  // 結果：タイトルへ
-  el.btnResultToTitle.addEventListener('click', async () => {
-    ensureAudio();
-    await resumeAudio();
-    sfxClick();
-    showTitle();
-  });
 }
 
 (function init(){
   wireEvents();
-  showTitle();
+  gotoSelect();
 })();
