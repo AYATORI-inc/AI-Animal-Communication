@@ -586,3 +586,42 @@ body.noScroll{ overflow:hidden; }
   }
   #screenSelect .tileName{ font-size: .88rem !important; }
 }
+
+/* ================================
+   v21: 左上ヘッダーの視認性アップ
+   ================================ */
+.appHeader{
+  /* 背景が明るいマップでも読めるように帯を追加 */
+  background: linear-gradient(180deg, rgba(10,14,28,.72), rgba(10,14,28,0));
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+}
+
+.brandText h1{
+  color: rgba(233,238,255,.98);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+
+.brandText p{
+  /* ここが薄く見えやすいので、mutedより濃く */
+  color: rgba(233,238,255,.86);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+
+/* 結果画面の「入力：…」も同じく濃く */
+#screenResult #resultSub{
+  color: rgba(233,238,255,.90);
+  text-shadow: 0 2px 16px rgba(0,0,0,.70);
+}
+
+.logo{
+  /* アイコン枠も背景に負けないように濃く */
+  background: linear-gradient(135deg, rgba(0,0,0,.40), rgba(0,0,0,.18));
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 16px 36px rgba(0,0,0,.45);
+}
+
+/* アイコンが画像のときも見えやすく */
+.logoImg{
+  filter: contrast(1.05) saturate(1.05);
+}
