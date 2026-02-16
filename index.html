@@ -7,116 +7,80 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="noScroll">
-  <!-- 背景装飾 -->
+  <!-- 背景の浮遊アイコン（装飾） -->
   <div class="bgFloat" aria-hidden="true">
+  <!-- マップのエリア名（薄い背景文字） -->
+  <div class="mapLabels" aria-hidden="true">
+    <span class="label l1">サバンナ</span>
+    <span class="label l2">みずべ</span>
+    <span class="label l3">ふれあい</span>
+    <span class="label l4">ジャングル</span>
+    <span class="label l5">ゲート</span>
+  </div>
     <span class="f f1">✨</span><span class="f f2">🌟</span><span class="f f3">🍀</span><span class="f f4">💫</span>
     <span class="f f5">🫧</span><span class="f f6">🌈</span><span class="f f7">⭐</span><span class="f f8">🦴</span>
   </div>
 
   <div class="appShell">
-    <!-- タイトル画面（オーバーレイ） -->
-    <div class="titleOverlay show" id="titleOverlay" role="dialog" aria-modal="true" aria-label="タイトル画面">
-      <div class="titleCard" role="document">
-        <div class="titleTop">
-          <div class="titleLogo" aria-hidden="true">🦁🐧🦫🐼</div>
-          <div>
-            <div class="titleName">動物えさやりチャット</div>
-            <div class="titleSub">あなたの入力で、動物のリアクションが変わる！</div>
-          </div>
-        </div>
-
-        <div class="titleBody">
-          <div class="titlePreview" aria-hidden="true">
-            <div class="previewAnimal">🐾</div>
-            <div class="previewText">まずは動物をえらんで、
-「肉」「魚」「草」「野菜」
-または自由入力でごはんをあげよう！</div>
-          </div>
-
-          <div class="titleNotes">
-            <div class="note"><span>🎨</span> 画像生成は現在オフ（必要になったら実装します）</div>
-            <div class="note"><span>🔊</span> 効果音あり（音が出ます）</div>
-            <div class="note"><span>🫧</span> もぐもぐ中はアイコンが上下に揺れます</div>
-          </div>
-        </div>
-
-        <div class="titleActions">
-          <button id="btnStart" class="btn primary big" type="button">▶ はじめる</button>
-          <button id="btnStartMuted" class="btn ghost big" type="button">🔇 音なしで開始</button>
-        </div>
-
-        <div class="titleFoot">ヒント：自由入力は「想像力ボーナス」あり！</div>
-      </div>
-    </div>
 
     <!-- ============================
-         動物選択画面（新規）
+         トップページ：動物選択画面
          ============================ -->
     <section id="screenSelect" class="screen show" aria-label="動物選択画面">
       <header class="appHeader">
         <div class="brand">
           <div class="logo" aria-hidden="true">🐾</div>
           <div class="brandText">
-            <h1>動物をえらぼう</h1>
-            <p>4種類から好きな動物を選んでスタート</p>
+            <h1>どうぶつを えらぼう</h1>
+            <p>すきな どうぶつを えらんでね</p>
           </div>
         </div>
       </header>
 
       <main class="selectStage">
         <div class="selectCard" role="region" aria-label="動物選択">
-          <div class="selectHint">えらんだ動物に、ごはんをあげよう！</div>
+          <div class="selectHint">どれかを タップすると、えさを あげる 画面に すすみます。</div>
 
-          <div class="animalGrid" role="list">
-            <button class="animalPick" type="button" data-animal="lion" role="listitem">
-              <div class="pickEmoji" aria-hidden="true">🦁</div>
-              <div class="pickMeta">
-                <div class="pickName">ライオン</div>
-                <div class="pickTag">王様きどり</div>
-                <div class="pickLine">「王の食事にふさわしいものを頼むぞ。」</div>
+          <!-- ✅ 横一列（4つ） -->
+          <div class="animalRow" role="list" aria-label="動物のえらび">
+            <button class="pickTile" type="button" data-animal="lion" role="listitem" aria-label="ライオン">
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/raion.jpg" alt="" />
               </div>
+              <div class="tileName">ライオン</div>
             </button>
 
-            <button class="animalPick" type="button" data-animal="penguin" role="listitem">
-              <div class="pickEmoji" aria-hidden="true">🐧</div>
-              <div class="pickMeta">
-                <div class="pickName">ペンギン</div>
-                <div class="pickTag">きまじめ</div>
-                <div class="pickLine">「できれば新鮮なお魚がいいです。」</div>
+            <button class="pickTile" type="button" data-animal="penguin" role="listitem" aria-label="ペンギン">
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/pengin.jpg" alt="" />
               </div>
+              <div class="tileName">ペンギン</div>
             </button>
 
-            <button class="animalPick" type="button" data-animal="capybara" role="listitem">
-              <div class="pickEmoji" aria-hidden="true">🦫</div>
-              <div class="pickMeta">
-                <div class="pickName">カピバラ</div>
-                <div class="pickTag">のんびり</div>
-                <div class="pickLine">「急がないから、ゆっくり選んでねぇ…」</div>
+            <button class="pickTile" type="button" data-animal="capybara" role="listitem" aria-label="カピバラ">
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/kapipara.jpg" alt="" />
               </div>
+              <div class="tileName">カピバラ</div>
             </button>
 
-            <button class="animalPick" type="button" data-animal="panda" role="listitem">
-              <div class="pickEmoji" aria-hidden="true">🐼</div>
-              <div class="pickMeta">
-                <div class="pickName">パンダ</div>
-                <div class="pickTag">マイペース</div>
-                <div class="pickLine">「笹っぽいの、ある？（なんでも笹に見える…）」</div>
+            <button class="pickTile" type="button" data-animal="panda" role="listitem" aria-label="パンダ">
+              <div class="tileEmoji" aria-hidden="true">
+                <img class="tileImg" src="./img/panda.jpg" alt="" />
               </div>
+              <div class="tileName">パンダ</div>
             </button>
           </div>
 
-          <div class="selectActions">
-            <button id="btnSelectToTitle" class="btn ghost" type="button">🏠 タイトルへ</button>
-          </div>
-
-          <div class="selectFoot">※ 好き嫌いのヒントは表示されません。いろいろ試してみよう！</div>
         </div>
       </main>
 
-      <footer class="appFooter">
+      <footer class="appFooter selectFooter">
+        <div class="bottomQuestion">どの　どうぶつに　えさを　あげる？</div>
         <div class="small">© プロトタイプ / ローカルで動作（外部API未接続）</div>
       </footer>
     </section>
+
 
     <!-- ============================
          ゲーム画面（えさ選択）
@@ -124,10 +88,12 @@
     <section id="screenGame" class="screen" aria-label="ゲーム画面" aria-hidden="true">
       <header class="appHeader">
         <div class="brand">
-          <div class="logo" aria-hidden="true">🦁</div>
+          <div class="logo" aria-hidden="true">
+            <img id="gameLogoImg" class="logoImg" src="./img/raion.jpg" alt="" />
+          </div>
           <div class="brandText">
-            <h1>えさをあげよう</h1>
-            <p>クイック4択 or 自由入力でごはんをあげる</p>
+            <h1>えさを あげよう</h1>
+            <p>ボタン 4つ or じゆうに いれてね</p>
           </div>
         </div>
       </header>
@@ -136,7 +102,9 @@
         <!-- 左：動物 -->
         <section class="panel animalPanel" aria-label="動物エリア">
           <div class="animalCard">
-            <div class="animalArt" id="animalArt" aria-hidden="true">🐾</div>
+            <div class="animalArt" aria-hidden="true">
+              <img id="animalImg" class="animalImg" src="./img/raion.jpg" alt="" />
+            </div>
 
             <div class="animalMeta">
               <div class="animalNameRow">
@@ -145,7 +113,7 @@
               </div>
 
               <div class="speech" aria-live="polite" aria-atomic="true">
-                <div class="bubble" id="begLine">……おなかすいた……</div>
+                <div class="bubble" id="begLine">……おねだり……</div>
                 <div class="bubbleHint">（下のボタンか、自由入力でごはんをあげてね）</div>
               </div>
 
@@ -193,7 +161,7 @@
             </div>
 
             <div class="backRow">
-              <button id="btnBackToSelect" class="btn ghost" type="button">⬅ 動物えらびへ</button>
+              <button id="btnBackToSelect" class="btn ghost" type="button">⬅ どうぶつ えらびへ</button>
             </div>
           </div>
 
@@ -217,15 +185,16 @@
       </footer>
     </section>
 
+
     <!-- ============================
-         結果画面（別ページ/別画面）
+         結果画面（別画面）
          ============================ -->
     <section id="screenResult" class="screen" aria-label="結果画面" aria-hidden="true">
       <header class="appHeader">
         <div class="brand">
           <div class="logo" aria-hidden="true">🎉</div>
           <div class="brandText">
-            <h1>結果</h1>
+            <h1>けっか</h1>
             <p id="resultSub">まだごはんをあげていません</p>
           </div>
         </div>
@@ -234,21 +203,22 @@
       <main class="resultStage">
         <div class="resultCard" role="region" aria-label="結果カード">
           <div class="resultTop">
-            <div class="resultAnimal" id="resultAnimal" aria-hidden="true">🐾</div>
+            <div class="resultAnimal" aria-hidden="true">
+              <img id="resultAnimalImg" class="resultAnimalImg" src="./img/raion.jpg" alt="" />
+            </div>
             <div class="resultEmoji" id="resultArt" aria-hidden="true">✨</div>
           </div>
 
           <div class="resultText" id="resultText">動物にごはんをあげると、ここに結果が出ます。</div>
 
           <div class="resultActions">
-            <button id="btnResultNext" class="btn primary" type="button">つぎの動物へ</button>
-            <button id="btnResultToTitle" class="btn ghost" type="button">🏠 タイトルへ</button>
+            <button id="btnResultNext" class="btn primary" type="button">つぎの どうぶつへ</button>
           </div>
         </div>
       </main>
 
       <footer class="appFooter">
-        <div class="small">ヒント：結果のあと「つぎの動物へ」で選択画面に戻ります。</div>
+        <div class="small">ヒント：結果のあと「つぎの どうぶつへ」で選択画面に戻ります。</div>
       </footer>
     </section>
 
