@@ -504,3 +504,85 @@ body.noScroll{ overflow:hidden; }
   .bob{ animation:none; }
   .spinner{ animation:none; }
 }
+
+/* v19: 結果画面が透けすぎて読めない問題の修正 */
+#screenResult .resultStage{ position: relative; }
+#screenResult .resultStage::before{
+  content:"";
+  position:absolute;
+  inset:-18px;
+  pointer-events:none;
+  /* 画面中央だけ少し暗くして、カードを見やすく */
+  background: radial-gradient(780px 420px at 50% 40%, rgba(0,0,0,.45), rgba(0,0,0,0));
+}
+
+#screenResult .resultCard{
+  border: 1px solid rgba(255,255,255,.26);
+  /* ✅ 透明度を下げて濃く */
+  background: linear-gradient(180deg, rgba(10,14,28,.82), rgba(10,14,28,.62));
+  box-shadow:
+    0 28px 80px rgba(0,0,0,.65),
+    inset 0 0 0 1px rgba(255,255,255,.08);
+  backdrop-filter: blur(12px);
+}
+
+#screenResult .resultText{
+  background: rgba(0,0,0,.28);
+  border-color: rgba(255,255,255,.18);
+}
+
+#screenResult .resultAnimal,
+#screenResult .resultEmoji{
+  background: rgba(0,0,0,.22);
+  border-color: rgba(255,255,255,.18);
+}
+
+/* ヘッダーも少しだけ暗幕を足して読みやすく */
+#screenResult .appHeader{
+  background: linear-gradient(180deg, rgba(10,14,28,.45), rgba(10,14,28,0));
+}
+
+/* ================================
+   v20: 動物選択の画像が巨大化するバグ修正
+   - 選択画面だけ、アイコン枠と画像サイズを強制固定
+   ================================ */
+#screenSelect .animalRow{ align-items: start; }
+
+#screenSelect .pickTile{
+  padding: 10px 8px !important;
+  gap: 6px !important;
+}
+
+#screenSelect .tileEmoji{
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  flex: 0 0 auto !important;
+}
+
+#screenSelect .tileImg{
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* どこかのグローバル img ルールに負けないように */
+#screenSelect .pickTile img{
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+#screenSelect .tileName{
+  font-size: .92rem !important;
+}
+
+@media (max-width: 520px){
+  #screenSelect .tileEmoji{
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 15px !important;
+  }
+  #screenSelect .tileName{ font-size: .88rem !important; }
+}
