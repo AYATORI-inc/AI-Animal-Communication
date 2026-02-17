@@ -10,28 +10,14 @@
   <!-- 背景（imgフォルダから参照） -->
   <div class="bgScene" aria-hidden="true"></div>
   <div class="mapLabels" aria-hidden="true">
-    <span class="label l1">サバンナ</span>
-    <span class="label l2">みずべ</span>
-    <span class="label l3">ふれあい</span>
-    <span class="label l4">ジャングル</span>
-    <span class="label l5">ゲート</span>
+    <span class="label l1">SAVANNA</span>
+    <span class="label l2">POLAR</span>
+    <span class="label l3">FOREST</span>
+    <span class="label l4">BAMBOO</span>
+    <span class="label l5">GATE</span>
   </div>
 
   <div class="appShell">
-    <header class="appHeader">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">🐾</div>
-        <div class="brandText">
-          <h1 id="headerTitle">すきな どうぶつを えらんでね</h1>
-          <p id="headerSub">どの どうぶつに えさを あげる？</p>
-        </div>
-      </div>
-      <div class="headerNote">
-        <strong>画像生成は現在オフ</strong><br />
-        <span>必要になったら実装します</span>
-      </div>
-    </header>
-
     <main class="main">
       <!-- 動物選択（トップページ） -->
       <section id="screenSelect" class="screen isActive" aria-label="動物選択">
@@ -66,16 +52,14 @@
             </button>
           </div>
 
-          <div class="bottomPrompt" aria-label="案内">
-            どの　どうぶつに　えさを　あげる？
-          </div>
+          <div class="bottomPrompt" aria-label="案内">どの　どうぶつに　えさを　あげる？</div>
         </div>
       </section>
 
       <!-- えさ選択 -->
       <section id="screenGame" class="screen" aria-label="えさをあげる">
         <div class="layout">
-          <!-- 左：動物 -->
+          <!-- 左：どうぶつ -->
           <section class="panel animalPanel" aria-label="どうぶつ">
             <div class="panelHeader">
               <div class="panelTitle">
@@ -102,7 +86,7 @@
             </div>
           </section>
 
-          <!-- 右：チャット＆操作 -->
+          <!-- 右：チャット -->
           <section class="panel chatPanel" aria-label="チャット">
             <div class="panelHeader">
               <div class="panelTitle">
@@ -130,9 +114,7 @@
                 <button id="btnSend" class="btn primary" type="button">あげる</button>
               </div>
 
-              <div class="small muted">
-                ※ 危ない言葉はブロックされます。
-              </div>
+              <div class="small muted">※ 危ない言葉はブロックされます。</div>
             </div>
           </section>
         </div>
@@ -183,10 +165,11 @@
           </div>
         </div>
       </div>
+
     </main>
 
     <footer class="appFooter">
-      <span class="small muted">© ローカルプロトタイプ</span>
+      <span class="small muted">©AYATORI-INC</span>
     </footer>
   </div>
 
