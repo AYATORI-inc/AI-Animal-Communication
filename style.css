@@ -610,3 +610,9 @@ body{
   .tileEmoji{ width: 50px !important; height: 50px !important; border-radius: 15px !important; }
   .tileName{ font-size: .88rem; }
 }
+
+/* v17: 動物選択画面の名前を白くして見やすく */
+#screenSelect .tileName{
+  color: rgba(255,255,255,.98);
+  text-shadow: 0 2px 14px rgba(0,0,0,.75);
+}
