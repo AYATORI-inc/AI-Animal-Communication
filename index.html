@@ -7,51 +7,62 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 背景（動物園マップ風） -->
-  <div class="bgMap" aria-hidden="true">
-    <div class="areaName a1">SAVANNA</div>
-    <div class="areaName a2">POLAR</div>
-    <div class="areaName a3">FOREST</div>
-    <div class="areaName a4">BAMBOO</div>
+  <!-- 背景（imgフォルダから参照） -->
+  <div class="bgScene" aria-hidden="true"></div>
+  <div class="mapLabels" aria-hidden="true">
+    <span class="label l1">サバンナ</span>
+    <span class="label l2">みずべ</span>
+    <span class="label l3">ふれあい</span>
+    <span class="label l4">ジャングル</span>
+    <span class="label l5">ゲート</span>
   </div>
 
-  <div class="app">
+  <div class="appShell">
     <header class="appHeader">
       <div class="brand">
-        <span class="brandMark">🐾</span>
-        <span class="brandTitle">どうぶつ えさやり チャット</span>
+        <div class="logo" aria-hidden="true">🐾</div>
+        <div class="brandText">
+          <h1 id="headerTitle">すきな どうぶつを えらんでね</h1>
+          <p id="headerSub">どの どうぶつに えさを あげる？</p>
+        </div>
       </div>
-      <div class="brandSub">※ 画像生成は現在オフ（必要になったら実装します）</div>
+      <div class="headerNote">
+        <strong>画像生成は現在オフ</strong><br />
+        <span>必要になったら実装します</span>
+      </div>
     </header>
 
     <main class="main">
       <!-- 動物選択（トップページ） -->
       <section id="screenSelect" class="screen isActive" aria-label="動物選択">
         <div class="card selectCard">
-          <div class="screenTop">
-            <div class="screenIcon">🧭</div>
-            <div class="screenLead">すきな どうぶつを えらんでね</div>
-          </div>
-
-          <div class="animalRow" role="group" aria-label="動物を選ぶ">
-            <button class="animalBtn" type="button" data-animal="lion">
-              <img src="./img/raion.jpg" alt="ライオン" width="96" height="96" />
-              <span class="animalBtnName">ライオン</span>
+          <div class="animalRow" role="group" aria-label="どうぶつをえらぶ">
+            <button class="pickTile" type="button" data-animal="lion" aria-label="ライオンをえらぶ">
+              <div class="tileEmoji">
+                <img class="tileImg" src="./img/raion.jpg" alt="ライオン" />
+              </div>
+              <div class="tileName">ライオン</div>
             </button>
 
-            <button class="animalBtn" type="button" data-animal="penguin">
-              <img src="./img/pengin.jpg" alt="ペンギン" width="96" height="96" />
-              <span class="animalBtnName">ペンギン</span>
+            <button class="pickTile" type="button" data-animal="penguin" aria-label="ペンギンをえらぶ">
+              <div class="tileEmoji">
+                <img class="tileImg" src="./img/pengin.jpg" alt="ペンギン" />
+              </div>
+              <div class="tileName">ペンギン</div>
             </button>
 
-            <button class="animalBtn" type="button" data-animal="capybara">
-              <img src="./img/kapipara.jpg" alt="カピバラ" width="96" height="96" />
-              <span class="animalBtnName">カピバラ</span>
+            <button class="pickTile" type="button" data-animal="capybara" aria-label="カピバラをえらぶ">
+              <div class="tileEmoji">
+                <img class="tileImg" src="./img/kapipara.jpg" alt="カピバラ" />
+              </div>
+              <div class="tileName">カピバラ</div>
             </button>
 
-            <button class="animalBtn" type="button" data-animal="panda">
-              <img src="./img/panda.jpg" alt="パンダ" width="96" height="96" />
-              <span class="animalBtnName">パンダ</span>
+            <button class="pickTile" type="button" data-animal="panda" aria-label="パンダをえらぶ">
+              <div class="tileEmoji">
+                <img class="tileImg" src="./img/panda.jpg" alt="パンダ" />
+              </div>
+              <div class="tileName">パンダ</div>
             </button>
           </div>
 
@@ -61,17 +72,17 @@
         </div>
       </section>
 
-      <!-- えさ選択画面 -->
+      <!-- えさ選択 -->
       <section id="screenGame" class="screen" aria-label="えさをあげる">
         <div class="layout">
-          <!-- 左：動物表示 -->
-          <section class="panel animalPanel" aria-label="動物エリア">
+          <!-- 左：動物 -->
+          <section class="panel animalPanel" aria-label="どうぶつ">
             <div class="panelHeader">
               <div class="panelTitle">
-                <span class="panelIcon">🦴</span>
+                <span class="panelIcon" aria-hidden="true">🦴</span>
                 <span>えさを あげよう</span>
               </div>
-              <button id="btnBackToSelect" class="btn small" type="button" aria-label="動物選択にもどる">もどる</button>
+              <button id="btnBackToSelect" class="btn small" type="button">もどる</button>
             </div>
 
             <div class="animalCard">
@@ -81,10 +92,10 @@
 
               <div class="animalMeta">
                 <div id="animalName" class="animalName">—</div>
-                <div id="animalTag" class="animalTag">—</div>
+                <div id="animalPersona" class="animalPersona">—</div>
               </div>
 
-              <div class="begBox" aria-label="おねだりセリフ">
+              <div class="begBox" aria-label="おねだり">
                 <div class="begLabel">おねだり</div>
                 <div id="begLine" class="begLine">…</div>
               </div>
@@ -92,19 +103,19 @@
           </section>
 
           <!-- 右：チャット＆操作 -->
-          <section class="panel chatPanel" aria-label="チャットエリア">
+          <section class="panel chatPanel" aria-label="チャット">
             <div class="panelHeader">
               <div class="panelTitle">
-                <span class="panelIcon">💬</span>
-                <span>チャット</span>
+                <span class="panelIcon" aria-hidden="true">💬</span>
+                <span>ボタン 4つ or じゆうに いれてね</span>
               </div>
-              <div class="small">動物の反応がここに出るよ</div>
+              <div class="small muted">動物の反応がここに出るよ</div>
             </div>
 
             <div id="chatLog" class="chatLog" role="log" aria-live="polite" aria-relevant="additions"></div>
 
             <div class="controls">
-              <div class="quickRow" aria-label="クイック選択">
+              <div class="quickRow" aria-label="クイック">
                 <button class="btn" data-quick="肉" type="button">🍖 肉</button>
                 <button class="btn" data-quick="魚" type="button">🐟 魚</button>
                 <button class="btn" data-quick="草" type="button">🌿 草</button>
@@ -114,47 +125,50 @@
               <div class="freeRow" aria-label="自由入力">
                 <label class="srOnly" for="freeInput">自由入力</label>
                 <input id="freeInput" class="input" type="text"
-                  placeholder="例：お母さんの手作りハンバーグ / 魔法の薬 / ふわふわパンケーキ…" maxlength="50" />
+                  placeholder="例：お母さんの手作りハンバーグ / 魔法の薬 / ふわふわパンケーキ…"
+                  maxlength="50" />
                 <button id="btnSend" class="btn primary" type="button">あげる</button>
               </div>
 
               <div class="small muted">
-                ※ 危ない言葉（暴力・性表現など）はブロックされます。
+                ※ 危ない言葉はブロックされます。
               </div>
             </div>
           </section>
         </div>
       </section>
 
-      <!-- 結果画面（個別ページ） -->
+      <!-- 結果（個別ページ） -->
       <section id="screenResult" class="screen" aria-label="けっか">
         <div class="card resultCard">
-          <div class="screenTop">
-            <div class="screenIcon">🏁</div>
-            <div class="screenLead">けっか</div>
+          <div class="resultTop">
+            <div class="resultIcon" aria-hidden="true">🏁</div>
+            <div class="resultTitleBlock">
+              <div class="resultTitle">けっか</div>
+              <div id="resultSub" class="resultSub">入力：—</div>
+            </div>
           </div>
 
-          <div id="resultSub" class="resultSub">—</div>
-
           <div class="resultGrid">
-            <div class="resultAnimal">
-              <div class="animalArt big">
-                <img id="resultAnimalImg" src="" alt="" />
+            <div class="resultLeft">
+              <div class="resultAnimal">
+                <div class="resultEmoji" id="resultEmoji" aria-hidden="true">✨</div>
+                <div class="resultAnimalPic">
+                  <img id="resultAnimalImg" src="" alt="" />
+                </div>
               </div>
-              <div id="resultArt" class="resultArt" aria-hidden="true">✨</div>
             </div>
 
             <pre id="resultText" class="resultText">—</pre>
           </div>
 
           <div class="resultActions">
-            <button id="btnResultNext" class="btn primary" type="button">
-              どうぶつせんたくへ
-            </button>
+            <button id="btnResultBack" class="btn primary" type="button">どうぶつせんたくへ</button>
           </div>
         </div>
       </section>
 
+      <!-- トースト -->
       <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
       <!-- 待機演出：もぐもぐ（上下に揺れる） -->
@@ -166,14 +180,13 @@
           <div class="loadingText">
             <strong>もぐもぐ…</strong>
             <p id="loadingLine">動物が味わっています…</p>
-            <p class="small muted">（えさを食べているあいだ、アイコンが上下に揺れます）</p>
           </div>
         </div>
       </div>
     </main>
 
     <footer class="appFooter">
-      <div class="small muted">© プロトタイプ / ローカルで動作（外部API未接続）</div>
+      <span class="small muted">© ローカルプロトタイプ</span>
     </footer>
   </div>
 
