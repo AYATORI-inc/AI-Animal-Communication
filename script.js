@@ -1,12 +1,14 @@
 'use strict';
 
 /*
-  v16: 背景画像（./img/background.jpg）対応 + 性格（条件分岐） + おねだり増量
-  - トップ：動物選択
-  - えさ：4ボタン + 自由入力
-  - 待機：動物アイコンが上下に揺れる（もぐもぐ）
-  - 結果：個別ページ表示 + 戻るボタン
-  - 効果音：クリック / もぐもぐ / 結果（成功失敗で同じ）
+  v20 調整
+  - 上部バー削除（DOMにヘッダー無し）
+  - フッター：©AYATORI-INC（index.html）
+  - 動物画像の枠なし（CSS側で対応）
+  - おねだり：時間経過で変化（各20）
+  - 待機演出：上下に揺れる（もぐもぐ）
+  - 結果：別ページ
+  - 効果音：クリック/もぐもぐ/結果（成功失敗で同じ）
 */
 
 // ================================
@@ -21,7 +23,7 @@ function hasNgWord(text){
 }
 
 // ================================
-// 性格（txtの内容をゲーム用に定義）
+// 性格（ローカル）
 // ================================
 const PERSONA = {
   lion: {
@@ -29,7 +31,7 @@ const PERSONA = {
     label: '王様気質・強がり',
     first: 'オレ',
     toneRules: {
-      bravadoRate: 0.75, // 困ったときに強がりを混ぜる確率
+      bravadoRate: 0.75,
       bravadoAdds: ['…でも余裕だぜ！', 'へっ、問題ないぜ！', 'たぶんな！', 'オレならいけるぜ！']
     },
     begLines: [
@@ -47,6 +49,12 @@ const PERSONA = {
       '王がチェックしてやるぜ！',
       'ふむ…ワイルドにいこうぜ！',
       'さぁ来い！オレは準備できてるぜ！',
+      'オレの勝ちパターンは「うまいもの」だぜ！',
+      'お腹が空くと…オレ、もっと王さまになるぜ！',
+      'すぐ食べる。王さまは待てないぜ！',
+      'お前のセンス、見せてみろ！',
+      'オレのドキドキ？そんなの…ない！…たぶん！',
+      'よし、いただく準備はできてるぜ！'
     ],
     react: {
       like: [
@@ -66,8 +74,8 @@ const PERSONA = {
         'オレに新しい世界を見せる気だな！',
         'よし…試してみるぜ！',
         'ふむ…とりあえず噛んでみるぜ！'
-      ],
-    },
+      ]
+    }
   },
 
   penguin: {
@@ -75,7 +83,7 @@ const PERSONA = {
     label: '陽気・ちょっぴり心配性',
     first: 'ボク',
     toneRules: {
-      politeRate: 0.65, // 困ったときに敬語が混ざる確率
+      politeRate: 0.65,
       politeLike: ['ありがとうございます！', 'うれしいです！'],
       politeScared: ['だ、大丈夫です…！', 'す、すみません…ちょっとだけ…', 'こ、こわいです…！']
     },
@@ -90,10 +98,16 @@ const PERSONA = {
       'ボクのこと、びっくりさせないでね…っ！',
       'ねぇ、いいにおいしてる？してる？',
       'もぐもぐの練習しておくねっ！',
-      'やさしいごはんだとうれしいな…！',
+      'やさしい味だとうれしいな…！',
       'あっ！それ、ボク知ってるかも！',
       'ふむふむ…まずは匂いチェックだよっ！',
       'よーし！準備OKだよっ！',
+      'ちょっとだけ…小さいのからだと安心かも…！',
+      'ボク、食べたらジャンプできるかもっ！',
+      'うれしいとね、羽がパタパタしちゃうんだ！',
+      'えへへ、きょうのごはんは何かなっ！',
+      'あの…変なのは…ゆっくりでお願いします…！',
+      'よし！いただきますっ！'
     ],
     react: {
       like: [
@@ -113,8 +127,8 @@ const PERSONA = {
         'ボクの知らないごはんだ！わくわくっ！',
         'よーし！チャレンジしてみるよっ！',
         'これは…新しい発見かもっ！'
-      ],
-    },
+      ]
+    }
   },
 
   capybara: {
@@ -140,6 +154,12 @@ const PERSONA = {
       'ひなたぼっこしながら…食べたいなぁ…',
       'お茶でも飲みながら…どう…？',
       'ふわぁ…ごはん…ください…',
+      'ぼくのペースで…もぐもぐするねぇ…',
+      'あわてないよぉ…ゆっくりで大丈夫…',
+      'おいしいと…ほっぺがゆるむよぉ…',
+      'のんびり食べると…もっとおいしいねぇ…',
+      'すこしだけ…味見してみたいなぁ…',
+      'いただくねぇ…ありがとう…'
     ],
     react: {
       like: [
@@ -159,8 +179,8 @@ const PERSONA = {
         'ゆっくり…ためしてみるよぉ…',
         'おもしろいねぇ…ありがと〜…',
         '一口だけ…ねぇ…'
-      ],
-    },
+      ]
+    }
   },
 
   panda: {
@@ -191,6 +211,12 @@ const PERSONA = {
       'パンダ、試してみたい…',
       '…静かに、もぐもぐする。',
       '…おなかの気分が、そう言ってる。',
+      'パンダの心：おやつ…ください…',
+      '…それ、食べたらどうなる…？',
+      '（じーっ）…それ、気になる…',
+      '…もぐもぐの前に…観察する。',
+      '竹じゃないけど…まあ…いいかも…',
+      '…いただく。たぶん。'
     ],
     react: {
       like: [
@@ -210,45 +236,41 @@ const PERSONA = {
         'パンダ、初めて見た…',
         '…試してみる。たぶん。',
         '…気になる。とても。'
-      ],
-    },
+      ]
+    }
   }
 };
 
 // ================================
-// 動物データ（好き嫌いは内部用・画面には出さない）
+// 動物（好き嫌いは内部のみ）
 // ================================
 const ANIMALS = [
   { id:'lion',    name:'ライオン',   img:'./img/raion.jpg',    emoji:'🦁', likes:['肉'],        dislikes:['草'] },
   { id:'penguin', name:'ペンギン',   img:'./img/pengin.jpg',   emoji:'🐧', likes:['魚'],        dislikes:['肉'] },
   { id:'capybara',name:'カピバラ',   img:'./img/kapipara.jpg', emoji:'🦫', likes:['草','野菜'], dislikes:['肉'] },
-  { id:'panda',   name:'パンダ',     img:'./img/panda.jpg',    emoji:'🐼', likes:['草'],        dislikes:['魚'] },
+  { id:'panda',   name:'パンダ',     img:'./img/panda.jpg',    emoji:'🐼', likes:['草'],        dislikes:['魚'] }
 ];
-
 const QUICK_OPTIONS = ['肉','魚','草','野菜'];
 
 // ================================
 // DOM
 // ================================
 const el = {
-  headerTitle: document.getElementById('headerTitle'),
-  headerSub: document.getElementById('headerSub'),
-
   screenSelect: document.getElementById('screenSelect'),
   screenGame: document.getElementById('screenGame'),
   screenResult: document.getElementById('screenResult'),
 
   pickButtons: Array.from(document.querySelectorAll('[data-animal]')),
 
-  btnBackToSelect: document.getElementById('btnBackToSelect'),
-  chatLog: document.getElementById('chatLog'),
-  freeInput: document.getElementById('freeInput'),
-  btnSend: document.getElementById('btnSend'),
-  begLine: document.getElementById('begLine'),
-
   animalImg: document.getElementById('animalImg'),
   animalName: document.getElementById('animalName'),
   animalPersona: document.getElementById('animalPersona'),
+  begLine: document.getElementById('begLine'),
+
+  chatLog: document.getElementById('chatLog'),
+  freeInput: document.getElementById('freeInput'),
+  btnSend: document.getElementById('btnSend'),
+  btnBackToSelect: document.getElementById('btnBackToSelect'),
 
   resultSub: document.getElementById('resultSub'),
   resultEmoji: document.getElementById('resultEmoji'),
@@ -259,7 +281,7 @@ const el = {
   toast: document.getElementById('toast'),
   loadingOverlay: document.getElementById('loadingOverlay'),
   loadingLine: document.getElementById('loadingLine'),
-  loadingAnimalImg: document.getElementById('loadingAnimalImg'),
+  loadingAnimalImg: document.getElementById('loadingAnimalImg')
 };
 
 // ================================
@@ -267,34 +289,33 @@ const el = {
 // ================================
 const state = {
   animal: null,
-  locked: true,
+  locked: false,
+  currentBeg: '',
   begTimer: null,
-  lastBeg: '',
-  sfxEnabled: true,
+  sfxEnabled: true
 };
 
 // ================================
 // Utils
 // ================================
-function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
-
-function setImgSafe(imgEl, src, alt, fallbackEmoji='🐾'){
-  if(!imgEl) return;
-  imgEl.alt = alt || '';
-  imgEl.onerror = () => {
-    const parent = imgEl.parentElement;
-    if(parent){
-      parent.innerHTML = `<div style="font-size:42px;line-height:1">${fallbackEmoji}</div>`;
-    }
-  };
-  imgEl.src = src;
+function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+function pickNotSame(arr, last){
+  if(!arr || arr.length === 0) return '';
+  if(arr.length === 1) return arr[0];
+  let v = pick(arr);
+  let guard = 0;
+  while(v === last && guard < 10){
+    v = pick(arr);
+    guard++;
+  }
+  return v;
 }
+function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
 // ================================
-// 効果音（WebAudio）
+// 効果音（Web Audio）
 // ================================
 const sfx = { ctx: null, munchTimer: null };
 
@@ -333,8 +354,7 @@ function sfxMunchOnce(){
   playTone(440 + randInt(-35, 35), 50, 'sine', 0.03);
 }
 function sfxResult(){
-  // 成功/失敗で同じ（1種類）
-  const seq = [523, 659];
+  const seq = [523, 659]; // 成功/失敗で同じ1種類
   seq.forEach((f, i) => setTimeout(() => playTone(f, 110, 'sine', 0.07), i * 120));
 }
 function startMunchLoop(){
@@ -352,31 +372,7 @@ function stopMunchLoop(){
 // ================================
 // UI helpers
 // ================================
-function showToast(text){
-  el.toast.textContent = text;
-  el.toast.classList.add('show');
-  window.setTimeout(() => el.toast.classList.remove('show'), 1500);
-}
-
-function updateHeader(screen, subText){
-  if(screen === 'select'){
-    el.headerTitle.textContent = 'すきな どうぶつを えらんでね';
-    el.headerSub.textContent = 'どの どうぶつに えさを あげる？';
-    return;
-  }
-  if(screen === 'game'){
-    el.headerTitle.textContent = 'えさを あげよう';
-    el.headerSub.textContent = 'ボタン 4つ or じゆうに いれてね';
-    return;
-  }
-  if(screen === 'result'){
-    el.headerTitle.textContent = 'けっか';
-    el.headerSub.textContent = subText || '入力：—';
-    return;
-  }
-}
-
-function showScreen(name, headerSub){
+function showScreen(name){
   el.screenSelect.classList.remove('isActive');
   el.screenGame.classList.remove('isActive');
   el.screenResult.classList.remove('isActive');
@@ -384,11 +380,24 @@ function showScreen(name, headerSub){
   if(name === 'select') el.screenSelect.classList.add('isActive');
   if(name === 'game') el.screenGame.classList.add('isActive');
   if(name === 'result') el.screenResult.classList.add('isActive');
-
-  updateHeader(name, headerSub);
 }
-
+function showToast(text){
+  if(!el.toast) return;
+  el.toast.textContent = text;
+  el.toast.classList.add('show');
+  window.setTimeout(() => el.toast.classList.remove('show'), 1500);
+}
+function setImgSafe(imgEl, src, alt, fallbackEmoji='🐾'){
+  if(!imgEl) return;
+  imgEl.alt = alt || '';
+  imgEl.onerror = () => {
+    const p = imgEl.parentElement;
+    if(p) p.innerHTML = `<div style="font-size:36px;line-height:1">${fallbackEmoji}</div>`;
+  };
+  imgEl.src = src;
+}
 function setLoading(on, line){
+  if(!el.loadingOverlay) return;
   el.loadingLine.textContent = line || '動物が味わっています…';
   el.loadingOverlay.classList.toggle('show', !!on);
   el.loadingOverlay.setAttribute('aria-hidden', on ? 'false' : 'true');
@@ -397,7 +406,7 @@ function setLoading(on, line){
 }
 
 // ================================
-// チャット
+// Chat
 // ================================
 function makeAvatarNode(avatar){
   const av = document.createElement('div');
@@ -415,11 +424,11 @@ function makeAvatarNode(avatar){
     av.appendChild(img);
     return av;
   }
+
   av.textContent = '🐾';
   return av;
 }
-
-function addChat({ who, avatar, text }){
+function addChatMessage({ who, avatar, text }){
   const row = document.createElement('div');
   row.className = `msg ${who === 'me' ? 'me' : 'npc'}`;
 
@@ -435,92 +444,37 @@ function addChat({ who, avatar, text }){
 }
 
 // ================================
-// おねだり（時間で変える）
+// Begging loop
 // ================================
-function stopBeg(){
+function setBegLine(line){
+  state.currentBeg = line || '';
+  el.begLine.textContent = state.currentBeg || '…';
+}
+function stopBegLoop(){
   if(state.begTimer){
     window.clearTimeout(state.begTimer);
     state.begTimer = null;
   }
 }
-function setBegLine(line){
-  state.lastBeg = line || '';
-  el.begLine.textContent = state.lastBeg || '…';
-}
-function pickBegLine(persona){
-  const lines = persona?.begLines || [];
-  if(lines.length === 0) return '…';
-  // 連続同じを避ける
-  let next = pick(lines);
-  if(lines.length >= 2){
-    let guard = 0;
-    while(next === state.lastBeg && guard < 6){
-      next = pick(lines);
-      guard++;
-    }
-  }
-  return next;
-}
-function startBeg(){
-  stopBeg();
-  const p = PERSONA[state.animal?.id];
-  if(!p) return;
+function startBegLoop(){
+  stopBegLoop();
+  const a = state.animal;
+  if(!a) return;
+  const persona = PERSONA[a.id];
+  if(!persona?.begLines?.length) return;
 
   const tick = () => {
     if(!state.animal) return;
-    setBegLine(pickBegLine(p));
-    state.begTimer = window.setTimeout(tick, randInt(2800, 4200));
+    const next = pickNotSame(persona.begLines, state.currentBeg);
+    setBegLine(next);
+    state.begTimer = window.setTimeout(tick, randInt(2600, 4200));
   };
-
-  // 最初
-  setBegLine(pickBegLine(p));
-  state.begTimer = window.setTimeout(tick, randInt(2600, 3600));
+  state.begTimer = window.setTimeout(tick, randInt(2200, 3600));
 }
 
 // ================================
-// ゲームロジック
+// Item classification
 // ================================
-function findAnimal(id){ return ANIMALS.find(a => a.id === id) || null; }
-
-function gotoSelect(){
-  setLoading(false);
-  stopBeg();
-  state.animal = null;
-  state.locked = true;
-
-  el.chatLog.innerHTML = '';
-  el.freeInput.value = '';
-
-  showScreen('select');
-}
-
-function startGameWithAnimal(id){
-  const a = findAnimal(id);
-  if(!a) return;
-
-  state.animal = a;
-  state.locked = false;
-
-  el.chatLog.innerHTML = '';
-  el.freeInput.value = '';
-
-  // animal UI
-  setImgSafe(el.animalImg, a.img, a.name, a.emoji);
-  setImgSafe(el.loadingAnimalImg, a.img, a.name, a.emoji);
-  setImgSafe(el.resultAnimalImg, a.img, a.name, a.emoji);
-
-  const p = PERSONA[a.id];
-  el.animalName.textContent = a.name;
-  el.animalPersona.textContent = p?.label || '—';
-
-  showScreen('game');
-  startBeg();
-
-  const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
-  addChat({ who:'npc', avatar, text: `【${a.name}】がやってきた！` });
-  addChat({ who:'npc', avatar, text: state.lastBeg || '…' });
-}
-
 function classifyItem(input){
   const raw = (input || '').trim();
   if(!raw) return { raw: '', category: '不明', vibe: 'ふつう' };
@@ -530,15 +484,15 @@ function classifyItem(input){
   }
 
   const t = raw.toLowerCase();
-  const rules = [
+  const catRules = [
     { category:'肉', keys:['肉','ハンバーグ','ステーキ','チキン','からあげ','ソーセージ','ベーコン','焼肉'] },
     { category:'魚', keys:['魚','さかな','サーモン','まぐろ','ツナ','いわし','さしみ','寿司','すし'] },
-    { category:'草', keys:['草','笹','葉','はっぱ','牧草','芝','しば'] },
+    { category:'草', keys:['草','笹','葉','はっぱ','牧草','芝','しば','竹','たけ'] },
     { category:'野菜', keys:['野菜','にんじん','キャベツ','トマト','きゅうり','ブロッコリー','かぼちゃ','サラダ'] },
   ];
 
   let category = '不明';
-  for(const r of rules){
+  for(const r of catRules){
     if(r.keys.some(k => t.includes(k))){ category = r.category; break; }
   }
 
@@ -551,9 +505,11 @@ function classifyItem(input){
   return { raw, category, vibe };
 }
 
+// ================================
+// Scoring
+// ================================
 function scoreFeeding(animal, itemInfo){
   let score = 50 + Math.floor(Math.random()*21) - 10;
-
   if(animal.likes.includes(itemInfo.category)) score += 25;
   if(animal.dislikes.includes(itemInfo.category)) score -= 25;
 
@@ -576,132 +532,179 @@ function scoreFeeding(animal, itemInfo){
     'しっぱい': ['😖','🤢','💦','😵'],
   };
 
-  return { score, outcome, emoji: pick(artByOutcome[outcome]) };
+  return { score, outcome, art: pick(artByOutcome[outcome]) };
 }
 
-function decideBucket(animal, itemInfo, judged){
-  const cat = itemInfo.category;
-  const liked = animal.likes.includes(cat);
-  const disliked = animal.dislikes.includes(cat);
+// ================================
+// Persona reaction（口調変化）
+// ================================
+function pickPersonaBucket(animal, itemInfo, judged){
+  const likes = animal.likes.includes(itemInfo.category);
+  const dislikes = animal.dislikes.includes(itemInfo.category);
 
-  let base = 'unknown';
-  if(liked) base = 'like';
-  else if(disliked) base = 'dislike';
-
-  // 結果で少し補正（予測不能感）
   if(judged.outcome === 'だいせいこう' || judged.outcome === 'せいこう'){
-    if(base === 'unknown') base = 'like';
-    if(base === 'dislike') base = 'unknown';
+    if(dislikes) return 'unknown';
+    return likes ? 'like' : 'unknown';
   }
   if(judged.outcome === 'しっぱい'){
-    if(base === 'like') base = 'unknown';
-    if(base === 'unknown') base = 'dislike';
+    if(likes) return 'unknown';
+    return 'dislike';
   }
+
+  if(likes) return 'like';
+  if(dislikes) return 'dislike';
+  return 'unknown';
+}
+
+function applyToneRules(animalId, base, bucket, itemInfo, judged){
+  const p = PERSONA[animalId];
+  if(!p?.toneRules) return base;
+
+  if(animalId === 'lion'){
+    const need = (bucket !== 'like') || (judged.outcome === 'しっぱい');
+    if(need && Math.random() < p.toneRules.bravadoRate){
+      return `${base} ${pick(p.toneRules.bravadoAdds)}`;
+    }
+    return base;
+  }
+
+  if(animalId === 'penguin'){
+    const scared = (bucket !== 'like') || (judged.outcome === 'しっぱい') || (itemInfo.vibe === 'スパイシー');
+    if(scared && Math.random() < p.toneRules.politeRate){
+      return `${pick(p.toneRules.politeScared)} ${base}`;
+    }
+    if(bucket === 'like' && Math.random() < 0.18){
+      return `${pick(p.toneRules.politeLike)} ${base}`;
+    }
+    return base;
+  }
+
+  if(animalId === 'capybara'){
+    const need = (bucket !== 'like') || (judged.outcome === 'しっぱい');
+    if(need && Math.random() < p.toneRules.maaRate){
+      return `${base} ${pick(p.toneRules.maaAdds)}`;
+    }
+    return base;
+  }
+
+  if(animalId === 'panda'){
+    const need = (bucket !== 'like') || (judged.outcome === 'しっぱい');
+    if(need && Math.random() < p.toneRules.questionRate){
+      const q = pick(p.toneRules.questionLines);
+      return `${q}\n${base}`;
+    }
+    return base;
+  }
+
   return base;
 }
 
-function applyToneRules(animalId, bucket, itemInfo, judged, baseLine){
-  const p = PERSONA[animalId];
-  if(!p) return baseLine;
+function generateLocalReaction(animal, itemInfo, judged){
+  const persona = PERSONA[animal.id];
+  const bucket = pickPersonaBucket(animal, itemInfo, judged);
 
-  const vibe = itemInfo.vibe;
-  const badish = (bucket !== 'like') || judged.outcome === 'しっぱい' || judged.outcome === 'びみょう';
-  let line = baseLine;
+  let base = persona ? pick(persona.react[bucket] || persona.react.unknown) : 'もぐもぐ…';
+  base = applyToneRules(animal.id, base, bucket, itemInfo, judged);
 
-  // ① ペンギン：困ると敬語が混ざる
-  if(animalId === 'penguin' && badish){
-    const r = p.toneRules;
-    const trigger = (Math.random() < r.politeRate) || vibe === 'スパイシー';
-    if(trigger){
-      // 先頭に敬語/不安を混ぜる
-      const head = pick(r.politeScared);
-      line = `${head} ${line}`.replace(/\s+/g,' ').trim();
-    }
-  }
-
-  // ② ライオン：強がりが付きやすい
-  if(animalId === 'lion' && badish){
-    const r = p.toneRules;
-    if(Math.random() < r.bravadoRate){
-      const add = pick(r.bravadoAdds);
-      // 末尾に足す（句点重複を軽く避ける）
-      if(!line.includes(add)) line = `${line} ${add}`.replace(/\s+/g,' ').trim();
-    }
-  }
-
-  // ③ カピバラ：「まぁ、いっかぁ」が混ざる
-  if(animalId === 'capybara' && badish){
-    const r = p.toneRules;
-    if(Math.random() < r.maaRate){
-      const add = pick(r.maaAdds);
-      line = `${line} ${add}`.replace(/\s+/g,' ').trim();
-    }
-  }
-
-  // ④ パンダ：困ると疑問が増える
-  if(animalId === 'panda' && badish){
-    const r = p.toneRules;
-    if(Math.random() < r.questionRate){
-      // 疑問文に寄せる（ベースを置き換え or 先頭付与）
-      const q = pick(r.questionLines);
-      // 置き換えのほうが「シュール」になりやすい
-      line = Math.random() < 0.55 ? q : `${q} ${line}`.replace(/\s+/g,' ').trim();
-    }
-  }
-
-  return line;
-}
-
-function generateReactionText(animal, itemInfo, judged){
-  const bucket = decideBucket(animal, itemInfo, judged);
-  const p = PERSONA[animal.id];
-  const base = pick((p?.react?.[bucket]) || (p?.react?.unknown) || ['…']);
-
-  const toned = applyToneRules(animal.id, bucket, itemInfo, judged, base);
-
-  // 一言の食べ描写（過剰に長くしない）
-  const extraByShow = {
-    'だいせいこう': ['もぐもぐ…！', 'おかわり…！', 'にこにこ！'],
-    'せいこう': ['もぐもぐ…', 'いい感じ…', 'ごきげん。'],
-    'びみょう': ['…うーん。', 'ちょっとふしぎ。', '首をかしげた。'],
-    'しっぱい': ['…うぅ。', 'むずかしい…。', 'しょんぼり。'],
+  const bodyTemplates = {
+    'だいせいこう': [
+      `「${itemInfo.raw}」に大満足！目がキラキラしてる！`,
+      'もぐもぐ…！テンションMAX！大よろこび！',
+      'もう一口！って顔してる！'
+    ],
+    'せいこう': [
+      `「${itemInfo.raw}」をもぐもぐ…いい感じ。`,
+      'ほどよく満腹。にこにこしてる。',
+      '落ち着いて味わってる。'
+    ],
+    'びみょう': [
+      `「${itemInfo.raw}」を一口…ふしぎな顔。`,
+      '悪くはないけど、ちょっと首をかしげてる。',
+      'もぐもぐ…（無言）'
+    ],
+    'しっぱい': [
+      `「${itemInfo.raw}」を見た瞬間、ちょっと固まった…！`,
+      '食べるより…別の使い方を思いついたみたい。',
+      'じーっ…（距離を取っている）'
+    ]
   };
-  const bite = pick(extraByShow[judged.outcome] || ['もぐもぐ…']);
 
-  // 「入力：」はヘッダー/結果に出すので、ここでは会話だけ
-  return `${toned}\n（${itemInfo.raw}）${bite}`.trim();
-}
+  const extra =
+    (itemInfo.vibe === 'ファンタジー') ? '（なにか不思議なオーラが漂っている…）' :
+    (itemInfo.vibe === 'ほっこり') ? '（やさしい匂いがする…）' :
+    (itemInfo.vibe === 'スパイシー') ? '（鼻がツーン！）' :
+    (itemInfo.vibe === 'ボリューム') ? '（量が多い…！）' : '';
 
-function buildResultText(animal, itemInfo, judged, reactionText){
-  const base = {
-    'だいせいこう': '超大成功！まんぞくそう！',
-    'せいこう': '成功！いい感じに食べた！',
-    'びみょう': 'うーん…ちょっと微妙。',
-    'しっぱい': '失敗…好みじゃなかったみたい。',
-  }[judged.outcome];
+  const body = pick(bodyTemplates[judged.outcome]);
+  const text = `${base}\n${body}${extra ? `\n${extra}` : ''}`.trim();
 
   const commentator = pick([
     `実況：満足度は ${judged.score}/100！`,
     `実況：この反応…満足度 ${judged.score}/100！`,
-    `実況：評価は ${judged.score}/100 でした！`,
+    `実況：評価は ${judged.score}/100 でした！`
   ]);
 
-  return `${base}\n\n${reactionText}\n\n${commentator}`.trim();
+  return { text, commentator };
 }
 
-function showResult(animal, itemInfo, judged, reactionText){
-  const headerSub = `入力：${itemInfo.raw}`;
-  showScreen('result', headerSub);
+function buildResultText(itemInfo, judged, reaction){
+  const base = {
+    'だいせいこう': '超大成功！まんぞくそう！',
+    'せいこう': '成功！いい感じに食べた！',
+    'びみょう': 'うーん…ちょっと微妙。',
+    'しっぱい': '失敗…好みじゃなかったみたい。'
+  }[judged.outcome];
 
-  el.resultSub.textContent = `入力：${itemInfo.raw}`;
-  el.resultEmoji.textContent = judged.emoji;
-  setImgSafe(el.resultAnimalImg, animal.img, animal.name, animal.emoji);
-  el.resultText.textContent = buildResultText(animal, itemInfo, judged, reactionText);
+  return `${base}\n\n入力：${itemInfo.raw}\n分類：${itemInfo.category} / 雰囲気：${itemInfo.vibe}\n\n${reaction.text}\n\n${reaction.commentator}`;
 }
 
 // ================================
-// えさをあげる
+// Navigation
 // ================================
+function gotoSelect(){
+  setLoading(false);
+  stopBegLoop();
+  state.animal = null;
+  state.locked = false;
+  el.chatLog.innerHTML = '';
+  el.freeInput.value = '';
+  showScreen('select');
+}
+
+function renderAnimal(){
+  const a = state.animal;
+  if(!a) return;
+  const persona = PERSONA[a.id];
+
+  setImgSafe(el.animalImg, a.img, a.name, a.emoji);
+  setImgSafe(el.resultAnimalImg, a.img, a.name, a.emoji);
+  setImgSafe(el.loadingAnimalImg, a.img, a.name, a.emoji);
+
+  el.animalName.textContent = a.name;
+  el.animalPersona.textContent = persona ? persona.label : '—';
+}
+
+function startGameWithAnimal(animalId){
+  const a = ANIMALS.find(x => x.id === animalId);
+  if(!a) return;
+
+  state.animal = a;
+  state.locked = false;
+  el.chatLog.innerHTML = '';
+  el.freeInput.value = '';
+
+  renderAnimal();
+  showScreen('game');
+
+  const persona = PERSONA[a.id];
+  setBegLine(pick(persona.begLines));
+  startBegLoop();
+
+  const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
+  addChatMessage({ who:'npc', avatar, text: `【${a.name}】をえらんだ！` });
+  addChatMessage({ who:'npc', avatar, text: state.currentBeg });
+}
+
 async function handleFeed(rawInput){
   const input = (rawInput || '').trim();
   if(!input){
@@ -709,12 +712,8 @@ async function handleFeed(rawInput){
     el.freeInput.focus();
     return;
   }
-  if(state.locked){
-    showToast('いまは操作できないよ');
-    return;
-  }
+  if(state.locked) return;
   if(!state.animal){
-    showToast('先に動物をえらんでね');
     gotoSelect();
     return;
   }
@@ -724,8 +723,8 @@ async function handleFeed(rawInput){
 
   if(hasNgWord(input)){
     sfxClick();
-    showToast('その言葉はつかえないよ（安全のため）');
-    addChat({ who:'npc', avatar:'🛡️', text:'安全のため、その内容は受け取れませんでした。ちがう言葉で試してね。' });
+    showToast('その言葉はつかえないよ');
+    addChatMessage({ who:'npc', avatar:'🛡️', text: '安全のため、その内容は受け取れませんでした。ちがう言葉で試してね。' });
     return;
   }
 
@@ -734,28 +733,36 @@ async function handleFeed(rawInput){
   const a = state.animal;
   const itemInfo = classifyItem(input);
 
-  addChat({ who:'me', avatar:'🙂', text:`「${itemInfo.raw}」をあげる` });
+  addChatMessage({ who:'me', avatar:'🙂', text: `「${itemInfo.raw}」をあげる` });
 
-  state.locked = true;
   setLoading(true, pick([
     '動物がくんくんにおいをかいでいる…',
     'もぐもぐ…味をたしかめ中…',
     'しばらく観察している…'
   ]));
 
-  await sleep(randInt(950, 1600));
+  await sleep(randInt(900, 1600));
 
   const judged = scoreFeeding(a, itemInfo);
-  const reactionText = generateReactionText(a, itemInfo, judged);
+  const reaction = generateLocalReaction(a, itemInfo, judged);
 
   setLoading(false);
   sfxResult();
 
-  // チャットにも一言だけ残す（結果は別画面）
   const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
-  addChat({ who:'npc', avatar, text: reactionText.split('\n')[0] });
+  addChatMessage({ who:'npc', avatar, text: reaction.text });
+  addChatMessage({ who:'npc', avatar:'🎙️', text: reaction.commentator });
 
-  showResult(a, itemInfo, judged, reactionText);
+  // 結果ページへ
+  stopBegLoop();
+  state.locked = true;
+
+  el.resultSub.textContent = `入力：${itemInfo.raw}`;
+  el.resultEmoji.textContent = judged.art;
+  setImgSafe(el.resultAnimalImg, a.img, a.name, a.emoji);
+  el.resultText.textContent = buildResultText(itemInfo, judged, reaction);
+
+  showScreen('result');
 }
 
 // ================================
@@ -764,16 +771,11 @@ async function handleFeed(rawInput){
 function wireEvents(){
   el.pickButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
-      ensureAudio(); await resumeAudio();
+      ensureAudio();
+      await resumeAudio();
       sfxClick();
       startGameWithAnimal(btn.getAttribute('data-animal'));
     });
-  });
-
-  el.btnBackToSelect.addEventListener('click', async () => {
-    ensureAudio(); await resumeAudio();
-    sfxClick();
-    gotoSelect();
   });
 
   document.querySelectorAll('[data-quick]').forEach(btn => {
@@ -797,14 +799,21 @@ function wireEvents(){
     }
   });
 
+  el.btnBackToSelect.addEventListener('click', async () => {
+    ensureAudio();
+    await resumeAudio();
+    sfxClick();
+    gotoSelect();
+  });
+
   el.btnResultBack.addEventListener('click', async () => {
-    ensureAudio(); await resumeAudio();
+    ensureAudio();
+    await resumeAudio();
     sfxClick();
     gotoSelect();
   });
 }
 
-// init
 (function init(){
   wireEvents();
   gotoSelect();
