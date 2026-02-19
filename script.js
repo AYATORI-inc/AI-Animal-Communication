@@ -245,10 +245,10 @@ const PERSONA = {
 // 動物（好き嫌いは内部のみ）
 // ================================
 const ANIMALS = [
-  { id:'lion',    name:'ライオン',   img:'./img/raion.jpg',    emoji:'🦁', likes:['肉'],        dislikes:['草'] },
-  { id:'penguin', name:'ペンギン',   img:'./img/pengin.jpg',   emoji:'🐧', likes:['魚'],        dislikes:['肉'] },
-  { id:'capybara',name:'カピバラ',   img:'./img/kapipara.jpg', emoji:'🦫', likes:['草','野菜'], dislikes:['肉'] },
-  { id:'panda',   name:'パンダ',     img:'./img/panda.jpg',    emoji:'🐼', likes:['草'],        dislikes:['魚'] }
+  { id:'lion',    name:'ライオン',   img:'./img/raion.webp',    emoji:'🦁', likes:['肉'],        dislikes:['草'] },
+  { id:'penguin', name:'ペンギン',   img:'./img/pengin.webp',   emoji:'🐧', likes:['魚'],        dislikes:['肉'] },
+  { id:'capybara',name:'カピバラ',   img:'./img/kapipara.webp', emoji:'🦫', likes:['草','野菜'], dislikes:['肉'] },
+  { id:'panda',   name:'パンダ',     img:'./img/panda.webp',    emoji:'🐼', likes:['草'],        dislikes:['魚'] }
 ];
 const QUICK_OPTIONS = ['肉','魚','草','野菜'];
 
