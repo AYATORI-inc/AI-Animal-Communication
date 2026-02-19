@@ -1,14 +1,15 @@
 'use strict';
 
 /*
-  v20 調整
-  - 上部バー削除（DOMにヘッダー無し）
-  - フッター：©AYATORI-INC（index.html）
-  - 動物画像の枠なし（CSS側で対応）
-  - おねだり：時間経過で変化（各20）
-  - 待機演出：上下に揺れる（もぐもぐ）
-  - 結果：別ページ
-  - 効果音：クリック/もぐもぐ/結果（成功失敗で同じ）
+  v19
+  - 背景画像：./img/background.jpg
+  - トップ：動物選択（横並び）
+  - 好き嫌いヒントは表示しない（内部で判定のみ）
+  - おねだりセリフ：時間経過でローテ（各20個）＋連続同一回避
+  - 待機演出：動物アイコン上下に揺れる（もぐもぐ）
+  - 結果：別ページ（result screen）
+  - 効果音：クリック / もぐもぐ / 結果（成功・失敗で同じ1種類）
+  - 注意文：※ 危ない言葉はブロックされます。
 */
 
 // ================================
@@ -23,7 +24,7 @@ function hasNgWord(text){
 }
 
 // ================================
-// 性格（ローカル）
+// 性格（txtの意図を反映）
 // ================================
 const PERSONA = {
   lion: {
@@ -242,7 +243,7 @@ const PERSONA = {
 };
 
 // ================================
-// 動物（好き嫌いは内部のみ）
+// 動物データ（好き嫌いは内部用・画面には出さない）
 // ================================
 const ANIMALS = [
   { id:'lion',    name:'ライオン',   img:'./img/raion.webp',    emoji:'🦁', likes:['肉'],        dislikes:['草'] },
@@ -263,14 +264,10 @@ const el = {
   pickButtons: Array.from(document.querySelectorAll('[data-animal]')),
 
   animalImg: document.getElementById('animalImg'),
-  animalName: document.getElementById('animalName'),
-  animalPersona: document.getElementById('animalPersona'),
   begLine: document.getElementById('begLine'),
 
-  chatLog: document.getElementById('chatLog'),
   freeInput: document.getElementById('freeInput'),
   btnSend: document.getElementById('btnSend'),
-  btnBackToSelect: document.getElementById('btnBackToSelect'),
 
   resultSub: document.getElementById('resultSub'),
   resultEmoji: document.getElementById('resultEmoji'),
@@ -283,6 +280,7 @@ const el = {
   loadingLine: document.getElementById('loadingLine'),
   loadingAnimalImg: document.getElementById('loadingAnimalImg')
 };
+
 
 // ================================
 // State
@@ -298,21 +296,29 @@ const state = {
 // ================================
 // Utils
 // ================================
-function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+function pick(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 function pickNotSame(arr, last){
   if(!arr || arr.length === 0) return '';
   if(arr.length === 1) return arr[0];
-  let v = pick(arr);
+  let v = arr[Math.floor(Math.random() * arr.length)];
   let guard = 0;
   while(v === last && guard < 10){
-    v = pick(arr);
+    v = arr[Math.floor(Math.random() * arr.length)];
     guard++;
   }
   return v;
 }
-function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
-function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+function randInt(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function clamp(n, min, max){
+  return Math.max(min, Math.min(max, n));
+}
+function sleep(ms){
+  return new Promise(r => setTimeout(r, ms));
+}
 
 // ================================
 // 効果音（Web Audio）
@@ -354,7 +360,8 @@ function sfxMunchOnce(){
   playTone(440 + randInt(-35, 35), 50, 'sine', 0.03);
 }
 function sfxResult(){
-  const seq = [523, 659]; // 成功/失敗で同じ1種類
+  // 成功/失敗で同じ（1種類）
+  const seq = [523, 659];
   seq.forEach((f, i) => setTimeout(() => playTone(f, 110, 'sine', 0.07), i * 120));
 }
 function startMunchLoop(){
@@ -372,6 +379,19 @@ function stopMunchLoop(){
 // ================================
 // UI helpers
 // ================================
+function setHeader(mode, sub){
+  if(!el.headerTitle || !el.headerSub) return;
+  if(mode === 'select'){
+    el.headerTitle.textContent = 'すきな どうぶつを えらんでね';
+    el.headerSub.textContent = 'どの どうぶつに えさを あげる？';
+  }else if(mode === 'game'){
+    el.headerTitle.textContent = 'えさを あげよう';
+    el.headerSub.textContent = 'ボタン 4つ or じゆうに いれてね';
+  }else if(mode === 'result'){
+    el.headerTitle.textContent = 'けっか';
+    el.headerSub.textContent = sub || '入力：—';
+  }
+}
 function showScreen(name){
   el.screenSelect.classList.remove('isActive');
   el.screenGame.classList.remove('isActive');
@@ -406,44 +426,6 @@ function setLoading(on, line){
 }
 
 // ================================
-// Chat
-// ================================
-function makeAvatarNode(avatar){
-  const av = document.createElement('div');
-  av.className = 'avatar';
-
-  if(typeof avatar === 'string'){
-    av.textContent = avatar;
-    return av;
-  }
-  if(avatar && avatar.type === 'img'){
-    const img = document.createElement('img');
-    img.alt = avatar.alt || '';
-    img.src = avatar.src || '';
-    img.onerror = () => { av.textContent = avatar.fallback || '🐾'; };
-    av.appendChild(img);
-    return av;
-  }
-
-  av.textContent = '🐾';
-  return av;
-}
-function addChatMessage({ who, avatar, text }){
-  const row = document.createElement('div');
-  row.className = `msg ${who === 'me' ? 'me' : 'npc'}`;
-
-  const av = makeAvatarNode(avatar);
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.textContent = text;
-
-  row.appendChild(av);
-  row.appendChild(bubble);
-  el.chatLog.appendChild(row);
-  el.chatLog.scrollTop = el.chatLog.scrollHeight;
-}
-
-// ================================
 // Begging loop
 // ================================
 function setBegLine(line){
@@ -461,7 +443,7 @@ function startBegLoop(){
   const a = state.animal;
   if(!a) return;
   const persona = PERSONA[a.id];
-  if(!persona?.begLines?.length) return;
+  if(!persona || !persona.begLines || persona.begLines.length === 0) return;
 
   const tick = () => {
     if(!state.animal) return;
@@ -536,7 +518,7 @@ function scoreFeeding(animal, itemInfo){
 }
 
 // ================================
-// Persona reaction（口調変化）
+// Persona reaction (①：状況で口調が変わる)
 // ================================
 function pickPersonaBucket(animal, itemInfo, judged){
   const likes = animal.likes.includes(itemInfo.category);
@@ -548,7 +530,7 @@ function pickPersonaBucket(animal, itemInfo, judged){
   }
   if(judged.outcome === 'しっぱい'){
     if(likes) return 'unknown';
-    return 'dislike';
+    return dislikes ? 'dislike' : 'dislike';
   }
 
   if(likes) return 'like';
@@ -558,7 +540,7 @@ function pickPersonaBucket(animal, itemInfo, judged){
 
 function applyToneRules(animalId, base, bucket, itemInfo, judged){
   const p = PERSONA[animalId];
-  if(!p?.toneRules) return base;
+  if(!p || !p.toneRules) return base;
 
   if(animalId === 'lion'){
     const need = (bucket !== 'like') || (judged.outcome === 'しっぱい');
@@ -644,7 +626,7 @@ function generateLocalReaction(animal, itemInfo, judged){
     `実況：評価は ${judged.score}/100 でした！`
   ]);
 
-  return { text, commentator };
+  return { text, commentator, bucket };
 }
 
 function buildResultText(itemInfo, judged, reaction){
@@ -666,8 +648,8 @@ function gotoSelect(){
   stopBegLoop();
   state.animal = null;
   state.locked = false;
-  el.chatLog.innerHTML = '';
   el.freeInput.value = '';
+  setHeader('select');
   showScreen('select');
 }
 
@@ -680,8 +662,6 @@ function renderAnimal(){
   setImgSafe(el.resultAnimalImg, a.img, a.name, a.emoji);
   setImgSafe(el.loadingAnimalImg, a.img, a.name, a.emoji);
 
-  el.animalName.textContent = a.name;
-  el.animalPersona.textContent = persona ? persona.label : '—';
 }
 
 function startGameWithAnimal(animalId){
@@ -690,20 +670,16 @@ function startGameWithAnimal(animalId){
 
   state.animal = a;
   state.locked = false;
-  el.chatLog.innerHTML = '';
+
   el.freeInput.value = '';
 
   renderAnimal();
+  setHeader('game');
   showScreen('game');
 
   const persona = PERSONA[a.id];
   setBegLine(pick(persona.begLines));
-  startBegLoop();
-
-  const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
-  addChatMessage({ who:'npc', avatar, text: `【${a.name}】をえらんだ！` });
-  addChatMessage({ who:'npc', avatar, text: state.currentBeg });
-}
+  startBegLoop();}
 
 async function handleFeed(rawInput){
   const input = (rawInput || '').trim();
@@ -724,7 +700,6 @@ async function handleFeed(rawInput){
   if(hasNgWord(input)){
     sfxClick();
     showToast('その言葉はつかえないよ');
-    addChatMessage({ who:'npc', avatar:'🛡️', text: '安全のため、その内容は受け取れませんでした。ちがう言葉で試してね。' });
     return;
   }
 
@@ -733,7 +708,6 @@ async function handleFeed(rawInput){
   const a = state.animal;
   const itemInfo = classifyItem(input);
 
-  addChatMessage({ who:'me', avatar:'🙂', text: `「${itemInfo.raw}」をあげる` });
 
   setLoading(true, pick([
     '動物がくんくんにおいをかいでいる…',
@@ -748,14 +722,12 @@ async function handleFeed(rawInput){
 
   setLoading(false);
   sfxResult();
-
-  const avatar = { type:'img', src: a.img, alt: a.name, fallback: a.emoji };
-  addChatMessage({ who:'npc', avatar, text: reaction.text });
-  addChatMessage({ who:'npc', avatar:'🎙️', text: reaction.commentator });
-
   // 結果ページへ
   stopBegLoop();
   state.locked = true;
+
+  const sub = `入力：${itemInfo.raw}`;
+  setHeader('result', sub);
 
   el.resultSub.textContent = `入力：${itemInfo.raw}`;
   el.resultEmoji.textContent = judged.art;
@@ -797,13 +769,6 @@ function wireEvents(){
       el.freeInput.value = '';
       await handleFeed(v);
     }
-  });
-
-  el.btnBackToSelect.addEventListener('click', async () => {
-    ensureAudio();
-    await resumeAudio();
-    sfxClick();
-    gotoSelect();
   });
 
   el.btnResultBack.addEventListener('click', async () => {

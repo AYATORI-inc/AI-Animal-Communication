@@ -1,8 +1,10 @@
 :root{
   --text: rgba(240,245,255,.98);
   --muted: rgba(240,245,255,.78);
+  --line: rgba(255,255,255,.18);
   --shadow: 0 18px 55px rgba(0,0,0,.45);
   --shadow2: 0 28px 80px rgba(0,0,0,.55);
+  --radius: 22px;
   --radius2: 26px;
   --primary: rgba(55, 214, 153, 1);
   --primary2: rgba(37, 180, 125, 1);
@@ -11,16 +13,15 @@
 
 *{ box-sizing:border-box; }
 html, body{ height:100%; }
-
 body{
   margin:0;
   font-family: var(--font);
   color: var(--text);
-  overflow: hidden; /* スクロールなし */
+  overflow: hidden; /* 画面スクロールはなし */
   background: #0b1224;
 }
 
-/* 背景 */
+/* 背景画像（imgフォルダから参照） */
 .bgScene{
   position: fixed;
   inset: 0;
@@ -67,10 +68,63 @@ body{
   z-index: 2;
   height: 100%;
   display: grid;
-  grid-template-rows: 1fr auto; /* 上部バー削除に合わせて変更 */
+  grid-template-rows: 1fr auto;
   gap: 12px;
   padding: 14px;
 }
+
+.appHeader{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius2);
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(180deg, rgba(10,14,28,.80), rgba(10,14,28,.38));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 45px rgba(0,0,0,.35);
+}
+.brand{ display:flex; align-items:center; gap: 12px; min-width: 0; }
+.logo{
+  width: 44px; height: 44px;
+  border-radius: 16px;
+  display:grid; place-items:center;
+  border: 1px solid rgba(255,255,255,.22);
+  background: linear-gradient(135deg, rgba(0,0,0,.40), rgba(0,0,0,.18));
+  box-shadow: 0 16px 36px rgba(0,0,0,.45);
+  flex: 0 0 auto;
+}
+.brandText{ min-width:0; }
+.brandText h1{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+  color: rgba(233,238,255,.98);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brandText p{
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgba(233,238,255,.88);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.headerNote{
+  text-align:right;
+  font-size: 11px;
+  color: rgba(233,238,255,.86);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  line-height: 1.25;
+}
+.headerNote strong{ font-weight: 1000; }
+.headerNote span{ color: rgba(233,238,255,.78); }
 
 .main{
   position: relative;
@@ -101,7 +155,6 @@ body{
   flex-direction: column;
   gap: 14px;
 }
-
 .animalRow{
   display:flex;
   justify-content: center;
@@ -109,17 +162,16 @@ body{
   gap: 12px;
   flex-wrap: nowrap;
 }
-
 .pickTile{
   width: clamp(120px, 20vw, 170px);
-  padding: 14px 10px;
+  padding: 10px 8px;
   border-radius: 22px;
   border: 1px solid rgba(255,255,255,.22);
   background: linear-gradient(180deg, rgba(0,0,0,.34), rgba(0,0,0,.18));
   box-shadow: 0 14px 34px rgba(0,0,0,.35);
   display:grid;
   justify-items:center;
-  gap: 10px;
+  gap: 6px;
   cursor:pointer;
   transition: transform .08s ease, background .12s ease, border-color .12s ease;
 }
@@ -130,30 +182,28 @@ body{
 }
 .pickTile:active{ transform: translateY(0) scale(.99); }
 
-/* ★枠なし：透過画像対応（トップページの動物画像） */
+/* 画像の巨大化を強制的に防ぐ */
 #screenSelect .tileEmoji{
-  width: 74px !important;
-  height: 74px !important;
-  display:grid;
-  place-items:center;
-  border: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  overflow: visible !important;
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 16px !important;
+  overflow:hidden !important;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
+  flex: 0 0 auto !important;
 }
 #screenSelect .tileImg{
-  width: 74px !important;
-  height: 74px !important;
-  object-fit: contain !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
   display:block !important;
 }
-/* 画像巨大化の予防（念のため） */
 #screenSelect .pickTile img{
-  max-width: 74px !important;
-  max-height: 74px !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
 }
 
-/* 動物名（白） */
+/* v17: 動物名を白でくっきり */
 #screenSelect .tileName{
   font-weight: 1000;
   letter-spacing: .06em;
@@ -183,7 +233,6 @@ body{
   align-items: stretch;
   min-height: 0;
 }
-
 .panel{
   border-radius: var(--radius2);
   border: 1px solid rgba(255,255,255,.18);
@@ -195,7 +244,6 @@ body{
   display:flex;
   flex-direction: column;
 }
-
 .panelHeader{
   padding: 12px 14px;
   display:flex;
@@ -205,7 +253,6 @@ body{
   background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.12));
   border-bottom: 1px solid rgba(255,255,255,.12);
 }
-
 .panelTitle{
   display:flex;
   align-items:center;
@@ -213,7 +260,6 @@ body{
   font-weight: 1000;
   letter-spacing: .05em;
 }
-
 .panelIcon{
   width: 28px; height: 28px;
   border-radius: 10px;
@@ -221,7 +267,6 @@ body{
   background: rgba(0,0,0,.25);
   border: 1px solid rgba(255,255,255,.14);
 }
-
 .small{ font-size: 12px; }
 .muted{ color: var(--muted); }
 
@@ -231,26 +276,21 @@ body{
   flex-direction: column;
   gap: 10px;
 }
-
-/* ★枠なし：ゲーム中の動物画像 */
 .animalArt{
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   margin: 0 auto;
-  border-radius: 0;
-  overflow: visible;
-  border: none;
-  background: transparent;
-  display:grid;
-  place-items:center;
+  border-radius: 24px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.20);
 }
 .animalArt img{
-  width: 140px;
-  height: 140px;
-  object-fit: contain;
+  width:100%;
+  height:100%;
+  object-fit: cover;
   display:block;
 }
-
 .animalMeta{ text-align:center; }
 .animalName{
   font-size: 22px;
@@ -292,7 +332,6 @@ body{
   overflow:auto;
   min-height: 0;
 }
-
 .msg{
   display:flex;
   gap: 10px;
@@ -300,26 +339,18 @@ body{
   margin: 10px 0;
 }
 .msg.me{ flex-direction: row-reverse; }
-
-/* ★枠なし：チャットの動物アバター（透過向け） */
 .avatar{
   width: 42px;
   height: 42px;
-  border-radius: 0;
-  overflow: visible;
+  border-radius: 16px;
+  overflow:hidden;
   flex: 0 0 auto;
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.22);
   display:grid;
   place-items:center;
 }
-.avatar img{
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  display:block;
-}
-
+.avatar img{ width:100%; height:100%; object-fit: cover; display:block; }
 .bubble{
   max-width: 92%;
   border-radius: 18px;
@@ -348,7 +379,6 @@ body{
 }
 .quickRow{ display:flex; flex-wrap: wrap; gap: 8px; }
 .freeRow{ display:flex; gap: 8px; }
-
 .input{
   flex: 1;
   padding: 12px 12px;
@@ -416,7 +446,6 @@ body{
   white-space: nowrap;
   max-width: 78vw;
 }
-
 .resultGrid{
   display:grid;
   grid-template-columns: 220px 1fr;
@@ -434,25 +463,15 @@ body{
   place-items:center;
   font-size: 34px;
 }
-
-/* ★枠なし：結果画面の動物画像 */
 .resultAnimalPic{
-  width: 120px;
-  height: 120px;
-  border-radius: 0;
-  overflow: visible;
-  border: none;
-  background: transparent;
-  display:grid;
-  place-items:center;
+  width: 110px;
+  height: 110px;
+  border-radius: 26px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
 }
-.resultAnimalPic img{
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  display:block;
-}
-
+.resultAnimalPic img{ width:100%; height:100%; object-fit: cover; display:block; }
 .resultText{
   margin: 0;
   padding: 12px 12px;
@@ -468,7 +487,6 @@ body{
 }
 .resultActions{ display:flex; justify-content:flex-end; }
 
-/* トースト */
 .toast{
   position: fixed;
   left: 50%;
@@ -501,7 +519,6 @@ body{
   z-index: 60;
 }
 .loadingOverlay.show{ display:flex; }
-
 .loadingCard{
   width: min(520px, calc(100% - 28px));
   padding: 16px;
@@ -513,25 +530,15 @@ body{
   align-items:center;
   gap: 14px;
 }
-
-/* ★枠なし：待機中の動物画像 */
 .loadingAnimal{
-  width: 90px;
-  height: 90px;
-  border-radius: 0;
-  overflow: visible;
-  border: none;
-  background: transparent;
-  display:grid;
-  place-items:center;
+  width: 86px;
+  height: 86px;
+  border-radius: 22px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
 }
-.loadingAnimal img{
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
-  display:block;
-}
-
+.loadingAnimal img{ width:100%; height:100%; object-fit: cover; display:block; }
 .loadingText strong{ font-weight: 1000; }
 .loadingText p{ margin: 4px 0 0; font-weight: 900; color: rgba(233,238,255,.92); }
 
@@ -552,25 +559,91 @@ body{
 
 .appFooter{ text-align:center; padding: 2px 0 0; }
 
+/* v20: 動物画像は背景透過を想定し、枠（ボーダー/背景/影）を撤去 */
+#screenSelect .tileEmoji{
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+#screenSelect .tileImg{
+  object-fit: contain !important; /* 透過PNGでも形を崩さない */
+}
+
+/* ゲーム中/結果/待機/チャットの動物画像コンテナも枠を撤去 */
+.animalArt, .resultAnimalPic, .loadingAnimal, .avatar{
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+.animalArt img, .resultAnimalPic img, .loadingAnimal img, .avatar img{
+  object-fit: contain !important;
+}
+
+
+
+/* v22: えさ選択画面を最小UIに */
+.gameCard{
+  padding: 18px;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+.gameStack{
+  display:flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+.bigBeg{
+  width: min(760px, 100%);
+}
+.animalShow{
+  width: 180px;
+  height: 180px;
+  display:grid;
+  place-items:center;
+}
+.animalShow img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display:block;
+  filter: drop-shadow(0 18px 28px rgba(0,0,0,.35));
+}
+
+/* えさエリア */
+.foodArea{
+  width: min(760px, 100%);
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+.foodArea .quickRow{
+  justify-content: center;
+}
+.foodArea .freeRow{
+  flex-wrap: wrap;
+}
+.foodArea .freeRow .input{
+  min-width: 220px;
+}
+
+
 @media (max-width: 980px){
   .layout{ grid-template-columns: 1fr; }
   .resultGrid{ grid-template-columns: 1fr; }
   .resultActions{ justify-content: stretch; }
   .resultActions .btn{ width: 100%; }
+  .headerNote{ display:none; }
   .animalRow{ gap: 10px; flex-wrap: wrap; }
 }
 @media (max-width: 520px){
-  #screenSelect .tileEmoji{
-    width: 64px !important;
-    height: 64px !important;
-  }
-  #screenSelect .tileImg{
-    width: 64px !important;
-    height: 64px !important;
-  }
-  #screenSelect .pickTile img{
-    max-width: 64px !important;
-    max-height: 64px !important;
-  }
+  #screenSelect .tileEmoji{ width: 50px !important; height: 50px !important; border-radius: 15px !important; }
   #screenSelect .tileName{ font-size: .88rem; }
 }

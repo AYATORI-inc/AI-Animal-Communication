@@ -18,36 +18,28 @@
   </div>
 
   <div class="appShell">
-    <main class="main">
+<main class="main">
       <!-- 動物選択（トップページ） -->
       <section id="screenSelect" class="screen isActive" aria-label="動物選択">
         <div class="card selectCard">
           <div class="animalRow" role="group" aria-label="どうぶつをえらぶ">
             <button class="pickTile" type="button" data-animal="lion" aria-label="ライオンをえらぶ">
-              <div class="tileEmoji">
-                <img class="tileImg" src="./img/raion.webp" alt="ライオン" />
-              </div>
+              <div class="tileEmoji"><img class="tileImg" src="./img/raion.webp" alt="ライオン" /></div>
               <div class="tileName">ライオン</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="penguin" aria-label="ペンギンをえらぶ">
-              <div class="tileEmoji">
-                <img class="tileImg" src="./img/pengin.webp" alt="ペンギン" />
-              </div>
+              <div class="tileEmoji"><img class="tileImg" src="./img/pengin.webp" alt="ペンギン" /></div>
               <div class="tileName">ペンギン</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="capybara" aria-label="カピバラをえらぶ">
-              <div class="tileEmoji">
-                <img class="tileImg" src="./img/kapipara.webp" alt="カピバラ" />
-              </div>
+              <div class="tileEmoji"><img class="tileImg" src="./img/kapipara.webp" alt="カピバラ" /></div>
               <div class="tileName">カピバラ</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="panda" aria-label="パンダをえらぶ">
-              <div class="tileEmoji">
-                <img class="tileImg" src="./img/panda.webp" alt="パンダ" />
-              </div>
+              <div class="tileEmoji"><img class="tileImg" src="./img/panda.webp" alt="パンダ" /></div>
               <div class="tileName">パンダ</div>
             </button>
           </div>
@@ -58,47 +50,18 @@
 
       <!-- えさ選択 -->
       <section id="screenGame" class="screen" aria-label="えさをあげる">
-        <div class="layout">
-          <!-- 左：どうぶつ -->
-          <section class="panel animalPanel" aria-label="どうぶつ">
-            <div class="panelHeader">
-              <div class="panelTitle">
-                <span class="panelIcon" aria-hidden="true">🦴</span>
-                <span>えさを あげよう</span>
-              </div>
-              <button id="btnBackToSelect" class="btn small" type="button">もどる</button>
+        <div class="card gameCard">
+          <div class="gameStack">
+            <div class="begBox bigBeg" aria-label="おねだり">
+              <div class="begLabel">おねだり</div>
+              <div id="begLine" class="begLine">…</div>
             </div>
 
-            <div class="animalCard">
-              <div class="animalArt" id="animalArtBox">
-                <img id="animalImg" src="" alt="" />
-              </div>
-
-              <div class="animalMeta">
-                <div id="animalName" class="animalName">—</div>
-                <div id="animalPersona" class="animalPersona">—</div>
-              </div>
-
-              <div class="begBox" aria-label="おねだり">
-                <div class="begLabel">おねだり</div>
-                <div id="begLine" class="begLine">…</div>
-              </div>
-            </div>
-          </section>
-
-          <!-- 右：チャット -->
-          <section class="panel chatPanel" aria-label="チャット">
-            <div class="panelHeader">
-              <div class="panelTitle">
-                <span class="panelIcon" aria-hidden="true">💬</span>
-                <span>ボタン 4つ or じゆうに いれてね</span>
-              </div>
-              <div class="small muted">動物の反応がここに出るよ</div>
+            <div class="animalShow" aria-label="どうぶつ">
+              <img id="animalImg" src="" alt="" />
             </div>
 
-            <div id="chatLog" class="chatLog" role="log" aria-live="polite" aria-relevant="additions"></div>
-
-            <div class="controls">
+            <div class="foodArea" aria-label="えさのせんたく">
               <div class="quickRow" aria-label="クイック">
                 <button class="btn" data-quick="肉" type="button">🍖 肉</button>
                 <button class="btn" data-quick="魚" type="button">🐟 魚</button>
@@ -109,15 +72,14 @@
               <div class="freeRow" aria-label="自由入力">
                 <label class="srOnly" for="freeInput">自由入力</label>
                 <input id="freeInput" class="input" type="text"
-                  placeholder="例：お母さんの手作りハンバーグ / 魔法の薬 / ふわふわパンケーキ…"
+                  placeholder="じゆうに えさを いれてね（例：手作りハンバーグ / まほうのドリンク）"
                   maxlength="50" />
-                <button id="btnSend" class="btn primary" type="button">あげる</button>
+                <button id="btnSend" class="btn primary" type="button">えさを あげる</button>
               </div>
-
-              <div class="small muted">※ 危ない言葉はブロックされます。</div>
             </div>
-          </section>
+          </div>
         </div>
+
       </section>
 
       <!-- 結果（個別ページ） -->
@@ -135,9 +97,7 @@
             <div class="resultLeft">
               <div class="resultAnimal">
                 <div class="resultEmoji" id="resultEmoji" aria-hidden="true">✨</div>
-                <div class="resultAnimalPic">
-                  <img id="resultAnimalImg" src="" alt="" />
-                </div>
+                <div class="resultAnimalPic"><img id="resultAnimalImg" src="" alt="" /></div>
               </div>
             </div>
 
