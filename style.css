@@ -21,47 +21,34 @@ body{
   background: #0b1224;
 }
 
-/* 背景画像（imgフォルダから参照） */
+/* 背景画像（imgフォルダから参照）
+   案A：暗幕＋彩度ダウン＋ぼかし
+   案B：背景の文字ラベルは使わない（HTML/CSSから除外） */
 .bgScene{
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.58)),
-    url("./img/background.jpg") center / cover no-repeat;
-  filter: saturate(1.03);
+  overflow: hidden;
 }
+/* 画像（ぼかし・彩度調整はここで） */
+.bgScene::before{
+  content:"";
+  position:absolute;
+  inset: -12px; /* blurの端欠け対策 */
+  background: url("./img/background.jpg") center / cover no-repeat;
+  filter: blur(3px) saturate(.7) brightness(.75) contrast(1.05);
+  transform: scale(1.06);
+}
+/* 暗幕＋ビネット（画像の上に重ねる） */
 .bgScene::after{
   content:"";
   position:absolute;
   inset: 0;
-  background: radial-gradient(1200px 620px at 50% 25%, rgba(0,0,0,0), rgba(0,0,0,.35));
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.68)),
+    radial-gradient(1200px 620px at 50% 25%, rgba(0,0,0,0), rgba(0,0,0,.38));
 }
-
-/* エリア名（薄い背景文字） */
-.mapLabels{
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  user-select: none;
-  opacity: .92;
-  mix-blend-mode: overlay;
-}
-.mapLabels .label{
-  position: absolute;
-  font-weight: 1000;
-  letter-spacing: .14em;
-  font-size: clamp(26px, 5.2vw, 62px);
-  color: rgba(255,255,255,.10);
-  text-shadow: 0 2px 14px rgba(0,0,0,.35);
-}
-.mapLabels .l1{ left: 8%; top: 14%; transform: rotate(-8deg); }
-.mapLabels .l2{ right: 10%; top: 18%; transform: rotate(6deg); }
-.mapLabels .l3{ left: 16%; bottom: 14%; transform: rotate(10deg); }
-.mapLabels .l4{ right: 13%; bottom: 16%; transform: rotate(-10deg); }
-.mapLabels .l5{ left: 44%; top: 8%; transform: rotate(-2deg); }
 
 .appShell{
   position: relative;
