@@ -76,7 +76,8 @@ body{
 .titleTop{
   display:flex;
   align-items:flex-start;
-  justify-content:flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 .titleKicker{
   font-size: 14px;
@@ -85,6 +86,47 @@ body{
   color: rgba(233,238,255,.92);
   text-shadow: 0 2px 16px rgba(0,0,0,.65);
 }
+
+/* API ツール（開発用） */
+.apiTools{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.apiBadge{
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: .08em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.28);
+  color: rgba(240,245,255,.82);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+.apiBadge.on{
+  border-color: rgba(55,214,153,.55);
+  background: rgba(55,214,153,.18);
+  color: rgba(240,255,245,.95);
+}
+
+.tinyBtn{
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.18);
+  color: rgba(240,245,255,.92);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 1000;
+  letter-spacing: .08em;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+  transition: transform .12s ease, border-color .12s ease;
+}
+.tinyBtn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.30);
+}
+.tinyBtn:active{ transform: translateY(0px) scale(.99); }
 
 .animalRowWide{
   display:flex;
@@ -155,6 +197,48 @@ body{
   font-weight: 1000;
   letter-spacing: .12em;
   box-shadow: 0 20px 70px rgba(0,0,0,.35);
+}
+
+/* =========================
+   モーダル（GAS設定）
+   ========================= */
+.modal{
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0,0,0,.55);
+  display: none;
+  place-items: center;
+  padding: 18px;
+}
+.modal.show{ display: grid; }
+
+.modalCard{
+  width: min(720px, 100%);
+  border-radius: var(--radius2);
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(180deg, rgba(10,14,28,.92), rgba(10,14,28,.66));
+  box-shadow: var(--shadow2);
+  backdrop-filter: blur(12px);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.modalTitle{
+  font-weight: 1000;
+  letter-spacing: .08em;
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+.modalActions{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.modalHint{
+  font-size: 12px;
+  color: rgba(240,245,255,.78);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
 }
 
 /* =========================

@@ -1,5 +1,142 @@
 'use strict';
 
+// ================================
+// GAS（Web App）接続
+// - gasCheck.html の方式に合わせて、POST text/plain で送信しJSONを受信する
+// ================================
+const GAS_URL_STORAGE_KEY = 'animalGameGasUrl';
+
+function getGasUrl(){
+  const saved = (localStorage.getItem(GAS_URL_STORAGE_KEY) || '').trim();
+  // 入力欄があればそちらを優先
+  const v = (el.gasUrlInput && el.gasUrlInput.value ? el.gasUrlInput.value : saved).trim();
+  return v;
+}
+function setGasUrl(url){
+  const u = (url || '').trim();
+  localStorage.setItem(GAS_URL_STORAGE_KEY, u);
+  if(el.gasUrlInput) el.gasUrlInput.value = u;
+  updateApiBadge();
+}
+
+function updateApiBadge(){
+  if(!el.apiBadge) return;
+  const url = getGasUrl();
+  el.apiBadge.textContent = url ? 'API:ON' : 'API:OFF';
+  el.apiBadge.classList.toggle('on', !!url);
+}
+
+function setApiModal(open){
+  if(!el.apiModal) return;
+  el.apiModal.classList.toggle('show', !!open);
+  el.apiModal.setAttribute('aria-hidden', open ? 'false' : 'true');
+  if(open){
+    if(el.gasUrlInput){
+      el.gasUrlInput.value = localStorage.getItem(GAS_URL_STORAGE_KEY) || '';
+      el.gasUrlInput.focus();
+    }
+    updateApiBadge();
+  }
+}
+
+async function gasHelloTest(){
+  const url = getGasUrl();
+  if(!url){
+    showToast('GAS URLを入れてね');
+    return;
+  }
+  try{
+    if(el.apiStatus) el.apiStatus.textContent = '接続中…';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: '' // Hello Worldテスト（空）
+    });
+    const txt = await res.text();
+    if(el.apiStatus) el.apiStatus.textContent = `HTTP ${res.status} ${res.statusText}`;
+    // 成功の目安としてトーストも
+    showToast(res.ok ? '接続OK' : '接続はできたけどHTTPがNG');
+    // デバッグ用にコンソール出力
+    try{ console.log('GAS hello response:', JSON.parse(txt)); }catch(e){ console.log('GAS hello response:', txt); }
+  }catch(err){
+    if(el.apiStatus) el.apiStatus.textContent = '接続失敗';
+    showToast('接続できませんでした（CORS/URL/公開設定を確認）');
+    console.warn(err);
+  }
+}
+
+function buildAiPrompt(animal, itemInfo, judged){
+  const a = animal;
+  const food = itemInfo.raw;
+  const outcomeHint = {
+    'だいせいこう': 'とても好きで大喜び',
+    'せいこう': 'けっこう好きで満足',
+    'びみょう': '食べるけど反応は微妙',
+    'しっぱい': 'あまり好きではない'
+  }[judged.outcome] || '';
+
+  // 返答形式は、GAS側が {message,imagePrompt,...} を返す想定に合わせつつ、最低 message があればOK
+  return [
+    `あなたは「${a.name}」という動物です。性格は「${a.label}」。一人称は「${a.first}」。`,
+    `いま「${food}」を食べました。${outcomeHint}。`,
+    `子供向けの口調で、60文字以内で感想を1つだけ。`,
+    `危ない言葉や過激表現は使わない。`,
+    `出力はJSONで {"message":"..."} を必ず含める。`
+  ].join('\n');
+}
+
+function parseGasResponse(text){
+  // text は JSON 文字列またはプレーンテキストの可能性
+  let data = null;
+  try{ data = JSON.parse(text); }catch(e){ /* ignore */ }
+
+  // gasCheck.html の形式（success, message, imageUrl, imagePrompt...）
+  if(data && typeof data === 'object' && (data.message || data.success !== undefined)){
+    return { message: data.message || '', raw: data };
+  }
+
+  // OpenAI互換（choices[0].message.content）
+  if(data && data.choices && data.choices[0] && data.choices[0].message){
+    const content = data.choices[0].message.content || '';
+    // content がさらに JSON の場合もある
+    try{
+      const inner = JSON.parse(content);
+      if(inner && inner.message) return { message: inner.message, raw: data };
+    }catch(e){}
+    return { message: content, raw: data };
+  }
+
+  // Gemini互換（candidates[0].content.parts[0].text）
+  if(data && data.candidates && data.candidates[0] && data.candidates[0].content){
+    const parts = data.candidates[0].content.parts || [];
+    const t = (parts[0] && parts[0].text) ? parts[0].text : '';
+    try{
+      const inner = JSON.parse(t);
+      if(inner && inner.message) return { message: inner.message, raw: data };
+    }catch(e){}
+    return { message: t, raw: data };
+  }
+
+  // プレーンテキスト
+  return { message: (typeof text === 'string' ? text : ''), raw: data || text };
+}
+
+async function callGasForMessage(prompt){
+  const url = getGasUrl();
+  if(!url) throw new Error('GAS URL not set');
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: prompt
+  });
+  const txt = await res.text();
+  if(!res.ok){
+    throw new Error(`HTTP ${res.status} ${res.statusText}: ${txt.slice(0,120)}`);
+  }
+  const parsed = parseGasResponse(txt);
+  return parsed.message || '';
+}
+
 /*
   v19
   - 背景画像：./img/background.jpg
@@ -278,7 +415,17 @@ const el = {
   toast: document.getElementById('toast'),
   loadingOverlay: document.getElementById('loadingOverlay'),
   loadingLine: document.getElementById('loadingLine'),
-  loadingAnimalImg: document.getElementById('loadingAnimalImg')
+  loadingAnimalImg: document.getElementById('loadingAnimalImg'),
+
+  // GAS UI
+  btnApiOpen: document.getElementById('btnApiOpen'),
+  btnApiClose: document.getElementById('btnApiClose'),
+  btnApiSave: document.getElementById('btnApiSave'),
+  btnApiTest: document.getElementById('btnApiTest'),
+  gasUrlInput: document.getElementById('gasUrlInput'),
+  apiModal: document.getElementById('apiModal'),
+  apiStatus: document.getElementById('apiStatus'),
+  apiBadge: document.getElementById('apiBadge')
 };
 
 
@@ -709,16 +856,31 @@ async function handleFeed(rawInput){
   const itemInfo = classifyItem(input);
 
 
+  // 先にローカル判定（絵文字など演出用）
+  const judged = scoreFeeding(a, itemInfo);
+  const reaction = generateLocalReaction(a, itemInfo, judged);
+
   setLoading(true, pick([
     '動物がくんくんにおいをかいでいる…',
     'もぐもぐ…味をたしかめ中…',
     'しばらく観察している…'
   ]));
 
-  await sleep(randInt(900, 1600));
+  // GASへ問い合わせ（設定されていない/失敗したらローカル結果を使う）
+  let aiMessage = '';
+  const prompt = buildAiPrompt(a, itemInfo, judged);
 
-  const judged = scoreFeeding(a, itemInfo);
-  const reaction = generateLocalReaction(a, itemInfo, judged);
+  try{
+    // 演出時間も確保（最低でも少し待つ）
+    const [msg] = await Promise.all([
+      callGasForMessage(prompt),
+      sleep(randInt(900, 1600))
+    ]);
+    aiMessage = (msg || '').trim();
+  }catch(err){
+    // 失敗時はローカルで続行
+    console.warn('GAS call failed, fallback to local:', err);
+  }
 
   setLoading(false);
   sfxResult();
@@ -732,7 +894,13 @@ async function handleFeed(rawInput){
   el.resultSub.textContent = `入力：${itemInfo.raw}`;
   el.resultEmoji.textContent = judged.art;
   setImgSafe(el.resultAnimalImg, a.img, a.name, a.emoji);
-  el.resultText.textContent = buildResultText(itemInfo, judged, reaction);
+
+  // AIが返せたらその一言を優先（表示はシンプル）
+  if(aiMessage){
+    el.resultText.textContent = `${aiMessage}\n\n（入力：${itemInfo.raw}）`;
+  }else{
+    el.resultText.textContent = buildResultText(itemInfo, judged, reaction);
+  }
 
   showScreen('result');
 }
@@ -771,6 +939,43 @@ function wireEvents(){
     }
   });
 
+
+  // GAS設定（開く/閉じる/保存/テスト）
+  if(el.btnApiOpen){
+    el.btnApiOpen.addEventListener('click', async () => {
+      ensureAudio();
+      await resumeAudio();
+      sfxClick();
+      setApiModal(true);
+    });
+  }
+  if(el.btnApiClose){
+    el.btnApiClose.addEventListener('click', async () => {
+      sfxClick();
+      setApiModal(false);
+    });
+  }
+  if(el.btnApiSave){
+    el.btnApiSave.addEventListener('click', async () => {
+      sfxClick();
+      setGasUrl(el.gasUrlInput ? el.gasUrlInput.value : '');
+      if(el.apiStatus) el.apiStatus.textContent = '保存しました';
+      showToast('保存しました');
+      setApiModal(false);
+    });
+  }
+  if(el.btnApiTest){
+    el.btnApiTest.addEventListener('click', async () => {
+      await gasHelloTest();
+    });
+  }
+  if(el.apiModal){
+    el.apiModal.addEventListener('click', (e) => {
+      // 背景クリックで閉じる
+      if(e.target === el.apiModal) setApiModal(false);
+    });
+  }
+
   el.btnResultBack.addEventListener('click', async () => {
     ensureAudio();
     await resumeAudio();
@@ -781,5 +986,10 @@ function wireEvents(){
 
 (function init(){
   wireEvents();
+  // GAS URL 初期値
+  updateApiBadge();
+  if(el.gasUrlInput){
+    el.gasUrlInput.value = localStorage.getItem(GAS_URL_STORAGE_KEY) || '';
+  }
   gotoSelect();
 })();

@@ -17,6 +17,12 @@
         <div class="titleScreen">
           <div class="titleTop">
             <div class="titleKicker">AIアニマル えさやり チャット</div>
+
+            <!-- 開発用：GAS設定 -->
+            <div class="apiTools" aria-label="API設定">
+              <span id="apiBadge" class="apiBadge" aria-hidden="true">API:OFF</span>
+              <button id="btnApiOpen" class="tinyBtn" type="button">API設定</button>
+            </div>
           </div>
 
           <div class="animalRowWide" role="group" aria-label="どうぶつをえらぶ">
@@ -129,6 +135,21 @@
           </div>
         </div>
       </div>
+
+      <!-- GAS設定モーダル（開発用） -->
+      <div id="apiModal" class="modal" aria-hidden="true">
+        <div class="modalCard" role="dialog" aria-label="GAS設定">
+          <div class="modalTitle">GAS Web App URL</div>
+          <input id="gasUrlInput" class="input" type="text" placeholder="https://script.google.com/macros/s/XXXXX/exec" />
+          <div class="modalActions">
+            <button id="btnApiTest" class="btn" type="button">接続テスト</button>
+            <button id="btnApiSave" class="btn primary" type="button">保存</button>
+            <button id="btnApiClose" class="btn" type="button">閉じる</button>
+          </div>
+          <div id="apiStatus" class="modalHint">※ URLは端末内に保存されます（localStorage）</div>
+        </div>
+      </div>
+
     </main>
 
     <footer class="appFooter">
