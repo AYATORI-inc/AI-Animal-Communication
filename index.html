@@ -7,37 +7,49 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 背景（imgフォルダから参照）※ラベル文字は非表示 -->
+  <!-- 背景（imgフォルダから参照）※ラベル文字は除外 -->
   <div class="bgScene" aria-hidden="true"></div>
 
-    <div class="appShell">
+  <div class="appShell">
     <main class="main">
-      <!-- 動物選択（トップページ） -->
+      <!-- タイトル（動物選択） -->
       <section id="screenSelect" class="screen isActive" aria-label="動物選択">
-        <div class="card selectCard">
-          <div class="animalRow" role="group" aria-label="どうぶつをえらぶ">
+        <div class="titleScreen">
+          <div class="titleTop">
+            <div class="titleKicker">AIアニマル えさやり チャット</div>
+          </div>
+
+          <div class="animalRowWide" role="group" aria-label="どうぶつをえらぶ">
             <button class="pickTile" type="button" data-animal="lion" aria-label="ライオンをえらぶ">
-              <div class="tileEmoji"><img class="tileImg" src="./img/raion.webp" alt="ライオン" /></div>
-              <div class="tileName">ライオン</div>
+              <div class="tileFrame">
+                <img class="tileImg" src="./img/raion.webp" alt="ライオン" />
+              </div>
+              <div class="tileTag">ライオン</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="penguin" aria-label="ペンギンをえらぶ">
-              <div class="tileEmoji"><img class="tileImg" src="./img/pengin.webp" alt="ペンギン" /></div>
-              <div class="tileName">ペンギン</div>
+              <div class="tileFrame">
+                <img class="tileImg" src="./img/pengin.webp" alt="ペンギン" />
+              </div>
+              <div class="tileTag">ペンギン</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="capybara" aria-label="カピバラをえらぶ">
-              <div class="tileEmoji"><img class="tileImg" src="./img/kapipara.webp" alt="カピバラ" /></div>
-              <div class="tileName">カピバラ</div>
+              <div class="tileFrame">
+                <img class="tileImg" src="./img/kapipara.webp" alt="カピバラ" />
+              </div>
+              <div class="tileTag">カピバラ</div>
             </button>
 
             <button class="pickTile" type="button" data-animal="panda" aria-label="パンダをえらぶ">
-              <div class="tileEmoji"><img class="tileImg" src="./img/panda.webp" alt="パンダ" /></div>
-              <div class="tileName">パンダ</div>
+              <div class="tileFrame">
+                <img class="tileImg" src="./img/panda.webp" alt="パンダ" />
+              </div>
+              <div class="tileTag">パンダ</div>
             </button>
           </div>
 
-          <div class="bottomPrompt" aria-label="案内">どの　どうぶつに　えさを　あげる？</div>
+          <div class="titlePrompt" aria-label="案内">どの　どうぶつに　えさを　あげる？</div>
         </div>
       </section>
 
@@ -72,7 +84,6 @@
             </div>
           </div>
         </div>
-
       </section>
 
       <!-- 結果（個別ページ） -->
@@ -118,7 +129,6 @@
           </div>
         </div>
       </div>
-
     </main>
 
     <footer class="appFooter">
