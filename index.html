@@ -17,13 +17,7 @@
         <div class="titleScreen">
           <div class="titleTop">
             <div class="titleKicker">AIアニマル えさやり チャット</div>
-
-            <!-- 開発用：GAS設定 -->
-            <div class="apiTools" aria-label="API設定">
-              <span id="apiBadge" class="apiBadge" aria-hidden="true">API:OFF</span>
-              <button id="btnApiOpen" class="tinyBtn" type="button">API設定</button>
-            </div>
-          </div>
+</div>
 
           <div class="animalRowWide" role="group" aria-label="どうぶつをえらぶ">
             <button class="pickTile" type="button" data-animal="lion" aria-label="ライオンをえらぶ">
@@ -111,7 +105,15 @@
               </div>
             </div>
 
-            <pre id="resultText" class="resultText">—</pre>
+            <div class="resultRight">
+              <pre id="resultText" class="resultText">—</pre>
+
+              <div id="resultImageWrap" class="resultImageWrap isHidden" aria-label="生成画像">
+                <div class="resultImageLabel">イラスト</div>
+                <div class="resultImageMeta"><span id="resultFoodBadge" class="badge">—</span><span id="resultMoodBadge" class="badge badgeMood">—</span></div>
+<img id="resultImage" class="resultImage" src="" alt="" role="button" tabindex="0" aria-label="生成画像を拡大表示" />
+              </div>
+            </div>
           </div>
 
           <div class="resultActions">
@@ -120,8 +122,11 @@
         </div>
       </section>
 
-      <!-- トースト -->
-      <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+      <!-- トースト（通常は短時間、エラー時は×で閉じるまで表示） -->
+      <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+        <span class="toastText" id="toastText"></span>
+        <button class="toastClose" id="toastClose" type="button" aria-label="閉じる">×</button>
+      </div>
 
       <!-- 待機演出：もぐもぐ（上下に揺れる） -->
       <div class="loadingOverlay" id="loadingOverlay" aria-hidden="true">
@@ -131,30 +136,24 @@
           </div>
           <div class="loadingText">
             <strong>もぐもぐ…</strong>
-            <p id="loadingLine">動物が味わっています…</p>
-          </div>
+            <p id="loadingLine">動物が味わっています…</p></div>
         </div>
       </div>
-
-      <!-- GAS設定モーダル（開発用） -->
-      <div id="apiModal" class="modal" aria-hidden="true">
-        <div class="modalCard" role="dialog" aria-label="GAS設定">
-          <div class="modalTitle">GAS Web App URL</div>
-          <input id="gasUrlInput" class="input" type="text" placeholder="https://script.google.com/macros/s/XXXXX/exec" />
-          <div class="modalActions">
-            <button id="btnApiTest" class="btn" type="button">接続テスト</button>
-            <button id="btnApiSave" class="btn primary" type="button">保存</button>
-            <button id="btnApiClose" class="btn" type="button">閉じる</button>
-          </div>
-          <div id="apiStatus" class="modalHint">※ URLは端末内に保存されます（localStorage）</div>
-        </div>
-      </div>
-
-    </main>
+</main>
 
     <footer class="appFooter">
       <span class="small muted">©AYATORI-INC</span>
     </footer>
+  </div>
+
+
+  <!-- 画像拡大モーダル -->
+  <div class="imgModal isHidden" id="imgModal" aria-hidden="true">
+    <div class="imgModalBackdrop" id="imgModalBackdrop" aria-hidden="true"></div>
+    <div class="imgModalPanel" role="dialog" aria-modal="true" aria-label="画像拡大表示">
+      <button class="imgModalClose" id="imgModalClose" type="button" aria-label="閉じる">×</button>
+      <img class="imgModalImg" id="imgModalImg" src="" alt="" />
+    </div>
   </div>
 
   <script src="script.js"></script>

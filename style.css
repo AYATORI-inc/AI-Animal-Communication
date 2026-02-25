@@ -1,7 +1,10 @@
 :root{
   --text: rgba(240,245,255,.98);
   --muted: rgba(240,245,255,.78);
+  --line: rgba(255,255,255,.18);
+  --shadow: 0 18px 55px rgba(0,0,0,.45);
   --shadow2: 0 28px 80px rgba(0,0,0,.55);
+  --radius: 22px;
   --radius2: 26px;
   --primary: rgba(55, 214, 153, 1);
   --primary2: rgba(37, 180, 125, 1);
@@ -14,13 +17,13 @@ body{
   margin:0;
   font-family: var(--font);
   color: var(--text);
-  overflow: hidden;
+  overflow: hidden; /* 画面スクロールはなし */
   background: #0b1224;
 }
 
 /* 背景画像（imgフォルダから参照）
    案A：暗幕＋彩度ダウン＋ぼかし
-   案B：背景の文字ラベルは除外（HTML/CSSにラベル要素なし） */
+   案B：背景の文字ラベルは除外（HTMLにも出さない） */
 .bgScene{
   position: fixed;
   inset: 0;
@@ -45,6 +48,32 @@ body{
     radial-gradient(1200px 620px at 50% 25%, rgba(0,0,0,0), rgba(0,0,0,.38));
 }
 
+/* 背景ラベルは使わない（念のため非表示） */
+.mapLabels{ display:none !important; }
+/* エリア名（薄い背景文字） */
+.mapLabels{
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+  opacity: .92;
+  mix-blend-mode: overlay;
+}
+.mapLabels .label{
+  position: absolute;
+  font-weight: 1000;
+  letter-spacing: .14em;
+  font-size: clamp(26px, 5.2vw, 62px);
+  color: rgba(255,255,255,.10);
+  text-shadow: 0 2px 14px rgba(0,0,0,.35);
+}
+.mapLabels .l1{ left: 8%; top: 14%; transform: rotate(-8deg); }
+.mapLabels .l2{ right: 10%; top: 18%; transform: rotate(6deg); }
+.mapLabels .l3{ left: 16%; bottom: 14%; transform: rotate(10deg); }
+.mapLabels .l4{ right: 13%; bottom: 16%; transform: rotate(-10deg); }
+.mapLabels .l5{ left: 44%; top: 8%; transform: rotate(-2deg); }
+
 .appShell{
   position: relative;
   z-index: 2;
@@ -55,10 +84,64 @@ body{
   padding: 18px;
 }
 
-.main{ position: relative; min-height: 0; }
+.appHeader{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius2);
+  border: 1px solid rgba(255,255,255,.16);
+  background: linear-gradient(180deg, rgba(10,14,28,.80), rgba(10,14,28,.38));
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 45px rgba(0,0,0,.35);
+}
+.brand{ display:flex; align-items:center; gap: 12px; min-width: 0; }
+.logo{
+  width: 44px; height: 44px;
+  border-radius: 16px;
+  display:grid; place-items:center;
+  border: 1px solid rgba(255,255,255,.22);
+  background: linear-gradient(135deg, rgba(0,0,0,.40), rgba(0,0,0,.18));
+  box-shadow: 0 16px 36px rgba(0,0,0,.45);
+  flex: 0 0 auto;
+}
+.brandText{ min-width:0; }
+.brandText h1{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+  color: rgba(233,238,255,.98);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brandText p{
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgba(233,238,255,.88);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.headerNote{
+  text-align:right;
+  font-size: 11px;
+  color: rgba(233,238,255,.86);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  line-height: 1.25;
+}
+.headerNote strong{ font-weight: 1000; }
+.headerNote span{ color: rgba(233,238,255,.78); }
 
-.screen{ display:none; height: 100%; width: 100%; }
-.screen.isActive{ display:block; }
+.main{
+  position: relative;
+  min-height: 0;
+}
+
 
 /* =========================
    タイトル画面（広々レイアウト）
@@ -72,7 +155,6 @@ body{
   gap: 26px;
   padding: 6px 6px 0;
 }
-
 .titleTop{
   display:flex;
   align-items:flex-start;
@@ -87,46 +169,19 @@ body{
   text-shadow: 0 2px 16px rgba(0,0,0,.65);
 }
 
-/* API ツール（開発用） */
-.apiTools{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-}
-.apiBadge{
-  font-size: 11px;
-  font-weight: 1000;
-  letter-spacing: .08em;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.18);
+/* API設定ボタン（右上） */
+.apiBtn{
+  border: 1px solid rgba(255,255,255,.22);
   background: rgba(0,0,0,.28);
-  color: rgba(240,245,255,.82);
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
-}
-.apiBadge.on{
-  border-color: rgba(55,214,153,.55);
-  background: rgba(55,214,153,.18);
-  color: rgba(240,255,245,.95);
-}
-
-.tinyBtn{
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(0,0,0,.18);
   color: rgba(240,245,255,.92);
-  border-radius: 999px;
-  padding: 8px 12px;
+  border-radius: 14px;
+  padding: 10px 12px;
   font-weight: 1000;
   letter-spacing: .08em;
   cursor: pointer;
   box-shadow: 0 16px 40px rgba(0,0,0,.25);
-  transition: transform .12s ease, border-color .12s ease;
 }
-.tinyBtn:hover{
-  transform: translateY(-1px);
-  border-color: rgba(255,255,255,.30);
-}
-.tinyBtn:active{ transform: translateY(0px) scale(.99); }
+.apiBtn:hover{ border-color: rgba(255,255,255,.32); }
 
 .animalRowWide{
   display:flex;
@@ -135,8 +190,6 @@ body{
   gap: 34px;
   padding: 0 10px;
 }
-
-/* 動物タイル（画像＋下ラベル） */
 .pickTile{
   width: clamp(160px, 18vw, 240px);
   border: 0;
@@ -163,14 +216,12 @@ body{
   padding: 12px;
   box-shadow: 0 18px 55px rgba(0,0,0,.40);
 }
-
 .tileImg{
   width: 100%;
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 18px 26px rgba(0,0,0,.25));
 }
-
 .tileTag{
   min-width: 64%;
   text-align: center;
@@ -183,8 +234,6 @@ body{
   letter-spacing: .12em;
   box-shadow: 0 16px 40px rgba(0,0,0,.28);
 }
-
-/* 下の大きい問いかけ */
 .titlePrompt{
   width: 100%;
   background: rgba(255,255,255,.96);
@@ -200,50 +249,130 @@ body{
 }
 
 /* =========================
-   モーダル（GAS設定）
+   結果画面：右側スタック（テキスト＋画像）
+   ========================= */
+.resultRight{
+  display:grid;
+  gap: 12px;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.resultImageWrap{
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.22);
+  box-shadow: 0 18px 55px rgba(0,0,0,.35);
+  padding: 12px;
+  display:grid;
+  gap: 10px;
+  place-items:center;
+}
+.resultImageWrap.isHidden{ display:none; }
+.resultImageLabel{
+  font-size: 12px;
+  color: rgba(240,245,255,.78);
+  letter-spacing: .14em;
+  font-weight: 1000;
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+.resultImageMeta{
+  width: 100%;
+  display:flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.18);
+  color: rgba(240,245,255,.92);
+  font-weight: 1000;
+  letter-spacing: .06em;
+  font-size: 12px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.22);
+}
+.badgeMood{
+  border-color: rgba(55,214,153,.35);
+  background: rgba(55,214,153,.14);
+}
+
+.resultImage{
+  width: min(420px, 100%);
+  height: auto;
+  max-height: 32vh; /* 画像が大きくてもはみ出さない */
+  object-fit: contain;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+}
+
+/* ローディング内の中止ボタン（控えめ） */
+
+/* =========================
+   API設定モーダル
    ========================= */
 .modal{
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 60;
   background: rgba(0,0,0,.55);
-  display: none;
+  display:none;
   place-items: center;
-  padding: 18px;
+  padding: 14px;
 }
-.modal.show{ display: grid; }
-
+.modal.show{ display:grid; }
 .modalCard{
   width: min(720px, 100%);
   border-radius: var(--radius2);
   border: 1px solid rgba(255,255,255,.16);
-  background: linear-gradient(180deg, rgba(10,14,28,.92), rgba(10,14,28,.66));
+  background: linear-gradient(180deg, rgba(10,14,28,.92), rgba(10,14,28,.70));
   box-shadow: var(--shadow2);
   backdrop-filter: blur(12px);
   padding: 16px;
-  display: grid;
+  display:grid;
   gap: 12px;
 }
 .modalTitle{
   font-weight: 1000;
-  letter-spacing: .08em;
+  letter-spacing: .10em;
   text-shadow: 0 2px 16px rgba(0,0,0,.65);
 }
-.modalActions{
-  display:flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.modalHint{
+.modalLabel{
   font-size: 12px;
   color: rgba(240,245,255,.78);
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  letter-spacing: .10em;
+  font-weight: 1000;
 }
-
-/* =========================
-   以降：ゲーム画面/結果画面（既存）
-   ========================= */
+.modalRow{
+  display:flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.modalNote{
+  margin: 0;
+  font-size: 12px;
+  color: rgba(240,245,255,.70);
+}
+.modalCheck{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(240,245,255,.88);
+}
+.modalCheck input{ transform: scale(1.1); }
+.screen{
+  display:none;
+  height: 100%;
+  width: 100%;
+}
+.screen.isActive{ display:grid; }
 
 .card{
   width: min(980px, 100%);
@@ -255,256 +384,543 @@ body{
   backdrop-filter: blur(12px);
 }
 
-/* えさ選択 */
-.gameCard{ padding: 18px; }
-.gameStack{
-  display:grid;
-  grid-template-rows: auto auto auto;
+/* 動物選択 */
+.selectCard{
+  padding: 18px;
+  display:flex;
+  flex-direction: column;
   gap: 14px;
+}
+.animalRow{
+  display:flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+.pickTile{
+  width: clamp(120px, 20vw, 170px);
+  padding: 10px 8px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: linear-gradient(180deg, rgba(0,0,0,.34), rgba(0,0,0,.18));
+  box-shadow: 0 14px 34px rgba(0,0,0,.35);
+  display:grid;
+  justify-items:center;
+  gap: 6px;
+  cursor:pointer;
+  transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+.pickTile:hover{
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.16));
+  border-color: rgba(255,255,255,.32);
+}
+.pickTile:active{ transform: translateY(0) scale(.99); }
+
+/* 画像の巨大化を強制的に防ぐ */
+#screenSelect .tileEmoji{
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 16px !important;
+  overflow:hidden !important;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
+  flex: 0 0 auto !important;
+}
+#screenSelect .tileImg{
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display:block !important;
+}
+#screenSelect .pickTile img{
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+/* v17: 動物名を白でくっきり */
+#screenSelect .tileName{
+  font-weight: 1000;
+  letter-spacing: .06em;
+  font-size: .92rem;
+  color: rgba(255,255,255,.98);
+  text-shadow: 0 2px 14px rgba(0,0,0,.78);
+}
+
+.bottomPrompt{
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(0,0,0,.28);
+  text-align:center;
+  font-weight: 1000;
+  letter-spacing: .06em;
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+
+/* ゲーム画面 */
+.layout{
+  height: 100%;
+  width: 100%;
+  display:grid;
+  grid-template-columns: 1.05fr 1.15fr;
+  gap: 12px;
+  align-items: stretch;
   min-height: 0;
 }
+.panel{
+  border-radius: var(--radius2);
+  border: 1px solid rgba(255,255,255,.18);
+  background: linear-gradient(180deg, rgba(10,14,28,.80), rgba(10,14,28,.58));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  min-height: 0;
+  overflow: hidden;
+  display:flex;
+  flex-direction: column;
+}
+.panelHeader{
+  padding: 12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.12));
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.panelTitle{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-weight: 1000;
+  letter-spacing: .05em;
+}
+.panelIcon{
+  width: 28px; height: 28px;
+  border-radius: 10px;
+  display:grid; place-items:center;
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.14);
+}
+.small{ font-size: 12px; }
+.muted{ color: var(--muted); }
+
+.animalCard{
+  padding: 14px;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.animalArt{
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border-radius: 24px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.20);
+}
+.animalArt img{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+}
+.animalMeta{ text-align:center; }
+.animalName{
+  font-size: 22px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+.animalPersona{
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(233,238,255,.90);
+  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+}
+
 .begBox{
+  padding: 12px;
   border-radius: 18px;
   border: 1px solid rgba(255,255,255,.16);
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
-  box-shadow: 0 16px 40px rgba(0,0,0,.35);
-  padding: 12px 12px;
+  background: rgba(0,0,0,.24);
 }
-.bigBeg{ padding: 14px 14px; }
 .begLabel{
   font-size: 12px;
-  color: rgba(240,245,255,.80);
-  letter-spacing: .14em;
   font-weight: 1000;
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  color: rgba(233,238,255,.84);
+  margin-bottom: 6px;
+  text-shadow: 0 2px 14px rgba(0,0,0,.65);
 }
 .begLine{
-  margin-top: 6px;
-  font-size: 16px;
   font-weight: 1000;
-  letter-spacing: .04em;
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  font-size: 14px;
+  line-height: 1.4;
+  text-shadow: 0 2px 14px rgba(0,0,0,.65);
 }
 
-.animalShow{
-  display:grid;
-  place-items:center;
-  padding: 6px 0 2px;
+.chatLog{
+  flex: 1;
+  padding: 12px 14px;
+  overflow:auto;
+  min-height: 0;
 }
-.animalShow img{
-  width: min(240px, 40vw);
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 18px 28px rgba(0,0,0,.55));
-}
-
-.foodArea{ display:grid; gap: 12px; }
-.quickRow{
+.msg{
   display:flex;
   gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
+  align-items:flex-start;
+  margin: 10px 0;
 }
-.freeRow{
+.msg.me{ flex-direction: row-reverse; }
+.avatar{
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  overflow:hidden;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.22);
   display:grid;
-  grid-template-columns: 1fr auto;
+  place-items:center;
+}
+.avatar img{ width:100%; height:100%; object-fit: cover; display:block; }
+.bubble{
+  max-width: 92%;
+  border-radius: 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.24);
+  box-shadow: 0 10px 22px rgba(0,0,0,.22);
+  white-space: pre-wrap;
+  line-height: 1.45;
+  font-weight: 900;
+  text-shadow: 0 2px 14px rgba(0,0,0,.65);
+}
+.msg.me .bubble{
+  background: rgba(55,214,153,.16);
+  border-color: rgba(55,214,153,.30);
+  text-shadow: none;
+}
+
+.controls{
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.10));
+  display:flex;
+  flex-direction: column;
   gap: 10px;
-  align-items: center;
+}
+.quickRow{ display:flex; flex-wrap: wrap; gap: 8px; }
+.freeRow{ display:flex; gap: 8px; }
+.input{
+  flex: 1;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  font-weight: 900;
+  outline: none;
+}
+.input::placeholder{ color: rgba(240,245,255,.62); }
+.input:focus{
+  border-color: rgba(55,214,153,.55);
+  box-shadow: 0 0 0 4px rgba(55,214,153,.18);
 }
 
 .btn{
+  padding: 11px 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255,255,255,.18);
-  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.02));
+  background: rgba(0,0,0,.22);
   color: var(--text);
-  border-radius: 18px;
-  padding: 12px 14px;
   font-weight: 1000;
-  letter-spacing: .08em;
-  cursor: pointer;
-  box-shadow: 0 16px 40px rgba(0,0,0,.30);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  cursor:pointer;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
 }
 .btn:hover{
   transform: translateY(-1px);
-  border-color: rgba(255,255,255,.30);
-  box-shadow: 0 20px 52px rgba(0,0,0,.40);
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.28);
 }
-.btn:active{ transform: translateY(0px) scale(.99); }
-
+.btn:active{ transform: translateY(0) scale(.99); }
 .btn.primary{
-  border-color: rgba(55, 214, 153, .55);
-  background: linear-gradient(180deg, rgba(55, 214, 153, .95), rgba(37, 180, 125, .92));
-  color: rgba(7,16,20,.96);
-  box-shadow: 0 18px 45px rgba(0,0,0,.35);
+  background: rgba(55,214,153,.92);
+  border-color: rgba(55,214,153,1);
+  color: rgba(0,0,0,.92);
 }
-.btn.primary:hover{ box-shadow: 0 22px 62px rgba(0,0,0,.45); }
-
-.input{
-  width: 100%;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(0,0,0,.22);
-  color: var(--text);
-  padding: 12px 14px;
-  font-size: 14px;
-  outline: none;
-  box-shadow: 0 16px 40px rgba(0,0,0,.25);
-}
-.input::placeholder{ color: rgba(240,245,255,.55); }
+.btn.primary:hover{ background: rgba(37,180,125,.95); }
+.btn.small{ padding: 8px 10px; border-radius: 12px; font-size: 12px; }
 
 /* 結果 */
-.resultCard{ padding: 18px; display:grid; gap: 14px; }
-.resultTop{
+.resultCard{
+  padding: 18px;
   display:flex;
-  align-items:center;
+  flex-direction: column;
   gap: 12px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-  padding: 12px 12px;
+  background: linear-gradient(180deg, rgba(10,14,28,.90), rgba(10,14,28,.70));
+  /* 画像が入っても画面外に出ないようにする */
+  max-height: calc(100svh - 140px);
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
 }
+.resultTop{ display:flex; align-items:center; gap: 10px; }
 .resultIcon{
-  width: 44px; height: 44px;
-  border-radius: 16px;
-  display:grid;
-  place-items:center;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(0,0,0,.22);
-  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  width: 34px; height: 34px;
+  border-radius: 12px;
+  display:grid; place-items:center;
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.14);
 }
-.resultTitle{ font-weight: 1000; letter-spacing: .10em; text-shadow: 0 2px 16px rgba(0,0,0,.65); }
+.resultTitle{ font-weight: 1000; letter-spacing: .08em; font-size: 16px; text-shadow: 0 2px 16px rgba(0,0,0,.65); }
 .resultSub{
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 12px;
-  color: rgba(240,245,255,.78);
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
+  color: rgba(233,238,255,.92);
+  text-shadow: 0 2px 16px rgba(0,0,0,.70);
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 78vw;
 }
-
 .resultGrid{
   display:grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: 12px;
+  align-items: start;
+  /* resultCard内で伸び縮みして、はみ出しを防ぐ */
+  flex: 1 1 auto;
   min-height: 0;
 }
-.resultAnimal{
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.14);
+.resultAnimal{ display:flex; flex-direction: column; align-items:center; gap: 10px; }
+.resultEmoji{
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.18);
   background: rgba(0,0,0,.22);
-  box-shadow: 0 18px 55px rgba(0,0,0,.35);
-  padding: 12px;
   display:grid;
-  gap: 10px;
   place-items:center;
+  font-size: 34px;
 }
-.resultEmoji{ font-size: 22px; opacity: .95; }
-.resultAnimalPic img{
-  width: 220px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 18px 28px rgba(0,0,0,.55));
-}
-.resultText{
-  margin:0;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.14);
+.resultAnimalPic{
+  width: 110px;
+  height: 110px;
+  border-radius: 26px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.18);
   background: rgba(0,0,0,.22);
-  box-shadow: 0 18px 55px rgba(0,0,0,.35);
-  padding: 14px;
-  min-height: 0;
-  overflow:auto;
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.55;
 }
-.resultActions{ display:flex; justify-content: flex-end; }
+.resultAnimalPic img{ width:100%; height:100%; object-fit: cover; display:block; }
+.resultText{
+  margin: 0;
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.28);
+  box-shadow: 0 10px 22px rgba(0,0,0,.22);
+  white-space: pre-wrap;
+  font-weight: 900;
+  line-height: 1.45;
+  text-shadow: 0 2px 14px rgba(0,0,0,.65);
+  /* 画像が増えてもテキスト側が縮む＆スクロールできるように */
+  min-height: 0;
+  overflow: auto;
+}
+.resultActions{ display:flex; justify-content:flex-end; }
 
 .toast{
   position: fixed;
   left: 50%;
-  bottom: 72px;
+  bottom: 18px;
   transform: translateX(-50%);
-  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(980px, calc(100% - 24px));
+  background: rgba(0,0,0,.72);
+  border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.96);
   padding: 10px 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.55);
-  box-shadow: 0 18px 55px rgba(0,0,0,.40);
+  border-radius: 18px;
+  box-shadow: 0 16px 28px rgba(0,0,0,.28);
   opacity: 0;
-  pointer-events: none;
+  pointer-events:none;
   transition: opacity .18s ease, transform .18s ease;
+  z-index: 50;
   font-weight: 1000;
-  letter-spacing: .06em;
 }
-.toast.show{
-  opacity: 1;
-  transform: translateX(-50%) translateY(-2px);
+.toast.show{ opacity: 1; transform: translateX(-50%) translateY(-2px); pointer-events:auto; }
+
+.toastText{
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
+.toastClose{
+  display: none; /* 通常は非表示（エラー時だけ表示） */
+  border: 0;
+  background: transparent;
+  color: rgba(255, 70, 70, 1);
+  font-size: 20px;
+  font-weight: 1000;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.toastClose:hover{ background: rgba(255,70,70,.15); }
+
+.toast.isError{
+  border-color: rgba(255, 70, 70, .55);
+  box-shadow: 0 18px 40px rgba(0,0,0,.38);
+}
+.toast.isError .toastClose{ display: inline-flex; }
+
+/* 待機演出 */
 .loadingOverlay{
   position: fixed;
   inset: 0;
-  z-index: 40;
-  background: rgba(0,0,0,.45);
   display:none;
-  place-items:center;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  background: rgba(0,0,0,.32);
+  backdrop-filter: blur(4px);
+  z-index: 60;
 }
-.loadingOverlay.show{ display:grid; }
+.loadingOverlay.show{ display:flex; }
 .loadingCard{
   width: min(520px, calc(100% - 28px));
-  border-radius: var(--radius2);
-  border: 1px solid rgba(255,255,255,.16);
-  background: linear-gradient(180deg, rgba(10,14,28,.90), rgba(10,14,28,.64));
-  box-shadow: var(--shadow2);
-  backdrop-filter: blur(12px);
   padding: 16px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(10,14,28,.90), rgba(10,14,28,.74));
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 18px 50px rgba(0,0,0,.40);
   display:flex;
   align-items:center;
   gap: 14px;
 }
-.loadingAnimal img{
-  width: 92px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 18px 28px rgba(0,0,0,.55));
+.loadingAnimal{
+  width: 86px;
+  height: 86px;
+  border-radius: 22px;
+  overflow:hidden;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.22);
 }
-.loadingText strong{
-  display:block;
-  font-weight: 1000;
-  letter-spacing: .08em;
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
-}
-.loadingText p{
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: rgba(240,245,255,.78);
-  text-shadow: 0 2px 16px rgba(0,0,0,.65);
-}
+.loadingAnimal img{ width:100%; height:100%; object-fit: cover; display:block; }
+.loadingText strong{ font-weight: 1000; }
+.loadingText p{ margin: 4px 0 0; font-weight: 900; color: rgba(233,238,255,.92); }
 
-@keyframes bob{
-  0%, 100%{ transform: translateY(0); }
+@keyframes bobY{
+  0%{ transform: translateY(0); }
   50%{ transform: translateY(-10px); }
+  100%{ transform: translateY(0); }
 }
-.bob{ animation: bob .9s ease-in-out infinite; }
-
-.appFooter{
-  display:flex;
-  justify-content: center;
-  align-items:center;
-  padding: 10px 8px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.18);
-  backdrop-filter: blur(8px);
-}
-.small{ font-size: 11px; }
-.muted{ color: var(--muted); }
+.bob{ animation: bobY .55s ease-in-out infinite; }
 
 .srOnly{
-  position:absolute;
+  position:absolute !important;
   width:1px; height:1px;
   padding:0; margin:-1px;
   overflow:hidden; clip: rect(0,0,0,0);
   white-space:nowrap; border:0;
+}
+
+.appFooter{ text-align:center; padding: 2px 0 0; }
+
+/* v20: 動物画像は背景透過を想定し、枠（ボーダー/背景/影）を撤去 */
+#screenSelect .tileEmoji{
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+#screenSelect .tileImg{
+  object-fit: contain !important; /* 透過PNGでも形を崩さない */
+}
+
+/* ゲーム中/結果/待機/チャットの動物画像コンテナも枠を撤去 */
+.animalArt, .resultAnimalPic, .loadingAnimal, .avatar{
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+.animalArt img, .resultAnimalPic img, .loadingAnimal img, .avatar img{
+  object-fit: contain !important;
+}
+
+
+
+/* v22: えさ選択画面を最小UIに */
+.gameCard{
+  padding: 18px;
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+.gameStack{
+  display:flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+.bigBeg{
+  width: min(760px, 100%);
+}
+.animalShow{
+  width: 180px;
+  height: 180px;
+  display:grid;
+  place-items:center;
+}
+.animalShow img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display:block;
+  filter: drop-shadow(0 18px 28px rgba(0,0,0,.35));
+}
+
+/* えさエリア */
+.foodArea{
+  width: min(760px, 100%);
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+.foodArea .quickRow{
+  justify-content: center;
+}
+.foodArea .freeRow{
+  flex-wrap: wrap;
+}
+.foodArea .freeRow .input{
+  min-width: 220px;
+}
+
+
+@media (max-width: 980px){
+  .layout{ grid-template-columns: 1fr; }
+  .resultGrid{ grid-template-columns: 1fr; }
+  .resultActions{ justify-content: stretch; }
+  .resultActions .btn{ width: 100%; }
+  .headerNote{ display:none; }
+  .animalRow{ gap: 10px; flex-wrap: wrap; }
+}
+@media (max-width: 520px){
+  #screenSelect .tileEmoji{ width: 50px !important; height: 50px !important; border-radius: 15px !important; }
+  #screenSelect .tileName{ font-size: .88rem; }
 }
 
 @media (max-width: 980px){
@@ -516,9 +932,68 @@ body{
   .pickTile{ width: clamp(150px, 38vw, 240px); }
 }
 
-@media (max-width: 720px){
-  .resultGrid{ grid-template-columns: 1fr; }
-  .resultActions{ justify-content: center; }
-  .freeRow{ grid-template-columns: 1fr; }
-  .btn.primary{ width: 100%; }
+
+
+/* 画像拡大（ライトボックス） */
+.resultImage{
+  cursor: zoom-in;
+}
+
+.imgModal{
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+.imgModal.isHidden{ display:none; }
+
+.imgModalBackdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.70);
+}
+
+.imgModalPanel{
+  position: relative;
+  z-index: 1;
+  width: min(980px, 96vw);
+  max-height: 92vh;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(10,14,28,.82);
+  box-shadow: 0 28px 80px rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.imgModalClose{
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(0,0,0,.25);
+  color: rgba(255,70,70,1);
+  font-size: 22px;
+  font-weight: 1000;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.imgModalClose:hover{ background: rgba(255,70,70,.12); }
+
+.imgModalImg{
+  width: 100%;
+  max-width: 100%;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.15);
 }
