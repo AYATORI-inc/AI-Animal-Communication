@@ -201,7 +201,7 @@ body{
   cursor: pointer;
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 16px;
   transition: transform .14s ease;
   transform: translateY(0);
 }
@@ -229,6 +229,8 @@ body{
 .pickTile:focus-visible .tileTag{
   border-color: rgba(55, 214, 153, .75);
   box-shadow: 0 0 0 4px rgba(55, 214, 153, .18), 0 16px 40px rgba(0,0,0,.28);
+  margin-top: 6px;
+
 }
 
 .tileFrame{
@@ -938,6 +940,17 @@ body{
 }
 
 
+
+
+/* 低い画面での被り対策：動物を少し上に、質問バーを少し薄く */
+@media (max-height: 720px){
+  .animalRowWide{ padding-bottom: 34px; }
+  .titlePrompt{ padding: 14px 16px; font-size: clamp(20px, 3.0vw, 34px); }
+}
+@media (max-height: 620px){
+  .animalRowWide{ padding-bottom: 42px; }
+  .titlePrompt{ padding: 12px 14px; font-size: clamp(18px, 2.8vw, 30px); }
+}
 @media (max-width: 980px){
   .layout{ grid-template-columns: 1fr; }
   .resultGrid{ grid-template-columns: 1fr; }
