@@ -171,18 +171,37 @@ function buildUnifiedPrompt(animalId, animalName, food, mood){
 
 function buildCommentOnlyPrompt(animalId, animalName, food, mood){
   const first = (PERSONA[animalId] && PERSONA[animalId].first) ? PERSONA[animalId].first : 'わたし';
-  return [
-    `あなたは子ども向けゲームの${animalName}です。`,
-    `一人称は「${first}」。必ず一人称で話す。`,
-    `「${food}」を食べて${mood}な感想を、日本語で1文だけ（18〜32文字）で返して。`,
-    `第三者視点（${animalName}は〜）・説明・豆知識・英語・コード・プロンプトの話は禁止。`
-  ].join('\n');
+  // 感想「だけ」を返させる（設定文・条件文を返させない）
+  return `（${animalName}の${first}）「${food}」を食べた${mood}な感想を、日本語で1文だけ。感想の文だけ出力。`;
 }
 
 
+
+function isMetaInstructionJapanese(msg){
+  if(!msg) return false;
+  const t = String(msg).trim();
+  const s = t.replace(/\s+/g,'');
+  // 典型的な「条件・設定文」の復唱
+  if(s.includes('あなたは') && (s.includes('一人称') || s.includes('必ず') || s.includes('返して') || s.includes('禁止') || s.includes('日本語で') || s.includes('文だけ') || s.includes('第三者視点') || s.includes('条件') || s.includes('出力'))){
+    return true;
+  }
+  // 「一人称は『ぼく』」のような設定だけが返ってくる
+  if(s.startsWith('あなたは') && s.includes('一人称') && (s.includes('。') || s.includes('！') || s.includes('!'))){
+    return true;
+  }
+  // 命令形が強い
+  const cmdHints = ['〜して','してください','してね','返して','出して','出力','禁止','条件','次の'];
+  if(cmdHints.some(w => s.includes(w.replace('〜','')) ) && (s.includes('日本語') || s.includes('一文') || s.includes('1文') || s.includes('一人称'))){
+    return true;
+  }
+  return false;
+}
 function isPromptEchoText(msg){
   if(!msg) return false;
   const t = String(msg).trim();
+
+  // 設定文・条件文（メタ指示）の復唱はプロンプトエコー扱い
+  if(isMetaInstructionJapanese(t)) return true;
 
   // 自分が送ったJSONやプロンプトがそのまま返ってきたパターン
   if(t.startsWith('{') && t.endsWith('}')){
@@ -281,6 +300,9 @@ function deepFindHumanText(obj){
       for(const it of v) visit(it);
     }else{
       for(const k of Object.keys(v)){
+        const key = String(k).toLowerCase();
+        if(key.includes('prompt')) continue; // imagePrompt/commentPrompt等
+        if(key === 'rawresponse') continue;  // 巨大で誤抽出しやすい
         visit(v[k]);
       }
     }
@@ -295,7 +317,8 @@ function deepFindHumanText(obj){
   // コードっぽいのを除外して、短い順で
   const cleaned = pool
     .map(sanitizeMessage)
-    .filter(s => s && s.length <= 220);
+    .filter(s => s && s.length <= 220)
+    .filter(s => !isPromptEchoText(s) && !isMetaInstructionJapanese(s));
 
   return cleaned[0] || '';
 }

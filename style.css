@@ -18,7 +18,7 @@ body{
   font-family: var(--font);
   color: var(--text);
   overflow: hidden; /* 画面スクロールはなし */
-  background: #101a36;
+  background: #0b1224;
 }
 
 /* 背景画像（imgフォルダから参照）
@@ -34,10 +34,12 @@ body{
 .bgScene::before{
   content:"";
   position:absolute;
-  inset: -12px; /* blurの端欠け対策 */
+  inset: 0;
   background: url("./img/background.jpg") center / cover no-repeat;
-  filter: blur(3px) saturate(.85) brightness(.92) contrast(1.02);
-  transform: scale(1.06);
+
+  /* ぼかし無し：見やすさ調整のみ */
+  filter: saturate(.95) brightness(.98) contrast(1.02);
+  transform: none;
 }
 .bgScene::after{
   content:"";
