@@ -1340,11 +1340,22 @@ function wireEvents(){
   }
 
   el.pickButtons.forEach(btn => {
-    btn.addEventListener('click', async () => {
+    const go = async () => {
       ensureAudio();
       await resumeAudio();
       sfxClick();
       startGameWithAnimal(btn.getAttribute('data-animal'));
+    };
+
+    btn.addEventListener('click', go);
+
+    // キーボード操作（Enter / Space）にも対応
+    btn.addEventListener('keydown', (ev) => {
+      const k = ev.key;
+      if(k === 'Enter' || k === ' '){
+        ev.preventDefault();
+        go();
+      }
     });
   });
 
