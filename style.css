@@ -18,7 +18,7 @@ body{
   font-family: var(--font);
   color: var(--text);
   overflow: hidden; /* 画面スクロールはなし */
-  background: #0b1224;
+  background: #101a36;
 }
 
 /* 背景画像（imgフォルダから参照）
@@ -36,7 +36,7 @@ body{
   position:absolute;
   inset: -12px; /* blurの端欠け対策 */
   background: url("./img/background.jpg") center / cover no-repeat;
-  filter: blur(3px) saturate(.7) brightness(.75) contrast(1.05);
+  filter: blur(3px) saturate(.85) brightness(.92) contrast(1.02);
   transform: scale(1.06);
 }
 .bgScene::after{
@@ -44,8 +44,8 @@ body{
   position:absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.68)),
-    radial-gradient(1200px 620px at 50% 25%, rgba(0,0,0,0), rgba(0,0,0,.38));
+    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.42)),
+    radial-gradient(1200px 620px at 50% 25%, rgba(0,0,0,0), rgba(0,0,0,.22));
 }
 
 /* 背景ラベルは使わない（念のため非表示） */
@@ -424,7 +424,7 @@ body{
   gap: 12px;
   flex-wrap: nowrap;
 }
-.pickTile{
+.selectCard .pickTile{
   width: clamp(120px, 20vw, 170px);
   padding: 10px 8px;
   border-radius: 22px;
@@ -1023,3 +1023,14 @@ body{
   border: 1px solid rgba(255,255,255,.14);
   background: rgba(0,0,0,.15);
 }
+
+
+/* === タイトル画面：動物タイルの“薄い枠”を完全に無効化（画像透過前提） === */
+.titleScreen .pickTile{
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
