@@ -1208,7 +1208,7 @@ async function handleFeed(rawInput){
     '動物がくんくんにおいをかいでいる…',
     'もぐもぐ…味をたしかめ中…',
     'しばらく観察している…',
-    'AIがイラストを描いている…'
+    'イラストを準備中…'
   ]));
 
   let gasData = null;
