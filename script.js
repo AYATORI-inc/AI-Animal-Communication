@@ -130,7 +130,7 @@ function getFirstVariants(animalId){
     lion: ['オレ','俺'],
     penguin: ['ボク','僕'],
     capybara: ['ぼく','僕'],
-    panda: ['パンダ','ぼく','ボク','僕']
+    panda: ['ぼく','ボク','僕']
   };
   return map[animalId] || [];
 }
@@ -179,9 +179,41 @@ function buildCommentOnlyPrompt(animalId, animalName, food, mood){
   ].join('\n');
 }
 
+
+function isPromptEchoText(msg){
+  if(!msg) return false;
+  const t = String(msg).trim();
+
+  // 自分が送ったJSONやプロンプトがそのまま返ってきたパターン
+  if(t.startsWith('{') && t.endsWith('}')){
+    const low = t.toLowerCase();
+    if(low.includes('"mode"') && (low.includes('"feed"') || low.includes('feed')) &&
+       (low.includes('animal') || low.includes('food') || low.includes('wantimage'))){
+      return true;
+    }
+  }
+  // こちらの統合プロンプトの見出しが残っている
+  if(t.includes('【画像】') || t.includes('【コメント】')) return true;
+
+  // prompt系フィールドや説明文が混ざっている
+  const low = t.toLowerCase();
+  if(low.includes('imageprompt') || low.includes('commentprompt') || low.includes('textprompt')) return true;
+
+  // 「プロンプトについて説明しているだけ」の文章（第三者説明・メタ文）
+  const metaHints = [
+    'the prompt', 'prompt for the image', 'here is an image',
+    'this image', 'proportions are', 'background is a single color'
+  ];
+  if(metaHints.some(w => low.includes(w))) return true;
+
+  return false;
+}
+
 function isBadCommentText(msg, animalId){
   const t = sanitizeMessage(msg);
   if(!t) return true;
+  // プロンプトのエコー（送信内容がそのまま返る等）はコメントとして不適切
+  if(isPromptEchoText(t)) return true;
   // 日本語が含まれないコメントはNG（ゲーム向け）
   if(!/[ぁ-んァ-ヶ一-龠]/.test(t)) return true;
 

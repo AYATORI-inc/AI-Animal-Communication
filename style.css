@@ -31,17 +31,15 @@ body{
   pointer-events: none;
   overflow: hidden;
 }
-/* 画像（ぼかし無し） */
 .bgScene::before{
   content:"";
   position:absolute;
-  inset: 0;
+  inset: -12px; /* blurの端欠け対策 */
   background: url("./img/background.jpg") center / cover no-repeat;
-
-  /* blurを削除（見やすさ調整のみ） */
-  filter: saturate(.90) brightness(.95) contrast(1.02);
-  transform: none;
-}.bgScene::after{
+  filter: blur(3px) saturate(.85) brightness(.92) contrast(1.02);
+  transform: scale(1.06);
+}
+.bgScene::after{
   content:"";
   position:absolute;
   inset: 0;
