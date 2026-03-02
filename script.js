@@ -157,22 +157,29 @@ function normalizeCommentText(msg){
   return t;
 }
 
-function buildUnifiedPrompt(animalId, animalName, food, mood){
+function buildUnifiedPrompt(animalId, animalName, food, mood, foodVisualJa){
   const first = (PERSONA[animalId] && PERSONA[animalId].first) ? PERSONA[animalId].first : 'わたし';
+  const fv = foodVisualJa ? String(foodVisualJa) : food;
+
   return [
-    `【画像】かわいいゲーム用イラスト。${animalName}が「${food}」を食べて${mood}。`,
-    `食べ物（${food}）が必ず見える。口元/手元に食べ物。動物だけの単体絵は禁止。`,
-    '背景は単色。文字/ロゴ/説明文は入れない。正方形1:1。',
-    `【コメント】あなたは${animalName}。一人称は「${first}」。必ず一人称で話す。`,
-    `「${food}」を食べた直後の感想を日本語で1文だけ（18〜32文字）。`,
-    `第三者視点（${animalName}は〜）や説明、英語、コード、プロンプトの話は禁止。`
+    // コメントは先頭に（GASが先頭だけ使う場合の保険）
+    `【コメント】あなたは${animalName}。一人称は「${first}」。日本語で1文だけ（18〜32文字）。`,
+    `「${food}」を食べた直後の感想。表情は「${mood}」。説明・第三者視点・英語・コード・プロンプト復唱は禁止。`,
+    '',
+    // 画像（えさを必ず描かせる）
+    '【画像】Square 1:1 / cute flat game illustration / medium close-up / centered.',
+    `${animalName}が「${food}」（${fv}）を口元か手元で食べている。食べ物は前景で大きく、必ず見える。`,
+    `表情は${mood}（わかりやすく誇張）。背景は単色。風景・広い背景は禁止。`,
+    '文字/ロゴ/説明文は入れない。動物だけの単体絵は禁止。食べ物を省略しない。'
   ].join('\n');
 }
 
-function buildCommentOnlyPrompt(animalId, animalName, food, mood){
+
+function buildCommentOnlyPrompt(animalId, animalName, food, mood, bucket){
   const first = (PERSONA[animalId] && PERSONA[animalId].first) ? PERSONA[animalId].first : 'わたし';
   // 感想「だけ」を返させる（設定文・条件文を返させない）
-  return `（${animalName}の${first}）「${food}」を食べた${mood}な感想を、日本語で1文だけ。感想の文だけ出力。`;
+  const b = bucket ? `（好み：${bucket}）` : '';
+  return `（${animalName}の${first}）「${food}」を食べた${mood}な感想を、日本語で1文だけ。感想の文だけ出力。${b}`;
 }
 
 
@@ -669,12 +676,66 @@ const PERSONA = {
 // 動物データ（好き嫌いは内部用・画面には出さない）
 // ================================
 const ANIMALS = [
-  { id:'lion',    name:'ライオン',   img:'./img/raion.webp',    emoji:'🦁', likes:['肉'],        dislikes:['草'] },
+  // ※ライオン：肉が好き、草＆野菜が苦手
+  { id:'lion',    name:'ライオン',   img:'./img/raion.webp',    emoji:'🦁', likes:['肉'],        dislikes:['草','野菜'] },
   { id:'penguin', name:'ペンギン',   img:'./img/pengin.webp',   emoji:'🐧', likes:['魚'],        dislikes:['肉'] },
-  { id:'capybara',name:'カピバラ',   img:'./img/kapipara.webp', emoji:'🦫', likes:['草','野菜'], dislikes:['肉'] },
-  { id:'panda',   name:'パンダ',     img:'./img/panda.webp',    emoji:'🐼', likes:['草'],        dislikes:['魚'] }
+  // ※カピバラ：草＆野菜が好き、肉＆魚は苦手
+  { id:'capybara',name:'カピバラ',   img:'./img/kapipara.webp', emoji:'🦫', likes:['草','野菜'], dislikes:['肉','魚'] },
+  // ※パンダ：竹(草)が好き、肉＆魚は苦手
+  { id:'panda',   name:'パンダ',     img:'./img/panda.webp',    emoji:'🐼', likes:['草'],        dislikes:['肉','魚'] }
 ];
 const QUICK_OPTIONS = ['肉','魚','草','野菜'];
+
+// ================================
+// Neutral reactions（好きでも嫌いでもない = 平凡）
+// ================================
+const NEUTRAL_REACT = {
+  lion: ['ふーん。', '…普通だな。', 'まあ、食べられる。'],
+  penguin: ['うん。', 'ふつうだね。', 'まあまあ。'],
+  capybara: ['ふつう…', 'まあ…', '悪くない…'],
+  panda: ['ふつう。', 'うん。', 'まあまあ。'],
+};
+
+// ================================
+// 画像用：えさを「描ける具体物」に寄せる（A案）
+// ================================
+function foodVisual(itemInfo){
+  const t = String(itemInfo.raw || '').replace(/[\s　]+/g,'').toLowerCase();
+
+  const table = [
+    {keys:['にんじん','人参'], ja:'にんじん', en:'a carrot'},
+    {keys:['キャベツ'], ja:'キャベツ', en:'a cabbage'},
+    {keys:['レタス'], ja:'レタス', en:'lettuce'},
+    {keys:['トマト'], ja:'トマト', en:'a tomato'},
+    {keys:['きゅうり'], ja:'きゅうり', en:'a cucumber'},
+    {keys:['竹','たけ','笹','ささ','バンブー'], ja:'竹の葉', en:'bamboo leaves'},
+    {keys:['ステーキ'], ja:'ステーキ', en:'a steak'},
+    {keys:['ハンバーグ'], ja:'ハンバーグ', en:'a hamburger steak'},
+    {keys:['さかな','魚'], ja:'魚の切り身', en:'a fish fillet'},
+    {keys:['サーモン'], ja:'サーモン', en:'salmon'},
+    {keys:['ジャーキー'], ja:'ジャーキー', en:'jerky'},
+  ];
+
+  for(const row of table){
+    if(row.keys.some(k => t.includes(String(k).toLowerCase().replace(/[\s　]+/g,'')))) return { ja:row.ja, en:row.en };
+  }
+
+  if(itemInfo.category === '肉') return { ja:'ステーキ', en:'a steak' };
+  if(itemInfo.category === '魚') return { ja:'魚の切り身', en:'a fish fillet' };
+  if(itemInfo.category === '草') return { ja:'青い草の束', en:'a bundle of fresh green grass' };
+  if(itemInfo.category === '野菜') return { ja:'野菜（小皿）', en:'a small plate of vegetables' };
+
+  return { ja:`小皿にのった「${itemInfo.raw}」`, en:`a small plate of "${itemInfo.raw}"` };
+}
+
+function moodFromBucket(bucket){
+  if(bucket === 'like') return { ja:'うれしそう', en:'delighted' };
+  if(bucket === 'dislike') return { ja:'イヤそう', en:'disgusted' };
+  return { ja:'ふつうの顔', en:'neutral expression' };
+}
+
+
+
 
 // ================================
 // DOM
@@ -1010,23 +1071,15 @@ function scoreFeeding(animal, itemInfo){
 // ================================
 // Persona reaction (①：状況で口調が変わる)
 // ================================
-function pickPersonaBucket(animal, itemInfo, judged){
+function pickPersonaBucket(animal, itemInfo){
+  // 好き嫌いは「結果(outcome)」より優先して固定（逆転防止）
   const likes = animal.likes.includes(itemInfo.category);
   const dislikes = animal.dislikes.includes(itemInfo.category);
-
-  if(judged.outcome === 'だいせいこう' || judged.outcome === 'せいこう'){
-    if(dislikes) return 'unknown';
-    return likes ? 'like' : 'unknown';
-  }
-  if(judged.outcome === 'しっぱい'){
-    if(likes) return 'unknown';
-    return dislikes ? 'dislike' : 'dislike';
-  }
-
   if(likes) return 'like';
   if(dislikes) return 'dislike';
-  return 'unknown';
+  return 'neutral'; // ←好きでも嫌いでもない = 平凡
 }
+
 
 function applyToneRules(animalId, base, bucket, itemInfo, judged){
   const p = PERSONA[animalId];
@@ -1073,10 +1126,16 @@ function applyToneRules(animalId, base, bucket, itemInfo, judged){
 
 function generateLocalReaction(animal, itemInfo, judged){
   const persona = PERSONA[animal.id];
-  const bucket = pickPersonaBucket(animal, itemInfo, judged);
+  const bucket = pickPersonaBucket(animal, itemInfo);
 
-  let base = persona ? pick(persona.react[bucket] || persona.react.unknown) : 'もぐもぐ…';
-  base = applyToneRules(animal.id, base, bucket, itemInfo, judged);
+  // ① 好き嫌いがない食べ物は「平凡」な反応（大げさにしない）
+  let base = 'もぐもぐ…';
+  if(bucket === 'neutral'){
+    base = pick((NEUTRAL_REACT[animal.id] || ['ふーん。','…普通。','まあまあ。']));
+  }else{
+    base = persona ? pick(persona.react[bucket] || persona.react.unknown) : 'もぐもぐ…';
+    base = applyToneRules(animal.id, base, bucket, itemInfo, judged);
+  }
 
   const bodyTemplates = {
     'だいせいこう': [
@@ -1101,13 +1160,19 @@ function generateLocalReaction(animal, itemInfo, judged){
     ]
   };
 
+  const neutralBodies = [
+    `「${itemInfo.raw}」をもぐもぐ。`,
+    `「${itemInfo.raw}」を食べた。`,
+    `「${itemInfo.raw}」を一口。`,
+  ];
+
   const extra =
     (itemInfo.vibe === 'ファンタジー') ? '（なにか不思議なオーラが漂っている…）' :
     (itemInfo.vibe === 'ほっこり') ? '（やさしい匂いがする…）' :
     (itemInfo.vibe === 'スパイシー') ? '（鼻がツーン！）' :
     (itemInfo.vibe === 'ボリューム') ? '（量が多い…！）' : '';
 
-  const body = pick(bodyTemplates[judged.outcome]);
+  const body = (bucket === 'neutral') ? pick(neutralBodies) : pick(bodyTemplates[judged.outcome]);
   const text = `${base}\n${body}${extra ? `\n${extra}` : ''}`.trim();
 
   const commentator = pick([
@@ -1119,12 +1184,13 @@ function generateLocalReaction(animal, itemInfo, judged){
   return { text, commentator, bucket };
 }
 
+
 function buildResultText(itemInfo, judged, reaction){
   const base = {
     'だいせいこう': '超大成功！まんぞくそう！',
     'せいこう': '成功！いい感じに食べた！',
     'びみょう': 'うーん…ちょっと微妙。',
-    'しっぱい': '失敗…好みじゃなかったみたい。'
+    'しっぱい': '失敗…うまく食べられなかったみたい。'
   }[judged.outcome];
 
   return `${base}\n\n入力：${itemInfo.raw}\n分類：${itemInfo.category} / 雰囲気：${itemInfo.vibe}\n\n${reaction.text}\n\n${reaction.commentator}`;
@@ -1214,25 +1280,28 @@ async function handleFeed(rawInput){
   let gasData = null;
   try{
 
-    const like = (judged.outcome === 'だいせいこう' || judged.outcome === 'せいこう');
+    const bucket = reaction.bucket; // like / dislike / neutral
+const moodObj = moodFromBucket(bucket);
+const mood = moodObj.ja;
 
-const mood =
-  like ? 'うれしそう' :
-  (judged.outcome === 'しっぱい' ? 'イヤそう' : 'ちょっと微妙そう');
-
-// 画像生成が「動物だけ」になりがちな時のため、えさ＆リアクションを強く指示するプロンプトを同梱
+// 画像生成が「動物＋風景だけ」になりがちな時のため、えさ＆リアクションを強く固定
+const fv = foodVisual(itemInfo);
 const imagePrompt = [
-  `${a.name}が「${itemInfo.raw}」を食べて${mood}にリアクションしているシーン。`,
-  'かわいい、ゲーム用イラスト、背景は単色、文字やロゴなし。',
-  `食べ物（${itemInfo.raw}）が見えるように。口元や手元に食べ物。`,
-  '正方形（1:1）。'
+  'Square 1:1 / cute flat game illustration.',
+  `Medium close-up, centered: ${a.name} ${a.emoji}.`,
+  `MUST show the food clearly: ${fv.en} ("${itemInfo.raw}") large in the foreground, in the mouth or paws.`,
+  `Reaction: ${moodObj.en} (exaggerated, easy to read).`,
+  'Background: plain solid color. No wide landscape / no scenery.',
+  'No text, no logo. Do NOT omit the food.'
 ].join(' ');
 
 const first = (PERSONA[a.id] && PERSONA[a.id].first) ? PERSONA[a.id].first : 'わたし';
 
-const commentPrompt = `あなたは${a.name}。一人称は「${first}」。必ず一人称で話す。\n「${itemInfo.raw}」を食べた直後の感想を、日本語で1文だけ（18〜32文字）。\n第三者視点・説明・英語・コード・プロンプトの話は禁止。`;
-
-
+const commentPrompt =
+  `あなたは${a.name}。一人称は「${first}」。必ず一人称で話す。\n` +
+  `「${itemInfo.raw}」を食べた直後の感想を、日本語で1文だけ（18〜32文字）。\n` +
+  `（好み：${bucket} / 表情：${mood}）\n` +
+  '第三者視点・説明・英語・コード・プロンプトの話は禁止。';
 const payload = {
   mode: 'feed',
 
@@ -1252,7 +1321,10 @@ const payload = {
   vibe: itemInfo.vibe,
   outcome: judged.outcome,
   score: judged.score,
-  like,
+  like: (bucket === 'like'),
+  bucket,
+  mood,
+  foodVisual: fv.ja,
 
   // リアクションのヒント（画像/コメント生成に使えるように）
   mood,
@@ -1273,7 +1345,7 @@ const payload = {
 
 // ① まずは「生テキスト」を投げる（GASが e.postData.contents をそのままプロンプトにしている場合に効く）
 try{
-  const unified = buildUnifiedPrompt(a.id, a.name, itemInfo.raw, mood);
+  const unified = buildUnifiedPrompt(a.id, a.name, itemInfo.raw, mood, fv.ja);
   gasData = await callGasText(unified);
 
   // 画像が取れないなら従来のJSON方式へフォールバック
@@ -1288,7 +1360,7 @@ try{
 try{
   const msg0 = normalizeCommentText(extractMessage(gasData));
   if(isBadCommentText(msg0, a.id)){
-    const commentData = await callGasText(buildCommentOnlyPrompt(a.id, a.name, itemInfo.raw, mood));
+    const commentData = await callGasText(buildCommentOnlyPrompt(a.id, a.name, itemInfo.raw, mood, bucket));
     const msg1 = normalizeCommentText(extractMessage(commentData));
     if(!isBadCommentText(msg1, a.id)){
       // 表示用に上書き（GASの返却キー差異に強くする）
