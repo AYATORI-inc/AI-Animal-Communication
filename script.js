@@ -1200,13 +1200,21 @@ function buildResultText(itemInfo, judged, reaction){
 // Navigation
 // ================================
 function gotoSelect(){
-  setLoading(false);
-  stopBegLoop();
+  // 画面遷移前の後始末（生成画像モーダルやローディングが残ると操作不能になる）
+  try{ closeImageModal(); }catch(_){}
+  try{ setLoading(false); }catch(_){}
+  try{ hideToast(); }catch(_){}
+  try{ stopBegLoop(); }catch(_){}
+
   state.animal = null;
   state.locked = false;
-  el.freeInput.value = '';
-  setHeader('select');
-  showScreen('select');
+
+  try{ if(el.freeInput) el.freeInput.value = ''; }catch(_){}
+  try{ setHeader('select'); }catch(_){}
+  try{ showScreen('select'); }catch(_){}
+
+  // スクロール位置を戻す（スマホで結果画面がスクロールされていると戻れた感がないため）
+  try{ window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }catch(_){ try{ window.scrollTo(0,0); }catch(__){} }
 }
 
 function renderAnimal(){
@@ -1507,10 +1515,12 @@ function wireEvents(){
     }
   });
 
-  el.btnResultBack.addEventListener('click', async () => {
-    ensureAudio();
-    await resumeAudio();
-    sfxClick();
+  el.btnResultBack.addEventListener('click', (e) => {
+    if(e) e.preventDefault();
+    // 音が鳴らなくても戻れることを最優先
+    try{ ensureAudio(); }catch(_){}
+    try{ resumeAudio(); }catch(_){}
+    try{ sfxClick(); }catch(_){}
     gotoSelect();
   });
 }
