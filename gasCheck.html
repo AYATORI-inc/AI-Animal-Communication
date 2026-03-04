@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAS接続テストページ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-area {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            min-height: 200px;
+        }
+
+        .result-area h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .result-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .result-content {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .image-display {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .image-display img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .url-input {
+            margin-bottom: 20px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 GAS接続テストページ</h1>
+
+        <!-- GAS URL設定セクション -->
+        <div class="section">
+            <h2>📡 GAS URL設定</h2>
+            <div class="input-group url-input">
+                <label for="gasUrl">GAS Web App URL:</label>
+                <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec" value="">
+            </div>
+        </div>
+
+        <!-- 接続テストセクション -->
+        <div class="section">
+            <h2>🔌 接続テスト</h2>
+            <p>GASに接続できるか確認する「Hello World」テストです。</p>
+            <button id="testConnectionBtn" onclick="testConnection()">
+                Hello World テスト
+            </button>
+            <span id="connectionStatus"></span>
+            <div id="connectionResult" class="result-area hidden">
+                <h3>接続テスト結果</h3>
+                <div id="connectionResultContent"></div>
+            </div>
+        </div>
+
+        <!-- プロンプト送信セクション -->
+        <div class="section">
+            <h2>📤 プロンプト送信</h2>
+            <div class="input-group">
+                <label for="promptInput">送信するプロンプト:</label>
+                <textarea id="promptInput" placeholder="プロンプトを入力してください">あなたは「サル」という動物です。性格は「元気で好奇心旺盛」。今「バナナ」を食べました。子供向けの口調で、60文字以内で感想を言ってください。</textarea>
+            </div>
+            <div style="margin-top: 10px; padding: 15px; background: #e7f3ff; border-radius: 5px; font-size: 13px; line-height: 1.6;">
+                <strong>📝 プロンプト仕様:</strong><br><br>
+                <strong>入力:</strong> 動物の行動や状況を説明するテキスト（日本語可）<br>
+                <strong>出力:</strong> AIは自動的に以下のJSON形式で返答します：<br>
+                <code style="background: white; padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">{"message": "動物のセリフ（日本語）", "imagePrompt": "画像生成用英語プロンプト"}</code><br>
+                <strong>画像生成:</strong> imagePromptの内容でDALL-E 3が画像を生成します<br>
+                <strong>例:</strong> "A cute cartoon monkey happily eating a banana, Pixar style, white background"<br><br>
+                <strong>⚠️ 注意:</strong> プロンプト内で「画像を生成」などと指示する必要はありません。システムが自動的に処理します。
+            </div>
+            <button id="sendPromptBtn" onclick="sendPrompt()">
+                プロンプトを送信
+            </button>
+            <span id="sendStatus"></span>
+        </div>
+
+        <!-- 結果表示セクション -->
+        <div class="section">
+            <h2>📥 送受信結果</h2>
+            <div id="resultArea" class="result-area">
+                <p style="color: #999; text-align: center; padding: 40px;">
+                    まだ送信していません。上記のボタンでテストを実行してください。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GAS URLを取得（ローカルストレージから読み込み）
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedUrl = localStorage.getItem('gasUrl');
+            if (savedUrl) {
+                document.getElementById('gasUrl').value = savedUrl;
+            }
+        });
+
+        // GAS URLを保存
+        document.getElementById('gasUrl').addEventListener('change', function() {
+            localStorage.setItem('gasUrl', this.value);
+        });
+
+        /**
+         * 接続テスト（Hello World）
+         */
+        async function testConnection() {
+            const gasUrl = document.getElementById('gasUrl').value;
+            const btn = document.getElementById('testConnectionBtn');
+            const status = document.getElementById('connectionStatus');
+            const resultArea = document.getElementById('connectionResult');
+            const resultContent = document.getElementById('connectionResultContent');
+
+            if (!gasUrl) {
+                alert('GAS URLを入力してください。');
+                return;
+            }
+
+            btn.disabled = true;
+            status.innerHTML = '<span class="status loading">接続中...</span><span class="loading-spinner"></span>';
+            resultArea.classList.add('hidden');
+
+            const requestBody = ''; // 空のボディでHello Worldテスト
+            const requestHeaders = {
+                'Content-Type': 'text/plain'
+            };
+
+            try {
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: requestHeaders,
+                    body: requestBody
+                });
+
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    data = responseText;
+                }
+                
+                status.innerHTML = '<span class="status success">✓ 接続成功</span>';
+                resultArea.classList.remove('hidden');
+                
+                resultContent.innerHTML = `
+                    <div class="result-item">
+                        <h4>📤 送信内容:</h4>
+                        <div class="result-content">${escapeHtml(requestBody === '' ? '(空のリクエスト - Hello Worldテスト)' : requestBody)}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📤 送信ヘッダー:</h4>
+                        <div class="result-content">${escapeHtml(JSON.stringify(requestHeaders, null, 2))}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📥 受信内容（JSON）:</h4>
+                        <div class="result-content">${escapeHtml(typeof data === 'string' ? data : JSON.stringify(data, null, 2))}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📥 受信ステータス:</h4>
+                        <div class="result-content">HTTP ${response.status} ${response.statusText}</div>
+                    </div>
+                `;
+
+            } catch (error) {
+                status.innerHTML = '<span class="status error">✗ 接続失敗</span>';
+                resultArea.classList.remove('hidden');
+                resultContent.innerHTML = `
+                    <div class="result-item">
+                        <h4>📤 送信内容:</h4>
+                        <div class="result-content">${escapeHtml(requestBody === '' ? '(空のリクエスト - Hello Worldテスト)' : requestBody)}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📤 送信ヘッダー:</h4>
+                        <div class="result-content">${escapeHtml(JSON.stringify(requestHeaders, null, 2))}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>❌ エラー:</h4>
+                        <div class="result-content" style="color: red;">${escapeHtml(error.toString())}</div>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        /**
+         * プロンプトを送信
+         */
+        async function sendPrompt() {
+            const gasUrl = document.getElementById('gasUrl').value;
+            const prompt = document.getElementById('promptInput').value;
+            const btn = document.getElementById('sendPromptBtn');
+            const status = document.getElementById('sendStatus');
+            const resultArea = document.getElementById('resultArea');
+
+            if (!gasUrl) {
+                alert('GAS URLを入力してください。');
+                return;
+            }
+
+            if (!prompt.trim()) {
+                alert('プロンプトを入力してください。');
+                return;
+            }
+
+            btn.disabled = true;
+            status.innerHTML = '<span class="status loading">送信中...</span><span class="loading-spinner"></span>';
+
+            try {
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: prompt
+                });
+
+                const data = await response.json();
+                
+                status.innerHTML = '<span class="status success">✓ 送信成功</span>';
+                
+                // 新しいレスポンス形式に対応（テキスト＋画像）
+                let responseText = '';
+                let imageUrl = null;
+                let imagePrompt = null;
+                let imageError = null;
+
+                // 新しいレスポンス形式（success, message, imageUrlを含む）
+                if (data.success !== undefined && data.message) {
+                    responseText = data.message;
+                    imageUrl = data.imageUrl || null;
+                    imagePrompt = data.imagePrompt || null;
+                    imageError = data.imageError || null;
+                } 
+                // 旧形式（OpenAI API形式）への後方互換性
+                else if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const text = data.choices[0].message.content;
+                    responseText = text;
+                    
+                    // JSON形式のレスポンスをパース
+                    try {
+                        const parsedContent = JSON.parse(text);
+                        if (parsedContent.message) {
+                            responseText = parsedContent.message;
+                        }
+                    } catch (e) {
+                        // JSONでない場合はそのまま表示
+                    }
+                } 
+                // Gemini API形式（後方互換性のため）
+                else if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    const text = data.candidates[0].content.parts[0].text;
+                    responseText = text;
+                    
+                    try {
+                        const parsedContent = JSON.parse(text);
+                        if (parsedContent.message) {
+                            responseText = parsedContent.message;
+                        }
+                    } catch (e) {
+                        // JSONでない場合はそのまま表示
+                    }
+                } 
+                else if (data.message) {
+                    responseText = data.message;
+                } else {
+                    responseText = JSON.stringify(data, null, 2);
+                }
+
+                // 結果を表示
+                let resultHTML = `
+                    <div class="result-item">
+                        <h4>📤 送信したテキスト:</h4>
+                        <div class="result-content">${escapeHtml(prompt)}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📥 受信したテキスト:</h4>
+                        <div class="result-content">${escapeHtml(responseText)}</div>
+                    </div>
+                `;
+
+                // 画像URLがある場合は画像を表示
+                if (imageUrl) {
+                    resultHTML += `
+                        <div class="result-item">
+                            <h4>🖼️ DALL-Eで生成した画像:</h4>
+                            <div class="image-display">
+                                <img src="${escapeHtml(imageUrl)}" alt="DALL-E生成画像" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <p style="display:none; color: red;">画像の読み込みに失敗しました。</p>
+                                <p style="margin-top: 10px;"><strong>画像URL:</strong> <a href="${escapeHtml(imageUrl)}" target="_blank">${escapeHtml(imageUrl)}</a></p>
+                            </div>
+                        </div>
+                    `;
+                } else if (imageError) {
+                    resultHTML += `
+                        <div class="result-item">
+                            <h4>❌ 画像生成エラー:</h4>
+                            <div class="result-content" style="color: red;">${escapeHtml(imageError)}</div>
+                        </div>
+                    `;
+                }
+                
+                // 画像生成用プロンプトを表示
+                if (imagePrompt) {
+                    resultHTML += `
+                        <div class="result-item">
+                            <h4>🎨 画像生成用プロンプト:</h4>
+                            <div class="result-content">${escapeHtml(imagePrompt)}</div>
+                        </div>
+                    `;
+                }
+                
+                // 生のレスポンス（デバッグ用）
+                resultHTML += `
+                    <div class="result-item">
+                        <h4>📋 生のレスポンス（JSON）:</h4>
+                        <div class="result-content">${escapeHtml(JSON.stringify(data, null, 2))}</div>
+                    </div>
+                `;
+
+                resultArea.innerHTML = resultHTML;
+
+            } catch (error) {
+                status.innerHTML = '<span class="status error">✗ 送信失敗</span>';
+                resultArea.innerHTML = `
+                    <div class="result-item">
+                        <h4>📤 送信したテキスト:</h4>
+                        <div class="result-content">${escapeHtml(prompt)}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>❌ エラー:</h4>
+                        <div class="result-content" style="color: red;">${escapeHtml(error.toString())}</div>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        /**
+         * HTMLエスケープ関数
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
