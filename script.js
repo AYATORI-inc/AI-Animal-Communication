@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v15';
+const VERSION = 'v18';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
@@ -88,6 +88,8 @@ function showToast(msg, isError=false){
 }
 
 function setLoading(on, line){
+  // ローディング表示中は“もぐもぐ”効果音
+  if(on) startLoadingSfx(); else stopLoadingSfx();
   if(!el.loadingOverlay) return;
   el.loadingOverlay.classList.toggle('show', !!on);
   if(el.loadingLine) el.loadingLine.textContent = line || '準備中…'; // ← AI表現を避ける
@@ -139,6 +141,7 @@ function showScreen(name){
 // ================================
 let audioCtx=null;
 let audioUnlocked=false;
+let loadingSfxTimer = null;
 function ensureAudio(){
   if(audioCtx) return;
   const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -174,7 +177,20 @@ const sfx = {
   feed: ()=>{ tone(240,0.05,0.03,'triangle'); setTimeout(()=>tone(180,0.06,0.03,'triangle'),70); },
   ok: ()=>{ tone(660,0.07,0.04,'sine'); setTimeout(()=>tone(880,0.09,0.04,'sine'),80); },
   ng: ()=>tone(220,0.10,0.05,'sawtooth'),
+  mogumogu: ()=>{ tone(260,0.05,0.018,'triangle'); setTimeout(()=>tone(190,0.06,0.018,'triangle'),70); },
 };
+function startLoadingSfx(){
+  if(loadingSfxTimer) return;
+  // もぐもぐ音を一定間隔で鳴らす（控えめ）
+  sfx.mogumogu();
+  loadingSfxTimer = setInterval(()=>{ sfx.mogumogu(); }, 850);
+}
+function stopLoadingSfx(){
+  if(!loadingSfxTimer) return;
+  clearInterval(loadingSfxTimer);
+  loadingSfxTimer = null;
+}
+
 window.addEventListener('pointerdown', ()=>unlockAudio(), {once:true});
 
 // ================================
@@ -327,6 +343,9 @@ async function callGas(payload, timeoutMs=30000){
     if(payload.animalName) form.set('animalName', payload.animalName);
     if(payload.food) form.set('food', payload.food);
     if(payload.category) form.set('category', payload.category);
+    if(payload.foodType) form.set('foodType', payload.foodType);
+    if(payload.foodRaw) form.set('foodRaw', payload.foodRaw);
+    if(payload.foodVisualEn) form.set('foodVisualEn', payload.foodVisualEn);
 
     const res = await fetch(GAS_URL, {
       method:'POST',
@@ -404,7 +423,11 @@ async function handleFeed(raw){
     const imagePrompt = [
       'Square 1:1, cute flat illustration, game art.',
       `Animal: ${a.name} ${a.emoji}. Medium close-up, centered.`,
+      // 食べ物の一致を強制（ここが最重要）
+      `FOOD MUST MATCH EXACTLY: "${foodInfo.raw}".`,
+      `ONLY FOOD: ${fv.en}. This is the only food in the entire image.`,
       `MUST show the food clearly: ${fv.en} ("${foodInfo.raw}") large in the foreground, in the animal\\'s mouth or paws.`,
+      'Do NOT include any other foods or dishes (no fish, no vegetables, no fruit, no milk, no picnic basket, no bowl, no sweets). One single food item only.',
       `Reaction: ${moodWord} (exaggerated).`,
       'Background: plain solid color. No wide landscape. No scenery.',
       'No text, no logo, no extra animals. Do NOT omit the food.'
@@ -415,7 +438,7 @@ async function handleFeed(raw){
       `「${foodInfo.raw}」を食べた直後の感想を、日本語で1文だけ。\\n`+
       `説明・英語・コード・プロンプト復唱は禁止。`;
 
-    const payload = {mode:'feed', animalId:a.id, animalName:a.name, food:foodInfo.raw, category:foodInfo.category, imagePrompt, commentPrompt, wantImage:true};
+    const payload = {mode:'feed', animalId:a.id, animalName:a.name, food:foodInfo.raw, category:foodInfo.category, imagePrompt, commentPrompt, prompt:imagePrompt, text:commentPrompt, foodType:foodInfo.category, foodRaw:foodInfo.raw, foodVisualEn:fv.en, nonce:String(Date.now())+'-'+Math.random(), wantImage:true};
     const gasData = await callGas(payload, 30000);
     if(myReq !== state.reqId) return;
 

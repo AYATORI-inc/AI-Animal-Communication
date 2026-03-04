@@ -819,8 +819,8 @@ body{
   align-items:center;
   justify-content:center;
   padding: 18px;
-  background: rgba(0,0,0,.32);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,.86);
+  backdrop-filter: blur(10px);
   z-index: 60;
 }
 .loadingOverlay.show{ display:flex; }
