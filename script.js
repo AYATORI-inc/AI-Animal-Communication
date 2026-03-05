@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v15';
+const VERSION = 'v25';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
@@ -88,6 +88,8 @@ function showToast(msg, isError=false){
 }
 
 function setLoading(on, line){
+  // ローディング表示中は“もぐもぐ”効果音
+  if(on) startLoadingSfx(); else stopLoadingSfx();
   if(!el.loadingOverlay) return;
   el.loadingOverlay.classList.toggle('show', !!on);
   if(el.loadingLine) el.loadingLine.textContent = line || '準備中…'; // ← AI表現を避ける
@@ -139,6 +141,7 @@ function showScreen(name){
 // ================================
 let audioCtx=null;
 let audioUnlocked=false;
+let loadingSfxTimer = null;
 function ensureAudio(){
   if(audioCtx) return;
   const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -174,7 +177,20 @@ const sfx = {
   feed: ()=>{ tone(240,0.05,0.03,'triangle'); setTimeout(()=>tone(180,0.06,0.03,'triangle'),70); },
   ok: ()=>{ tone(660,0.07,0.04,'sine'); setTimeout(()=>tone(880,0.09,0.04,'sine'),80); },
   ng: ()=>tone(220,0.10,0.05,'sawtooth'),
+  mogumogu: ()=>{ tone(260,0.05,0.018,'triangle'); setTimeout(()=>tone(190,0.06,0.018,'triangle'),70); },
 };
+function startLoadingSfx(){
+  if(loadingSfxTimer) return;
+  // もぐもぐ音を一定間隔で鳴らす（控えめ）
+  sfx.mogumogu();
+  loadingSfxTimer = setInterval(()=>{ sfx.mogumogu(); }, 850);
+}
+function stopLoadingSfx(){
+  if(!loadingSfxTimer) return;
+  clearInterval(loadingSfxTimer);
+  loadingSfxTimer = null;
+}
+
 window.addEventListener('pointerdown', ()=>unlockAudio(), {once:true});
 
 // ================================
@@ -186,6 +202,14 @@ const ANIMALS = [
   { id:'capybara', name:'カピバラ',  emoji:'🦫', img:'./img/kapipara.webp', first:'わたし' },
   { id:'panda',    name:'パンダ',    emoji:'🐼', img:'./img/panda.webp',    first:'ぼく' },
 ];
+
+const PERSONALITY = {
+  lion:     '自信家で王様気質',
+  penguin:  '元気で好奇心旺盛',
+  capybara: 'のんびりマイペース',
+  panda:    'おっとりで食いしんぼう',
+};
+
 const FOOD_TYPES = ['肉','草','タイヤ','激辛料理'];
 const BEG_LINES = {
   lion: ['腹が減ったぜ…','なにかくれよ！','うまいの頼む！'],
@@ -316,33 +340,75 @@ function foodVisual(foodInfo){
   return {en: foodInfo.raw};
 }
 
-async function callGas(payload, timeoutMs=30000){
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(), timeoutMs);
-  try{
-    const form=new URLSearchParams();
-    form.set('payload', JSON.stringify(payload));
-    if(payload.imagePrompt) form.set('imagePrompt', payload.imagePrompt);
-    if(payload.commentPrompt) form.set('commentPrompt', payload.commentPrompt);
-    if(payload.animalName) form.set('animalName', payload.animalName);
-    if(payload.food) form.set('food', payload.food);
-    if(payload.category) form.set('category', payload.category);
+let apiMode = 'auto'; // 'json' | 'form' | 'auto'
 
-    const res = await fetch(GAS_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-      body: form.toString(),
-      signal: controller.signal,
-    });
+async function fetchWithTimeout(url, options, timeoutMs){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), timeoutMs);
+  try{
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
     const txt = await res.text();
-    if(!res.ok) return {ok:false, error:`HTTP ${res.status}`, raw:txt};
-    try{ return JSON.parse(txt); }catch(_e){ return {ok:true, message:String(txt)}; }
+    let data = null;
+    // JSONならparse
+    try{ data = JSON.parse(txt); }catch(_e){ data = null; }
+    return { ok: res.ok, status: res.status, data, text: txt, contentType: ct };
   }catch(e){
-    if(e && e.name==='AbortError') return {ok:false, error:'timeout'};
-    return {ok:false, error:(e&&e.message)?e.message:String(e)};
+    if(e && e.name === 'AbortError') return { ok:false, status:0, data:null, text:'', contentType:'', error:'timeout' };
+    return { ok:false, status:0, data:null, text:'', contentType:'', error: (e && e.message) ? e.message : String(e) };
   }finally{
     clearTimeout(timer);
   }
+}
+
+function normalizeGasResponse(r){
+  if(!r) return { ok:false, error:'no_response' };
+  if(!r.ok){
+    return { ok:false, error: r.error || ('http_'+r.status), raw: r.text };
+  }
+  if(r.contentType && r.contentType.includes('text/html') && !r.data){
+    return { ok:false, error:'html_response', raw: r.text };
+  }
+  if(r.data && typeof r.data === 'object') return r.data;
+  return { ok:true, message: String(r.text || '') };
+}
+
+async function callGas(payload, timeoutMs=30000){
+  const tryJson = async ()=>{
+    const r = await fetchWithTimeout(GAS_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(payload),
+    }, timeoutMs);
+    const out = normalizeGasResponse(r);
+    if(out && out.ok !== false) apiMode = 'json';
+    return out;
+  };
+
+  const tryForm = async ()=>{
+    const form = new URLSearchParams();
+    form.set('payload', JSON.stringify(payload));
+    const flatKeys = ['mode','animalId','animalName','animalPersonality','animalFirst','foodRaw','category','categorySource','food','foodType','wantImage','imagePrompt','commentPrompt','prompt','text','nonce','gameVersion'];
+    flatKeys.forEach(k=>{ if(payload[k] != null) form.set(k, String(payload[k])); });
+    if(payload.allowedCategories) form.set('allowedCategories', JSON.stringify(payload.allowedCategories));
+
+    const r = await fetchWithTimeout(GAS_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: form.toString(),
+    }, timeoutMs);
+    const out = normalizeGasResponse(r);
+    if(out && out.ok !== false) apiMode = 'form';
+    return out;
+  };
+
+  if(apiMode === 'json') return await tryJson();
+  if(apiMode === 'form') return await tryForm();
+
+  const a = await tryJson();
+  if(a && a.ok !== false) return a;
+  const b = await tryForm();
+  return b;
 }
 function extractImageSrc(data){
   if(!data) return '';
@@ -365,7 +431,7 @@ function isBadAiLine(line){
   return false;
 }
 
-async function handleFeed(raw){
+async function handleFeed(raw, fromQuick=false){
   const input=(raw||'').trim();
   if(!input){ showToast('なにか入力してね', true); return; }
   if(state.locked) return;
@@ -373,7 +439,11 @@ async function handleFeed(raw){
   state.locked=true;
 
   const a=state.animal;
-  const foodInfo=classifyFood(input);
+  const foodInfo = classifyFood(input);
+  // 4択ボタンならカテゴリ固定。フリー入力はGAS側でカテゴリ判定してもらう（categoryを空にする）
+  const categorySource = fromQuick ? 'fixed' : 'auto_requested';
+  const categoryForGas = fromQuick ? foodInfo.category : '';
+
   const judged=judgeScore(foodInfo.category);
   const local=makeLocalText(a, foodInfo, judged);
 
@@ -404,18 +474,43 @@ async function handleFeed(raw){
     const imagePrompt = [
       'Square 1:1, cute flat illustration, game art.',
       `Animal: ${a.name} ${a.emoji}. Medium close-up, centered.`,
+      // 食べ物の一致を強制（ここが最重要）
+      `FOOD MUST MATCH EXACTLY: "${foodInfo.raw}".`,
+      `ONLY FOOD: ${fv.en}. This is the only food in the entire image.`,
       `MUST show the food clearly: ${fv.en} ("${foodInfo.raw}") large in the foreground, in the animal\\'s mouth or paws.`,
+      'Do NOT include any other foods or dishes (no fish, no vegetables, no fruit, no milk, no picnic basket, no bowl, no sweets). One single food item only.',
       `Reaction: ${moodWord} (exaggerated).`,
       'Background: plain solid color. No wide landscape. No scenery.',
       'No text, no logo, no extra animals. Do NOT omit the food.'
     ].join('\\n');
 
+    const personality = PERSONALITY[a.id] || 'やさしい';
     const commentPrompt =
-      `あなたは${a.name}。一人称は「${a.first}」。必ず一人称で話す。\\n`+
-      `「${foodInfo.raw}」を食べた直後の感想を、日本語で1文だけ。\\n`+
-      `説明・英語・コード・プロンプト復唱は禁止。`;
+      `あなたは「${a.name}」という動物です。性格は「${personality}」。` +
+      `今「${foodInfo.raw}」を食べました。` +
+      `（${a.first}の口調で）、60文字以内で感想を言ってください。`;
 
-    const payload = {mode:'feed', animalId:a.id, animalName:a.name, food:foodInfo.raw, category:foodInfo.category, imagePrompt, commentPrompt, wantImage:true};
+    const payload = {
+      mode: 'feed',
+      gameVersion: VERSION,
+      animalId: a.id,
+      animalName: a.name,
+      animalPersonality: personality,
+      animalFirst: a.first,
+      foodRaw: foodInfo.raw,
+      category: categoryForGas,
+      categorySource,
+      allowedCategories: FOOD_TYPES,
+      // 互換：旧キー
+      food: foodInfo.raw,
+      foodType: categoryForGas,
+      imagePrompt,
+      commentPrompt,
+      prompt: imagePrompt,
+      text: commentPrompt,
+      nonce: String(Date.now()) + '-' + Math.random(),
+      wantImage: true,
+    };
     const gasData = await callGas(payload, 30000);
     if(myReq !== state.reqId) return;
 
@@ -476,7 +571,7 @@ function bind(){
   $$('[data-quick]').forEach(btn=>{
     btn.addEventListener('click', safeRun(()=>{
       sfx.feed();
-      return handleFeed(btn.getAttribute('data-quick'));
+      return handleFeed(btn.getAttribute('data-quick'), true);
     }));
   });
 
@@ -484,7 +579,7 @@ function bind(){
     sfx.feed();
     const v = el.freeInput?.value || '';
     if(el.freeInput) el.freeInput.value='';
-    return handleFeed(v);
+    return handleFeed(v, false);
   }));
 
   el.freeInput?.addEventListener('keydown', (e)=>{
