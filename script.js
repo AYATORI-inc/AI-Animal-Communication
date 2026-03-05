@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v26';
+const VERSION = 'v28';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
@@ -42,6 +42,26 @@ const pick = (a) => (a && a.length ? a[Math.floor(Math.random()*a.length)] : '')
 const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
 const firstLine = (m) => String(m||'').split(/\r?\n/).map(s=>s.trim()).find(Boolean) || '';
 
+
+const FOOD_ICON_SRC = {
+  '肉': './img/oniku1.png',
+  '草': './img/kusa2.png',
+  'タイヤ': './img/taiya3.png',
+  '激辛料理': './img/gekikara4.png',
+};
+
+function setFoodBadge(badgeEl, category, raw){
+  if(!badgeEl) return;
+  while(badgeEl.firstChild) badgeEl.removeChild(badgeEl.firstChild);
+  badgeEl.append(document.createTextNode('えさ：'));
+  const img = document.createElement('img');
+  img.className = 'badgeFoodIcon';
+  img.alt = '';
+  img.setAttribute('aria-hidden','true');
+  img.src = FOOD_ICON_SRC[category] || '';
+  badgeEl.append(img);
+  badgeEl.append(document.createTextNode(' ' + (raw || '')));
+}
 const el = {
   screenSelect: $('#screenSelect'),
   screenGame: $('#screenGame'),
@@ -498,7 +518,7 @@ async function handleFeed(raw, fromQuick=false){
     setImgSafe(el.resultAnimalImg, a.img, a.name);
     if(el.resultSub) el.resultSub.textContent = `入力：${foodInfo.raw}`;
     if(el.resultEmoji) el.resultEmoji.textContent = local.mood || judged.art;
-    if(el.resultFoodBadge) el.resultFoodBadge.textContent = `えさ：${local.foodEmoji} ${foodInfo.raw}`;
+    if(el.resultFoodBadge) setFoodBadge(el.resultFoodBadge, foodInfo.category, foodInfo.raw);
     if(el.resultMoodBadge) el.resultMoodBadge.textContent = `きぶん：${local.mood || judged.art}`;
     if(el.resultText) el.resultText.textContent = local.text;
     if(el.resultImageWrap) el.resultImageWrap.classList.add('isHidden');
