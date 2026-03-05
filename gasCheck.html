@@ -223,7 +223,13 @@
             <h2>📡 GAS URL設定</h2>
             <div class="input-group url-input">
                 <label for="gasUrl">GAS Web App URL:</label>
-                <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec" value="">
+                <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec" value="https://script.google.com/macros/s/AKfycbxN_lNgpMEsQ1_bCu2uPeMZT_byjb0bId_g9IbBWAecG6hFVWTpuvgzrkLVT0affBXpqA/exec">
+            </div>
+            <div style="margin-top: 10px; padding: 15px; background: #d4edda; border-radius: 5px; font-size: 13px; line-height: 1.6; border-left: 4px solid #28a745;">
+                <strong>✅ GETリクエスト方式:</strong><br><br>
+                このページはGETリクエストを使用しているため、CORSエラーが発生しません。<br>
+                ローカルファイル（file://）から直接開いても動作します。<br><br>
+                <strong>注意:</strong> URLの長さ制限（約2000文字）があるため、非常に長いテキストを送信する場合は注意してください。
             </div>
         </div>
 
@@ -244,17 +250,71 @@
         <!-- プロンプト送信セクション -->
         <div class="section">
             <h2>📤 プロンプト送信</h2>
-            <div class="input-group">
-                <label for="promptInput">送信するプロンプト:</label>
-                <textarea id="promptInput" placeholder="プロンプトを入力してください">あなたは「サル」という動物です。性格は「元気で好奇心旺盛」。今「バナナ」を食べました。子供向けの口調で、60文字以内で感想を言ってください。</textarea>
+            
+            <!-- 送信形式選択 -->
+            <div class="input-group" style="margin-bottom: 20px;">
+                <label>送信形式:</label>
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="sendFormat" value="json" checked style="margin-right: 5px;">
+                        <span>JSON形式（新形式・推奨）</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="sendFormat" value="text" style="margin-right: 5px;">
+                        <span>テキスト形式（旧形式・後方互換）</span>
+                    </label>
+                </div>
             </div>
+
+            <!-- JSON形式の入力フィールド -->
+            <div id="jsonFormSection">
+                <div class="input-group">
+                    <label for="animalType">動物種類 <span style="color: red;">*</span>:</label>
+                    <input type="text" id="animalType" placeholder="例: サル、ライオン、ペンギン" value="サル">
+                </div>
+                <div class="input-group">
+                    <label for="foodType">食べ物種類:</label>
+                    <input type="text" id="foodType" placeholder="例: バナナ、肉、草" value="バナナ">
+                </div>
+                <div class="input-group">
+                    <label for="freeWord">フリーワード（食べ物種類の代わりに使用）:</label>
+                    <input type="text" id="freeWord" placeholder="例: 魔法のジュース、お母さんの手作りハンバーグ">
+                </div>
+                <div class="input-group">
+                    <label for="likeLevel">好き度（オプション）:</label>
+                    <select id="likeLevel" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                        <option value="">指定なし</option>
+                        <option value="大好き">大好き</option>
+                        <option value="好き">好き</option>
+                        <option value="普通">普通</option>
+                        <option value="嫌い">嫌い</option>
+                        <option value="大嫌い">大嫌い</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="baseImagePrompt">動物イラスト画質用基礎プロンプト（オプション）:</label>
+                    <textarea id="baseImagePrompt" placeholder="例: A cute cartoon style, Pixar animation, white background, high quality" style="min-height: 60px;"></textarea>
+                </div>
+            </div>
+
+            <!-- テキスト形式の入力フィールド（旧形式） -->
+            <div id="textFormSection" style="display: none;">
+                <div class="input-group">
+                    <label for="promptInput">送信するプロンプト:</label>
+                    <textarea id="promptInput" placeholder="プロンプトを入力してください">あなたは「サル」という動物です。性格は「元気で好奇心旺盛」。今「バナナ」を食べました。子供向けの口調で、60文字以内で感想を言ってください。</textarea>
+                </div>
+            </div>
+
             <div style="margin-top: 10px; padding: 15px; background: #e7f3ff; border-radius: 5px; font-size: 13px; line-height: 1.6;">
                 <strong>📝 プロンプト仕様:</strong><br><br>
-                <strong>入力:</strong> 動物の行動や状況を説明するテキスト（日本語可）<br>
+                <strong>JSON形式（新形式）:</strong><br>
+                - <strong>動物種類</strong>: 必須項目。動物の種類を指定します。<br>
+                - <strong>食べ物種類</strong> または <strong>フリーワード</strong>: どちらか一方を指定してください。フリーワードが優先されます。<br>
+                - <strong>好き度</strong>: オプション。動物のその食べ物への好き度を指定します。<br>
+                - <strong>基礎プロンプト</strong>: オプション。画像生成の品質を向上させるための基礎プロンプトです。<br><br>
                 <strong>出力:</strong> AIは自動的に以下のJSON形式で返答します：<br>
                 <code style="background: white; padding: 5px; border-radius: 3px; display: block; margin: 5px 0;">{"message": "動物のセリフ（日本語）", "imagePrompt": "画像生成用英語プロンプト"}</code><br>
-                <strong>画像生成:</strong> imagePromptの内容でDALL-E 3が画像を生成します<br>
-                <strong>例:</strong> "A cute cartoon monkey happily eating a banana, Pixar style, white background"<br><br>
+                <strong>画像生成:</strong> imagePromptの内容でDALL-E 3が画像を生成します<br><br>
                 <strong>⚠️ 注意:</strong> プロンプト内で「画像を生成」などと指示する必要はありません。システムが自動的に処理します。
             </div>
             <button id="sendPromptBtn" onclick="sendPrompt()">
@@ -288,6 +348,21 @@
             localStorage.setItem('gasUrl', this.value);
         });
 
+        // 送信形式の切り替え
+        document.querySelectorAll('input[name="sendFormat"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const jsonSection = document.getElementById('jsonFormSection');
+                const textSection = document.getElementById('textFormSection');
+                if (this.value === 'json') {
+                    jsonSection.style.display = 'block';
+                    textSection.style.display = 'none';
+                } else {
+                    jsonSection.style.display = 'none';
+                    textSection.style.display = 'block';
+                }
+            });
+        });
+
         /**
          * 接続テスト（Hello World）
          */
@@ -307,16 +382,10 @@
             status.innerHTML = '<span class="status loading">接続中...</span><span class="loading-spinner"></span>';
             resultArea.classList.add('hidden');
 
-            const requestBody = ''; // 空のボディでHello Worldテスト
-            const requestHeaders = {
-                'Content-Type': 'text/plain'
-            };
-
+            // GETリクエストでHello Worldテスト（パラメータなし）
             try {
                 const response = await fetch(gasUrl, {
-                    method: 'POST',
-                    headers: requestHeaders,
-                    body: requestBody
+                    method: 'GET'
                 });
 
                 const responseText = await response.text();
@@ -332,12 +401,8 @@
                 
                 resultContent.innerHTML = `
                     <div class="result-item">
-                        <h4>📤 送信内容:</h4>
-                        <div class="result-content">${escapeHtml(requestBody === '' ? '(空のリクエスト - Hello Worldテスト)' : requestBody)}</div>
-                    </div>
-                    <div class="result-item">
-                        <h4>📤 送信ヘッダー:</h4>
-                        <div class="result-content">${escapeHtml(JSON.stringify(requestHeaders, null, 2))}</div>
+                        <h4>📤 送信方法:</h4>
+                        <div class="result-content">GETリクエスト（パラメータなし - Hello Worldテスト）</div>
                     </div>
                     <div class="result-item">
                         <h4>📥 受信内容（JSON）:</h4>
@@ -354,12 +419,8 @@
                 resultArea.classList.remove('hidden');
                 resultContent.innerHTML = `
                     <div class="result-item">
-                        <h4>📤 送信内容:</h4>
-                        <div class="result-content">${escapeHtml(requestBody === '' ? '(空のリクエスト - Hello Worldテスト)' : requestBody)}</div>
-                    </div>
-                    <div class="result-item">
-                        <h4>📤 送信ヘッダー:</h4>
-                        <div class="result-content">${escapeHtml(JSON.stringify(requestHeaders, null, 2))}</div>
+                        <h4>📤 送信方法:</h4>
+                        <div class="result-content">GETリクエスト（パラメータなし - Hello Worldテスト）</div>
                     </div>
                     <div class="result-item">
                         <h4>❌ エラー:</h4>
@@ -376,31 +437,84 @@
          */
         async function sendPrompt() {
             const gasUrl = document.getElementById('gasUrl').value;
-            const prompt = document.getElementById('promptInput').value;
             const btn = document.getElementById('sendPromptBtn');
             const status = document.getElementById('sendStatus');
             const resultArea = document.getElementById('resultArea');
+            const sendFormat = document.querySelector('input[name="sendFormat"]:checked').value;
 
             if (!gasUrl) {
                 alert('GAS URLを入力してください。');
                 return;
             }
 
-            if (!prompt.trim()) {
-                alert('プロンプトを入力してください。');
-                return;
+            let urlParams = new URLSearchParams();
+            let requestData = null;
+
+            // JSON形式の場合
+            if (sendFormat === 'json') {
+                const animalType = document.getElementById('animalType').value.trim();
+                const foodType = document.getElementById('foodType').value.trim();
+                const freeWord = document.getElementById('freeWord').value.trim();
+                const likeLevel = document.getElementById('likeLevel').value;
+                const baseImagePrompt = document.getElementById('baseImagePrompt').value.trim();
+
+                if (!animalType) {
+                    alert('動物種類を入力してください。');
+                    return;
+                }
+
+                if (!foodType && !freeWord) {
+                    alert('食べ物種類またはフリーワードを入力してください。');
+                    return;
+                }
+
+                // クエリパラメータとして追加
+                urlParams.append('animalType', animalType);
+                
+                // フリーワードが優先
+                if (freeWord) {
+                    urlParams.append('freeWord', freeWord);
+                } else {
+                    urlParams.append('foodType', foodType);
+                }
+                
+                if (likeLevel) {
+                    urlParams.append('likeLevel', likeLevel);
+                }
+                
+                if (baseImagePrompt) {
+                    urlParams.append('baseImagePrompt', baseImagePrompt);
+                }
+
+                requestData = {
+                    animalType: animalType,
+                    likeLevel: likeLevel || undefined,
+                    baseImagePrompt: baseImagePrompt || undefined
+                };
+                
+                if (freeWord) {
+                    requestData.freeWord = freeWord;
+                } else {
+                    requestData.foodType = foodType;
+                }
+            } else {
+                // テキスト形式の場合（旧形式）
+                const prompt = document.getElementById('promptInput').value.trim();
+                if (!prompt) {
+                    alert('プロンプトを入力してください。');
+                    return;
+                }
+                urlParams.append('prompt', prompt);
+                requestData = prompt;
             }
 
             btn.disabled = true;
             status.innerHTML = '<span class="status loading">送信中...</span><span class="loading-spinner"></span>';
 
             try {
-                const response = await fetch(gasUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
-                    body: prompt
+                // GETリクエストで送信（CORSエラーを回避）
+                const response = await fetch(gasUrl + '?' + urlParams.toString(), {
+                    method: 'GET'
                 });
 
                 const data = await response.json();
@@ -458,8 +572,16 @@
                 // 結果を表示
                 let resultHTML = `
                     <div class="result-item">
-                        <h4>📤 送信したテキスト:</h4>
-                        <div class="result-content">${escapeHtml(prompt)}</div>
+                        <h4>📤 送信方法:</h4>
+                        <div class="result-content">GETリクエスト（${sendFormat === 'json' ? 'JSON形式' : 'テキスト形式（旧形式）'}）</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📤 送信したデータ:</h4>
+                        <div class="result-content">${escapeHtml(sendFormat === 'json' ? JSON.stringify(requestData, null, 2) : requestData)}</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📤 送信URL:</h4>
+                        <div class="result-content" style="word-break: break-all;">${escapeHtml(gasUrl + '?' + urlParams.toString())}</div>
                     </div>
                     <div class="result-item">
                         <h4>📥 受信したテキスト:</h4>
@@ -512,8 +634,12 @@
                 status.innerHTML = '<span class="status error">✗ 送信失敗</span>';
                 resultArea.innerHTML = `
                     <div class="result-item">
-                        <h4>📤 送信したテキスト:</h4>
-                        <div class="result-content">${escapeHtml(prompt)}</div>
+                        <h4>📤 送信方法:</h4>
+                        <div class="result-content">GETリクエスト（${sendFormat === 'json' ? 'JSON形式' : 'テキスト形式（旧形式）'}）</div>
+                    </div>
+                    <div class="result-item">
+                        <h4>📤 送信したデータ:</h4>
+                        <div class="result-content">${escapeHtml(sendFormat === 'json' ? JSON.stringify(requestData, null, 2) : requestData)}</div>
                     </div>
                     <div class="result-item">
                         <h4>❌ エラー:</h4>
