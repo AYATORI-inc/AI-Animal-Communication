@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v18';
+const VERSION = 'v24';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
@@ -202,6 +202,14 @@ const ANIMALS = [
   { id:'capybara', name:'カピバラ',  emoji:'🦫', img:'./img/kapipara.webp', first:'わたし' },
   { id:'panda',    name:'パンダ',    emoji:'🐼', img:'./img/panda.webp',    first:'ぼく' },
 ];
+
+const PERSONALITY = {
+  lion:     '自信家で王様気質',
+  penguin:  '元気で好奇心旺盛',
+  capybara: 'のんびりマイペース',
+  panda:    'おっとりで食いしんぼう',
+};
+
 const FOOD_TYPES = ['肉','草','タイヤ','激辛料理'];
 const BEG_LINES = {
   lion: ['腹が減ったぜ…','なにかくれよ！','うまいの頼む！'],
@@ -433,10 +441,11 @@ async function handleFeed(raw){
       'No text, no logo, no extra animals. Do NOT omit the food.'
     ].join('\\n');
 
+    const personality = PERSONALITY[a.id] || 'やさしい';
     const commentPrompt =
-      `あなたは${a.name}。一人称は「${a.first}」。必ず一人称で話す。\\n`+
-      `「${foodInfo.raw}」を食べた直後の感想を、日本語で1文だけ。\\n`+
-      `説明・英語・コード・プロンプト復唱は禁止。`;
+      `あなたは「${a.name}」という動物です。性格は「${personality}」。今「${foodInfo.raw}」を食べました。` +
+      `（${a.first}の口調で）60文字以内で感想を言ってください。` +
+      `※日本語で1文。説明やプロンプト復唱は禁止。`;
 
     const payload = {mode:'feed', animalId:a.id, animalName:a.name, food:foodInfo.raw, category:foodInfo.category, imagePrompt, commentPrompt, prompt:imagePrompt, text:commentPrompt, foodType:foodInfo.category, foodRaw:foodInfo.raw, foodVisualEn:fv.en, nonce:String(Date.now())+'-'+Math.random(), wantImage:true};
     const gasData = await callGas(payload, 30000);
