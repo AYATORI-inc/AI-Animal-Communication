@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v25';
+const VERSION = 'v26';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
@@ -410,15 +410,61 @@ async function callGas(payload, timeoutMs=30000){
   const b = await tryForm();
   return b;
 }
-function extractImageSrc(data){
-  if(!data) return '';
-  if(data.image_b64){
-    const mime=data.image_mime || 'image/png';
-    return `data:${mime};base64,${data.image_b64}`;
+function extractImageSrc(gasData){
+  if(!gasData) return '';
+
+  // data URI そのまま
+  const direct = gasData.image_datauri || gasData.datauri || gasData.dataUri || (gasData.image && (gasData.image.datauri || gasData.image.dataUri));
+  if(typeof direct === 'string' && direct.startsWith('data:')) return direct;
+
+  // URL形式
+  const url =
+    gasData.imageUrl ||
+    gasData.image_url ||
+    gasData.url ||
+    gasData.image ||
+    gasData.imageURL ||
+    (gasData.image && (gasData.image.url || gasData.image.imageUrl || gasData.image.image_url)) ||
+    (gasData.result && (gasData.result.imageUrl || gasData.result.image_url || gasData.result.url));
+  if(typeof url === 'string'){
+    if(url.startsWith('data:')) return url;
+    if(/^https?:\/\//.test(url)) return url;
   }
-  if(data.imageUrl) return String(data.imageUrl);
-  if(data.image_url) return String(data.image_url);
-  if(data.url) return String(data.url);
+
+  // base64形式（想定キー多数）
+  const b64 =
+    gasData.image_b64 ||
+    gasData.imageBase64 ||
+    gasData.image_base64 ||
+    gasData.b64 ||
+    (gasData.image && (gasData.image.b64 || gasData.image.base64 || gasData.image.b64_json)) ||
+    (gasData.data && gasData.data[0] && (gasData.data[0].b64_json || gasData.data[0].b64)) ||
+    (gasData.result && (gasData.result.image_b64 || gasData.result.imageBase64 || gasData.result.b64));
+
+  if(typeof b64 === 'string' && b64.length > 50){
+    const mime =
+      gasData.image_mime ||
+      gasData.mime ||
+      gasData.contentType ||
+      (gasData.image && (gasData.image.mime || gasData.image.contentType)) ||
+      (gasData.result && (gasData.result.image_mime || gasData.result.mime)) ||
+      'image/webp';
+    return `data:${mime};base64,${b64}`;
+  }
+
+  // images 配列
+  const arr = gasData.images || (gasData.data && Array.isArray(gasData.data) ? gasData.data : null);
+  if(Array.isArray(arr) && arr.length){
+    const one = arr[0];
+    const b = one && (one.b64_json || one.b64 || one.base64);
+    if(typeof b === 'string' && b.length > 50){
+      const mime = one.mime || one.contentType || gasData.image_mime || 'image/webp';
+      return `data:${mime};base64,${b}`;
+    }
+    const u = one && (one.url || one.imageUrl || one.image_url);
+    if(typeof u === 'string' && /^https?:\/\//.test(u)) return u;
+  }
+
   return '';
 }
 function isBadAiLine(line){
@@ -533,6 +579,11 @@ async function handleFeed(raw, fromQuick=false){
     }
 
     const src = extractImageSrc(gasData);
+    if(!src){
+      debugState.gas = 'ok-noimg';
+      renderDebug();
+    }
+
     if(src && el.resultImageWrap && el.resultImage){
       el.resultImage.src = src;
       el.resultImage.alt = `${a.name}が${foodInfo.raw}を食べているイラスト`;
