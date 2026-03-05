@@ -1082,3 +1082,25 @@ body{
   filter: drop-shadow(0 18px 40px rgba(0,0,0,.38));
 }
 
+
+
+/* =========================
+   えさアイコン（透過PNG）
+   ========================= */
+.foodBtn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.foodBtnIcon{
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.20));
+}
+.badgeFoodIcon{
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  margin: 0 6px;
+}
