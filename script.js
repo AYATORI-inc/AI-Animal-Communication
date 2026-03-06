@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v29';
+const VERSION = 'v30';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
@@ -107,12 +107,35 @@ function showToast(msg, isError=false){
   if(!isError) setTimeout(()=>el.toast.classList.remove('show'), 1600);
 }
 
+const LOADING_LINES = [
+  'もぐもぐ準備中…',
+  'えさを はこんでいます…',
+  'いただきます の じゅんび…',
+  'ゆっくり かみかみ…',
+  'あじを たしかめています…',
+  'おいしい きぶん…',
+  'ちょっと まってね…',
+  'おまちどうさま…',
+  'もぐもぐ タイム…',
+  'もぐもぐ…もうすぐ！',
+  'いま ひとくちめ…',
+  'じゅんび できたら すぐだよ…'
+];
+let loadingBag = [];
+function nextLoadingLine(){
+  if(loadingBag.length === 0){
+    // 連続で同じ文になりにくいようにシャッフルして使い切り
+    loadingBag = LOADING_LINES.slice().sort(()=>Math.random() - 0.5);
+  }
+  return loadingBag.pop() || 'ちょっと まってね…';
+}
+
 function setLoading(on, line){
   // ローディング表示中は“もぐもぐ”効果音
   if(on) startLoadingSfx(); else stopLoadingSfx();
   if(!el.loadingOverlay) return;
   el.loadingOverlay.classList.toggle('show', !!on);
-  if(el.loadingLine) el.loadingLine.textContent = line || '準備中…'; // ← AI表現を避ける
+  if(el.loadingLine) el.loadingLine.textContent = on ? nextLoadingLine() : ''; // ← AI表現を避ける
 }
 
 function setImgSafe(img, src, alt){
@@ -532,7 +555,7 @@ async function handleFeed(raw, fromQuick=false){
   const myReq = ++state.reqId;
   debugState.gas = 'wait';
   renderDebug();
-  setLoading(true, 'もぐもぐ準備中…'); // ← AI表現を避ける
+  setLoading(true); // ← AI表現を避ける
 
   try{
     const fv = foodVisual(foodInfo);
