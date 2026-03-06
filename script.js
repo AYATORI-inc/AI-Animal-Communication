@@ -1,23 +1,16 @@
 'use strict';
-const VERSION = 'v30';
+const VERSION = 'v36';
 const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
 
 // ================================
-// Debug pill（見える化）
+// Debug（コンソールのみ）
 // ================================
 const debugState = { screen:'-', gas:'-', audio:'off' };
-function ensureDebugPill(){
-  if(document.getElementById('debugPill')) return;
-  const d = document.createElement('div');
-  d.id = 'debugPill';
-  d.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:9999;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font:12px/1.2 ui-monospace,Menlo,Consolas,monospace;backdrop-filter:blur(6px)';
-  document.body.appendChild(d);
-}
 function renderDebug(){
-  ensureDebugPill();
-  const d = document.getElementById('debugPill');
-  if(!d) return;
-  d.textContent = `${VERSION} screen=${debugState.screen} gas=${debugState.gas} audio=${debugState.audio}`;
+  // 画面左下への表示は行わず、コンソールに出します
+  if(typeof console !== 'undefined'){
+    console.debug(`[${VERSION}] screen=${debugState.screen} gas=${debugState.gas} audio=${debugState.audio}`);
+  }
 }
 renderDebug();
 
@@ -44,10 +37,10 @@ const firstLine = (m) => String(m||'').split(/\r?\n/).map(s=>s.trim()).find(Bool
 
 
 const FOOD_ICON_SRC = {
-  '肉': './img/oniku1.png',
-  '草': './img/kusa2.png',
-  'タイヤ': './img/taiya3.png',
-  '激辛料理': './img/gekikara4.png',
+  'にく': './img/oniku1.png',
+  'くさ': './img/kusa2.png',
+  'たいや': './img/taiya3.png',
+  'げきからりょうり': './img/gekikara4.png',
 };
 
 function setFoodBadge(badgeEl, category, raw){
@@ -253,7 +246,7 @@ const PERSONALITY = {
   panda:    'おっとりで食いしんぼう',
 };
 
-const FOOD_TYPES = ['肉','草','タイヤ','激辛料理'];
+const FOOD_TYPES = ['にく','くさ','たいや','げきからりょうり'];
 const BEG_LINES = {
   lion: ['腹が減ったぜ…','なにかくれよ！','うまいの頼む！'],
   penguin:['おなかすいた〜','なんかある？','もぐもぐしたい！'],
@@ -261,7 +254,7 @@ const BEG_LINES = {
   panda:['たけ…ほしい…','もぐもぐ…したい…','なにか…ある？'],
 };
 const MEGA_DISLIKE = {
-  'タイヤ': {
+  'たいや': {
     base: {
       lion:['それ食べものじゃねぇ！','ゴム臭っ！ムリだ！','歯が折れるって！'],
       penguin:['それ、食べものじゃないよ〜！','くちばし痛い…！','ゴムはやだ…'],
@@ -273,7 +266,7 @@ const MEGA_DISLIKE = {
     mood:'😡',
     emoji:'🛞',
   },
-  '激辛料理': {
+  'げきからりょうり': {
     base: {
       lion:['か、辛っ！舌が燃える！','口の中が火事だ！','これ…戦いか！？'],
       penguin:['からいっ！水〜！','くちがヒリヒリ…！','あつい…むり…'],
@@ -337,14 +330,37 @@ function gotoGame(animalId){
 }
 
 function classifyFood(input){
-  const raw=(input||'').trim();
-  if(!raw) return {raw:'', category:'肉'};
-  if(FOOD_TYPES.includes(raw)) return {raw, category:raw};
-  const t = raw.toLowerCase();
-  if(['タイヤ','ホイール','車輪','くるま','バイク','ゴム'].some(k=>t.includes(k))) return {raw, category:'タイヤ'};
-  if(['激辛','辛','辛い','唐辛子','チリ','ハバネロ','麻婆','担々','火鍋','カレー','わさび','ペヤング'].some(k=>t.includes(k))) return {raw, category:'激辛料理'};
-  if(['草','笹','葉','はっぱ','牧草','芝','しば','竹','たけ','クローバー'].some(k=>t.includes(k))) return {raw, category:'草'};
-  return {raw, category:'肉'};
+  const rawIn = (input||'').trim();
+  if(!rawIn) return {raw:'', category:'にく'};
+
+  // 正規化（表示もひらがなに揃える）
+  const lower = rawIn.toLowerCase();
+
+  // 4択の直接入力（漢字/ひらがな両対応）
+  const direct = [
+    {keys:['にく','肉'], cat:'にく'},
+    {keys:['くさ','草'], cat:'くさ'},
+    {keys:['たいや','タイヤ'], cat:'たいや'},
+    {keys:['げきからりょうり','激辛料理','激辛'], cat:'げきからりょうり'},
+  ];
+  for(const d of direct){
+    if(d.keys.includes(rawIn) || d.keys.some(k=>lower === k.toLowerCase())){
+      return { raw: d.cat, category: d.cat };
+    }
+  }
+
+  // キーワード推定（自由入力）
+  if(['タイヤ','ホイール','車輪','くるま','バイク','ゴム','たいや'].some(k=>lower.includes(k.toLowerCase()))){
+    return { raw: rawIn, category:'たいや' };
+  }
+  if(['激辛','辛','辛い','唐辛子','チリ','ハバネロ','麻婆','担々','火鍋','カレー','わさび','ペヤング','げきから'].some(k=>lower.includes(k.toLowerCase()))){
+    return { raw: rawIn, category:'げきからりょうり' };
+  }
+  if(['草','笹','葉','はっぱ','牧草','芝','しば','竹','たけ','クローバー','くさ'].some(k=>lower.includes(k.toLowerCase()))){
+    return { raw: rawIn, category:'くさ' };
+  }
+  // それ以外はにく扱い（暫定）
+  return { raw: rawIn, category:'にく' };
 }
 function judgeScore(category){
   let base=60;
@@ -365,7 +381,7 @@ function judgeScore(category){
 function makeLocalText(animal, foodInfo, judged){
   const aId=animal.id;
   const cat=foodInfo.category;
-  if(cat==='タイヤ' || cat==='激辛料理'){
+  if(cat==='たいや' || cat==='げきからりょうり'){
     const meta = MEGA_DISLIKE[cat];
     const base = pick((meta.base||{})[aId] || ['やだ…']);
     const body = pick(meta.body || [`「${foodInfo.raw}」は苦手…`]);
@@ -376,10 +392,10 @@ function makeLocalText(animal, foodInfo, judged){
   return { text:`${base}\n${body}`.trim(), mood: judged.art, foodEmoji:(cat==='肉')?'🍖':'🌿', ok:(judged.outcome==='だいせいこう'||judged.outcome==='せいこう') };
 }
 function foodVisual(foodInfo){
-  if(foodInfo.category==='肉') return {en:'a steak'};
-  if(foodInfo.category==='草') return {en:'a bundle of fresh green grass'};
-  if(foodInfo.category==='タイヤ') return {en:'a rubber tire'};
-  if(foodInfo.category==='激辛料理') return {en:'an extremely spicy dish with red chili peppers'};
+  if(foodInfo.category==='にく') return {en:'a steak'};
+  if(foodInfo.category==='くさ') return {en:'a bundle of fresh green grass'};
+  if(foodInfo.category==='たいや') return {en:'a rubber tire'};
+  if(foodInfo.category==='げきからりょうり') return {en:'an extremely spicy dish with red chili peppers'};
   return {en: foodInfo.raw};
 }
 
@@ -559,9 +575,9 @@ async function handleFeed(raw, fromQuick=false){
 
   try{
     const fv = foodVisual(foodInfo);
-    const moodWord = (foodInfo.category==='タイヤ'||foodInfo.category==='激辛料理') ? 'disgusted' : 'delighted';
+    const moodWord = (foodInfo.category==='たいや'||foodInfo.category==='げきからりょうり') ? 'disgusted' : 'delighted';
     const imagePrompt = [
-      'Square 1:1, cute flat illustration, game art.',
+      'Square 1:1. Style: kawaii mascot 2D illustration, pastel, soft shading, thick clean outlines, like a children\'s picture book. Match the game\'s cute animal characters. NOT photorealistic, NOT realistic, NOT cinematic, NOT 3D render.',
       `Animal: ${a.name} ${a.emoji}. Medium close-up, centered.`,
       // 食べ物の一致を強制（ここが最重要）
       `FOOD MUST MATCH EXACTLY: "${foodInfo.raw}".`,
@@ -569,7 +585,8 @@ async function handleFeed(raw, fromQuick=false){
       `MUST show the food clearly: ${fv.en} ("${foodInfo.raw}") large in the foreground, in the animal\\'s mouth or paws.`,
       'Do NOT include any other foods or dishes (no fish, no vegetables, no fruit, no milk, no picnic basket, no bowl, no sweets). One single food item only.',
       `Reaction: ${moodWord} (exaggerated).`,
-      'Background: plain solid color. No wide landscape. No scenery.',
+      'NEGATIVE: photorealistic, realistic animal, detailed fur, cinematic lighting, 3D render, real photo, landscape, mountains, snow field, ocean, wide background.',
+      'Background: simple pastel studio background (solid or soft gradient). No scenery.',
       'No text, no logo, no extra animals. Do NOT omit the food.'
     ].join('\\n');
 
@@ -613,7 +630,7 @@ async function handleFeed(raw, fromQuick=false){
 
     const line = firstLine(gasData.message);
     if(line && !isBadAiLine(line) && el.resultText){
-      if(foodInfo.category==='タイヤ'||foodInfo.category==='激辛料理'){
+      if(foodInfo.category==='たいや'||foodInfo.category==='げきからりょうり'){
         const pos=['うまい','おいしい','最高','すき','大好き','やった'];
         if(!pos.some(k=>line.includes(k))) el.resultText.textContent=line;
       } else {

@@ -332,9 +332,9 @@ body{
 }
 
 .resultImage{
-  width: min(420px, 100%);
+  width: min(620px, 100%);
   height: auto;
-  max-height: 32vh; /* 画像が大きくてもはみ出さない */
+  max-height: 46vh; /* 画像が大きくてもはみ出さない */
   object-fit: contain;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,.14);
@@ -1067,15 +1067,15 @@ body{
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: clamp(8px, 2.5vh, 40px);
+  top: clamp(10px, 3vh, 56px);
 
-  /* ★2倍サイズ相当（上限を引き上げ） */
-  width: min(980px, 96vw);
+  /* レスポンシブ：画面幅に合わせて大きく */
+  width: clamp(520px, 62vw, 1500px);
   height: auto;
-  max-height: clamp(220px, 26vh, 420px);
+  max-height: clamp(180px, 24vh, 520px);
   object-fit: contain;
 
-  /* ★動物や文字の“後ろ”にする */
+  /* 動物・文字の後ろ */
   z-index: 1;
 
   pointer-events: none;
@@ -1092,15 +1092,96 @@ body{
   align-items: center;
   gap: 8px;
 }
-.foodBtnIcon{
-  width: 22px;
-  height: 22px;
+\.foodBtnIcon{
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   filter: drop-shadow(0 6px 10px rgba(0,0,0,.20));
 }
-.badgeFoodIcon{
-  width: 16px;
-  height: 16px;
+\.badgeFoodIcon{
+  width: 24px;
+  height: 24px;
   object-fit: contain;
   margin: 0 6px;
+}
+
+
+/* =========================
+   v36: えさ選択画面レイアウト調整
+   - 動物を左側（赤丸の空き領域）に移動
+   - えさボタンを 2x2 に配置（アイコンを少し大きく）
+   ========================= */
+#screenGame .gameStack{
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 18px 22px;
+  align-items: center;
+}
+
+/* おねだりは上段で横断 */
+#screenGame .begBox{
+  grid-column: 1 / -1;
+}
+
+/* 動物は左の中央 */
+#screenGame .animalShow{
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  place-items: center;
+}
+
+/* えさボタンは右 */
+#screenGame .foodArea{
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* クイックボタン 2x2 */
+#screenGame .quickRow{
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 12px 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ボタンの見た目を少し大きく */
+#screenGame .foodBtn{
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+#screenGame .foodBtnIcon{
+  width: 48px;
+  height: 48px;
+}
+
+/* 自由入力は下段で横断（今の画面幅なら見やすい） */
+#screenGame .freeRow{
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+/* モバイルは縦積みに戻す */
+@media (max-width: 760px){
+  #screenGame .gameStack{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #screenGame .freeRow{
+    width: 100%;
+  }
+  #screenGame .quickRow{
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+  }
+  #screenGame .foodBtn{
+    justify-content: center;
+  }
 }
