@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v45';
+const VERSION = 'v46';
 const GAS_URL = "https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec";
 // v44: HTMLの<meta name=\"gas-url\">があればそれを優先
 let GAS_ENDPOINT_OVERRIDE = null;
@@ -529,28 +529,19 @@ function normalizeGasResponse(r){
   return { ok:true, message: String(r.text || '') };
 }
 
-async function callGas(payload, timeoutMs=120000){
-  // v45: file://（origin null）だとGET/JSONはCORSで落ちやすいので、フォーム送信を優先する
-  try{ if(window.location && window.location.protocol === 'file:') apiMode = 'form'; }catch(_e){}
-  // どの方式がどこで失敗したか追えるように、全トレースを保持
-  const traces = [];
-  const attach = (out)=>{
-    if(out && typeof out === 'object'){
-      out.__traces = traces;
-      out.__trace = traces[traces.length-1] || null;
-      return out;
-    }
-    return { ok:true, message:String(out||''), __traces: traces, __trace: traces[traces.length-1] || null };
-  };
-
-  const tryGet = async ()=>{
+async function callGas(payload, timeoutMs=60000){
+  // v46: GASは doGet(e) のみ（CORS回避のため）。fetchは使わずJSONP(scriptタグ)で呼ぶ。
+  // これなら file://（origin null）でも動きます。
+  const buildUrl = ()=>{
     const params = new URLSearchParams();
+
     const animalType = payload.animalType || payload.animalName || '';
     if(animalType) params.set('animalType', animalType);
 
     const raw = payload.foodRaw || payload.food || '';
     const cat = payload.category || '';
     const fromQuick = payload.categorySource === 'fixed';
+
     if(fromQuick && cat){
       params.set('foodType', cat);
     }else if(raw){
@@ -559,88 +550,71 @@ async function callGas(payload, timeoutMs=120000){
 
     if(payload.likeLevel) params.set('likeLevel', payload.likeLevel);
 
-    // URLが長くなりすぎると失敗しやすいので、baseImagePromptは短いものだけ送る
-    const baseImagePrompt = payload.baseImagePrompt || BASE_IMAGE_PROMPT;
-    if(baseImagePrompt && baseImagePrompt.length <= 600) params.set('baseImagePrompt', baseImagePrompt);
+    // baseImagePrompt はURL長制限があるので短くする（詳細はGAS側に固定推奨）
+    if(payload.baseImagePrompt){
+      const short = String(payload.baseImagePrompt).slice(0, 220);
+      params.set('baseImagePrompt', short);
+    }
 
     params.set('gameVersion', payload.gameVersion || VERSION);
-    params.set('t', String(Date.now())); // cache bust
+
+    // JSONP
+    const cb = `__gas_cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    params.set('callback', cb);
 
     const url = GAS_ENDPOINT + (GAS_ENDPOINT.includes('?') ? '&' : '?') + params.toString();
-    const r = await fetchWithTimeout(url, { method:'GET' }, timeoutMs);
-    const out = normalizeGasResponse(r);
-    traces.push({
-      mode:'get',
-      status: r.status,
-      contentType: r.contentType,
-      error: r.error || '',
-      urlSample: url.slice(0, 800),
-      textSample: (r.text || '').slice(0, 1200),
-    });
-    return out;
+    return { url, cb };
   };
 
-  const tryJson = async ()=>{
-    const r = await fetchWithTimeout(GAS_ENDPOINT, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify(payload),
+  const { url, cb } = buildUrl();
+
+  return await new Promise((resolve) => {
+    const started = Date.now();
+    const trace = {
+      mode: 'jsonp',
+      status: 200,
+      contentType: 'application/javascript',
+      error: '',
+      urlSample: url.slice(0, 900),
+      ms: 0,
+    };
+
+    let timer = null;
+    const cleanup = (scriptEl)=>{
+      try{ delete window[cb]; }catch(_e){ window[cb] = undefined; }
+      if(timer) clearTimeout(timer);
+      if(scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      trace.ms = Date.now() - started;
+    };
+
+    window[cb] = (data)=>{
+      const scriptEl = document.getElementById(cb);
+      cleanup(scriptEl);
+      if(data && typeof data === 'object'){
+        data.__trace = trace;
+        resolve(data);
+      }else{
+        resolve({ success:true, message:String(data||''), __trace: trace });
+      }
+    };
+
+    const script = document.createElement('script');
+    script.id = cb;
+    script.src = url;
+    script.async = true;
+    script.onerror = ()=>{
+      cleanup(script);
+      trace.error = 'script_load_failed';
+      resolve({ ok:false, error:'script_load_failed', __trace: trace });
+    };
+    document.body.appendChild(script);
+
+    timer = setTimeout(()=>{
+      cleanup(script);
+      trace.error = 'timeout';
+      resolve({ ok:false, error:'timeout', __trace: trace });
     }, timeoutMs);
-    const out = normalizeGasResponse(r);
-    traces.push({
-      mode:'json',
-      status: r.status,
-      contentType: r.contentType,
-      error: r.error || '',
-      textSample: (r.text || '').slice(0, 1200),
-    });
-    if(out && out.ok !== false) apiMode = 'json';
-    return out;
-  };
-
-  const tryForm = async ()=>{
-    const form = new URLSearchParams();
-    form.set('payload', JSON.stringify(payload));
-    const flatKeys = ['mode','animalId','animalName','animalPersonality','animalFirst','foodRaw','category','categorySource','food','foodType','wantImage','imagePrompt','commentPrompt','prompt','text','nonce','gameVersion'];
-    flatKeys.forEach(k=>{ if(payload[k] != null) form.set(k, String(payload[k])); });
-    if(payload.allowedCategories) form.set('allowedCategories', JSON.stringify(payload.allowedCategories));
-
-    const r = await fetchWithTimeout(GAS_ENDPOINT, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
-      body: form.toString(),
-    }, timeoutMs);
-    const out = normalizeGasResponse(r);
-    traces.push({
-      mode:'form',
-      status: r.status,
-      contentType: r.contentType,
-      error: r.error || '',
-      textSample: (r.text || '').slice(0, 1200),
-    });
-    if(out && out.ok !== false) apiMode = 'form';
-    return out;
-  };
-
-  // GET優先
-  const g = (apiMode !== 'form') ? await tryGet() : { ok:false, error:'skip_get' };
-  if(g && g.ok !== false) return attach(g);
-
-  // 失敗したら従来方式
-  if(apiMode === 'json'){
-    const out = await tryJson();
-    return attach(out);
-  }
-  if(apiMode === 'form'){
-    const out = await tryForm();
-    return attach(out);
-  }
-
-  const a = await tryJson();
-  if(a && a.ok !== false) return attach(a);
-
-  const b = await tryForm();
-  return attach(b);
+  });
 }
 function extractImageSrc(gasData){
   if(!gasData) return '';
@@ -801,7 +775,7 @@ async function handleFeed(raw, fromQuick=false){
     state.lastGasTraces = (gasData && gasData.__traces) ? gasData.__traces : (state.lastGasTrace ? [state.lastGasTrace] : null);
     if(myReq !== state.reqId) return;
 
-    if(!gasData || gasData.ok===false){
+    if(!gasData || (gasData.ok===false || gasData.success===false)){
       const err = gasData ? (gasData.error||'ng') : 'ng';
       debugState.gas = err;
       renderDebug();
@@ -856,7 +830,7 @@ async function retryImage(){
     state.lastGasData = gasData;
     state.lastGasTrace = (gasData && gasData.__trace) ? gasData.__trace : null;
     state.lastGasTraces = (gasData && gasData.__traces) ? gasData.__traces : (state.lastGasTrace ? [state.lastGasTrace] : null);
-    if(!gasData || gasData.ok === false){
+    if(!gasData || (gasData.ok === false || gasData.success === false)){
       const err = gasData ? (gasData.error||'ng') : 'ng';
       setPlaceholderState('error', err==='timeout' ? 'タイムアウト：GASの処理に時間がかかっています' : ('えらー：' + err));
       return;
