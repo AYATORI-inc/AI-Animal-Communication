@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 'v44';
+const VERSION = 'v45';
 const GAS_URL = "https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec";
 // v44: HTMLの<meta name=\"gas-url\">があればそれを優先
 let GAS_ENDPOINT_OVERRIDE = null;
@@ -530,6 +530,8 @@ function normalizeGasResponse(r){
 }
 
 async function callGas(payload, timeoutMs=120000){
+  // v45: file://（origin null）だとGET/JSONはCORSで落ちやすいので、フォーム送信を優先する
+  try{ if(window.location && window.location.protocol === 'file:') apiMode = 'form'; }catch(_e){}
   // どの方式がどこで失敗したか追えるように、全トレースを保持
   const traces = [];
   const attach = (out)=>{
@@ -621,7 +623,7 @@ async function callGas(payload, timeoutMs=120000){
   };
 
   // GET優先
-  const g = await tryGet();
+  const g = (apiMode !== 'form') ? await tryGet() : { ok:false, error:'skip_get' };
   if(g && g.ok !== false) return attach(g);
 
   // 失敗したら従来方式

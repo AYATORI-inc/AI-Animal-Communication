@@ -1289,3 +1289,16 @@ body{
 @media (max-width: 760px){
   .resultRight .resultText{ max-height: 12vh !important; }
 }
+
+
+/* v45: 結果画面の視認性（画像が下に隠れない） */
+.resultRight{ align-content: start; }
+.resultRight .resultImageWrap{ grid-row: 1; }
+.resultRight .resultText{
+  grid-row: 2;
+  max-height: 14vh;
+  overflow: auto;
+}
+@media (max-width: 760px){
+  .resultRight .resultText{ max-height: 12vh; }
+}
