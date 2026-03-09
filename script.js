@@ -1,6 +1,13 @@
 'use strict';
-const VERSION = 'v37';
-const GAS_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec';
+const VERSION = 'v44';
+const GAS_URL = "https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec";
+// v44: HTMLの<meta name=\"gas-url\">があればそれを優先
+let GAS_ENDPOINT_OVERRIDE = null;
+try{
+  const m = document.querySelector('meta[name=\"gas-url\"]');
+  if(m && m.content) GAS_ENDPOINT_OVERRIDE = m.content.trim();
+}catch(_e){}
+const GAS_ENDPOINT = (GAS_ENDPOINT_OVERRIDE || GAS_ENDPOINT);
 
 // ================================
 // Debug（コンソールのみ）
@@ -13,6 +20,8 @@ function renderDebug(){
   }
 }
 renderDebug();
+console.info(`[${VERSION}] GAS_ENDPOINT=`, GAS_ENDPOINT);
+
 
 window.addEventListener('error', (e) => {
   debugState.gas = 'ERR';
@@ -73,6 +82,7 @@ const el = {
   resultImage: $('#resultImage'),
   resultImagePlaceholder: $('#resultImagePlaceholder'),
   btnRetryImage: $('#btnRetryImage'),
+  btnCopyGas: $('#btnCopyGas'),
   resultFoodBadge: $('#resultFoodBadge'),
   resultMoodBadge: $('#resultMoodBadge'),
   btnResultBack: $('#btnResultBack'),
@@ -148,6 +158,89 @@ function closeImageModal(){
   if(!el.imgModal) return;
   el.imgModal.classList.add('isHidden');
   if(el.imgModalImg) el.imgModalImg.removeAttribute('src');
+}
+
+
+function ensureResultPlaceholder(){
+  if(!el.resultImageWrap) return;
+
+  // 既にあるなら参照だけ
+  if(!el.resultImagePlaceholder){
+    el.resultImagePlaceholder = document.getElementById('resultImagePlaceholder');
+  }
+  if(!el.btnRetryImage){
+    el.btnRetryImage = document.getElementById('btnRetryImage');
+  }
+  if(!el.btnCopyGas){
+    el.btnCopyGas = document.getElementById('btnCopyGas');
+  }
+
+  if(el.resultImagePlaceholder) return;
+
+  // 無ければ動的に作る（HTMLをいじらなくても動く）
+  const ph = document.createElement('div');
+  ph.className = 'resultImagePlaceholder';
+  ph.id = 'resultImagePlaceholder';
+  ph.innerHTML = `
+    <div class="phTitle">イラストを じゅんびしています…</div>
+    <div class="phSub">うまくいかないときは「もういちど」をおしてね</div>
+    <div class="phBtns">
+      <button class="btn small" id="btnRetryImage" type="button">もういちど</button>
+      <button class="btn small ghost" id="btnCopyGas" type="button">れすぽんす を こぴー</button>
+    </div>
+  `;
+  el.resultImageWrap.prepend(ph);
+
+  el.resultImagePlaceholder = ph;
+  el.btnRetryImage = ph.querySelector('#btnRetryImage');
+  el.btnCopyGas = ph.querySelector('#btnCopyGas');
+}
+
+function setPlaceholderState(kind, extra){
+  // kind: loading | noimg | error
+  ensureResultPlaceholder();
+  if(!el.resultImagePlaceholder) return;
+
+  const t = el.resultImagePlaceholder.querySelector('.phTitle');
+  const s = el.resultImagePlaceholder.querySelector('.phSub');
+  if(kind === 'loading'){
+    if(t) t.textContent = 'イラストを じゅんびしています…';
+    if(s) s.textContent = 'ちょっと まってね…';
+    if(el.btnRetryImage) el.btnRetryImage.style.display = 'none';
+    if(el.btnCopyGas) el.btnCopyGas.style.display = 'none';
+  }else if(kind === 'noimg'){
+    if(t) t.textContent = 'イラストが うまく でませんでした…';
+    if(s) s.textContent = extra || '「もういちど」で やりなおせます';
+    if(el.btnRetryImage) el.btnRetryImage.style.display = 'inline-flex';
+    if(el.btnCopyGas) el.btnCopyGas.style.display = 'inline-flex';
+  }else{
+    if(t) t.textContent = 'イラストの じゅんびに しっぱいしました…';
+    if(s) s.textContent = extra || 'つうしんが うまくいかなかったみたい…';
+    if(el.btnRetryImage) el.btnRetryImage.style.display = 'inline-flex';
+    if(el.btnCopyGas) el.btnCopyGas.style.display = 'inline-flex';
+  }
+
+  el.resultImagePlaceholder.style.display = 'grid';
+  if(el.resultImage){
+    el.resultImage.classList.add('isHidden');
+    el.resultImage.removeAttribute('src');
+  }
+  if(el.resultImageWrap) el.resultImageWrap.classList.remove('isHidden');
+}
+
+async function copyGasResponse(){
+  const trace = state.lastGasTrace || null;
+  const traces = state.lastGasTraces || (trace ? [trace] : null);
+  const data = state.lastGasData || null;
+  const payload = state.lastPayload || null;
+  const text = JSON.stringify({ trace, traces, data, payload }, null, 2);
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('こぴー しました');
+  }catch(_e){
+    // fallback
+    window.prompt('このテキストを こぴーして おくってね', text);
+  }
 }
 
 // ================================
@@ -248,6 +341,8 @@ const PERSONALITY = {
   panda:    'おっとりで食いしんぼう',
 };
 
+const BASE_IMAGE_PROMPT = "Square 1:1. Style: kawaii mascot 2D illustration, pastel, soft shading, thick clean outlines, like a children's picture book. Simple studio background. Not photorealistic, not realistic, not 3D render. No scenery.";
+
 const FOOD_TYPES = ['にく','くさ','たいや','げきからりょうり'];
 const BEG_LINES = {
   lion: ['腹が減ったぜ…','なにかくれよ！','うまいの頼む！'],
@@ -291,7 +386,7 @@ const NEUTRAL_LINES = {
 // ================================
 // state
 // ================================
-const state = { animal:null, locked:false, begTimer:null, reqId:0, lastPayload:null };
+const state = { animal:null, locked:false, begTimer:null, reqId:0 };
 
 function stopBegLoop(){
   if(state.begTimer){ clearTimeout(state.begTimer); state.begTimer=null; }
@@ -366,17 +461,17 @@ function classifyFood(input){
 }
 function judgeScore(category){
   let base=60;
-  if(category==='くさ') base=55;
-  if(category==='たいや') base=10;
-  if(category==='げきからりょうり') base=20;
+  if(category==='草') base=55;
+  if(category==='タイヤ') base=10;
+  if(category==='激辛料理') base=20;
   const score = clamp(base + (Math.floor(Math.random()*21)-10), 0, 100);
   let outcome='せいこう';
   if(score>=80) outcome='だいせいこう';
   else if(score>=55) outcome='せいこう';
   else if(score>=35) outcome='びみょう';
   else outcome='しっぱい';
-  if(category==='たいや') outcome='しっぱい';
-  if(category==='げきからりょうり' && outcome==='だいせいこう') outcome='びみょう';
+  if(category==='タイヤ') outcome='しっぱい';
+  if(category==='激辛料理' && outcome==='だいせいこう') outcome='びみょう';
   const art = (outcome==='だいせいこう'||outcome==='せいこう')?'😄':(outcome==='びみょう')?'😐':'😡';
   return {score,outcome,art};
 }
@@ -391,7 +486,7 @@ function makeLocalText(animal, foodInfo, judged){
   }
   const base = pick(NEUTRAL_LINES[aId] || ['ふつう。']);
   const body = pick([`「${foodInfo.raw}」をもぐもぐ。`,`「${foodInfo.raw}」を一口。`,`「${foodInfo.raw}」を食べた。`]);
-  return { text:`${base}\n${body}`.trim(), mood: judged.art, foodEmoji:(cat==='にく')?'🍖':(cat==='くさ')?'🌿':'🍽️', ok:(judged.outcome==='だいせいこう'||judged.outcome==='せいこう') };
+  return { text:`${base}\n${body}`.trim(), mood: judged.art, foodEmoji:(cat==='肉')?'🍖':'🌿', ok:(judged.outcome==='だいせいこう'||judged.outcome==='せいこう') };
 }
 function foodVisual(foodInfo){
   if(foodInfo.category==='にく') return {en:'a steak'};
@@ -434,21 +529,69 @@ function normalizeGasResponse(r){
   return { ok:true, message: String(r.text || '') };
 }
 
-function looksLikeBase64(s){
-  if(typeof s !== 'string') return false;
-  if(s.length < 120) return false;
-  // base64-ish (allow urlsafe)
-  return /^[A-Za-z0-9+/_=-]+$/.test(s.slice(0, 180));
-}
+async function callGas(payload, timeoutMs=120000){
+  // どの方式がどこで失敗したか追えるように、全トレースを保持
+  const traces = [];
+  const attach = (out)=>{
+    if(out && typeof out === 'object'){
+      out.__traces = traces;
+      out.__trace = traces[traces.length-1] || null;
+      return out;
+    }
+    return { ok:true, message:String(out||''), __traces: traces, __trace: traces[traces.length-1] || null };
+  };
 
-async function callGas(payload, timeoutMs=30000){
+  const tryGet = async ()=>{
+    const params = new URLSearchParams();
+    const animalType = payload.animalType || payload.animalName || '';
+    if(animalType) params.set('animalType', animalType);
+
+    const raw = payload.foodRaw || payload.food || '';
+    const cat = payload.category || '';
+    const fromQuick = payload.categorySource === 'fixed';
+    if(fromQuick && cat){
+      params.set('foodType', cat);
+    }else if(raw){
+      params.set('freeWord', raw);
+    }
+
+    if(payload.likeLevel) params.set('likeLevel', payload.likeLevel);
+
+    // URLが長くなりすぎると失敗しやすいので、baseImagePromptは短いものだけ送る
+    const baseImagePrompt = payload.baseImagePrompt || BASE_IMAGE_PROMPT;
+    if(baseImagePrompt && baseImagePrompt.length <= 600) params.set('baseImagePrompt', baseImagePrompt);
+
+    params.set('gameVersion', payload.gameVersion || VERSION);
+    params.set('t', String(Date.now())); // cache bust
+
+    const url = GAS_ENDPOINT + (GAS_ENDPOINT.includes('?') ? '&' : '?') + params.toString();
+    const r = await fetchWithTimeout(url, { method:'GET' }, timeoutMs);
+    const out = normalizeGasResponse(r);
+    traces.push({
+      mode:'get',
+      status: r.status,
+      contentType: r.contentType,
+      error: r.error || '',
+      urlSample: url.slice(0, 800),
+      textSample: (r.text || '').slice(0, 1200),
+    });
+    return out;
+  };
+
   const tryJson = async ()=>{
-    const r = await fetchWithTimeout(GAS_URL, {
+    const r = await fetchWithTimeout(GAS_ENDPOINT, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify(payload),
     }, timeoutMs);
     const out = normalizeGasResponse(r);
+    traces.push({
+      mode:'json',
+      status: r.status,
+      contentType: r.contentType,
+      error: r.error || '',
+      textSample: (r.text || '').slice(0, 1200),
+    });
     if(out && out.ok !== false) apiMode = 'json';
     return out;
   };
@@ -460,23 +603,42 @@ async function callGas(payload, timeoutMs=30000){
     flatKeys.forEach(k=>{ if(payload[k] != null) form.set(k, String(payload[k])); });
     if(payload.allowedCategories) form.set('allowedCategories', JSON.stringify(payload.allowedCategories));
 
-    const r = await fetchWithTimeout(GAS_URL, {
+    const r = await fetchWithTimeout(GAS_ENDPOINT, {
       method:'POST',
       headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
       body: form.toString(),
     }, timeoutMs);
     const out = normalizeGasResponse(r);
+    traces.push({
+      mode:'form',
+      status: r.status,
+      contentType: r.contentType,
+      error: r.error || '',
+      textSample: (r.text || '').slice(0, 1200),
+    });
     if(out && out.ok !== false) apiMode = 'form';
     return out;
   };
 
-  if(apiMode === 'json') return await tryJson();
-  if(apiMode === 'form') return await tryForm();
+  // GET優先
+  const g = await tryGet();
+  if(g && g.ok !== false) return attach(g);
+
+  // 失敗したら従来方式
+  if(apiMode === 'json'){
+    const out = await tryJson();
+    return attach(out);
+  }
+  if(apiMode === 'form'){
+    const out = await tryForm();
+    return attach(out);
+  }
 
   const a = await tryJson();
-  if(a && a.ok !== false) return a;
+  if(a && a.ok !== false) return attach(a);
+
   const b = await tryForm();
-  return b;
+  return attach(b);
 }
 function extractImageSrc(gasData){
   if(!gasData) return '';
@@ -569,14 +731,8 @@ async function handleFeed(raw, fromQuick=false){
     if(el.resultFoodBadge) setFoodBadge(el.resultFoodBadge, foodInfo.category, foodInfo.raw);
     if(el.resultMoodBadge) el.resultMoodBadge.textContent = `きぶん：${local.mood || judged.art}`;
     if(el.resultText) el.resultText.textContent = local.text;
-    if(el.resultImageWrap) el.resultImageWrap.classList.remove('isHidden');
-    if(el.resultImage){ el.resultImage.classList.add('isHidden'); el.resultImage.removeAttribute('src'); el.resultImage.alt=''; }
-    if(el.resultImagePlaceholder){
-      el.resultImagePlaceholder.style.display = 'grid';
-      const t = el.resultImagePlaceholder.querySelector('.phTitle');
-      if(t) t.textContent = 'イラストを じゅんびしています…';
-      if(el.btnRetryImage) el.btnRetryImage.style.display = 'none';
-    }
+    // イラスト枠は常に見せて、状態を表示する
+    setPlaceholderState('loading');
   }catch(e){ console.warn(e); }
 
   showScreen('result');
@@ -611,17 +767,21 @@ async function handleFeed(raw, fromQuick=false){
       `今「${foodInfo.raw}」を食べました。` +
       `（${a.first}の口調で）、60文字以内で感想を言ってください。`;
 
+    const likeLevel = (judged.outcome==='だいせいこう') ? '大好き' : (judged.outcome==='せいこう') ? '好き' : (judged.outcome==='びみょう') ? '普通' : '大嫌い';
     const payload = {
       mode: 'feed',
       gameVersion: VERSION,
       animalId: a.id,
       animalName: a.name,
+      animalType: a.name,
       animalPersonality: personality,
       animalFirst: a.first,
       foodRaw: foodInfo.raw,
       category: categoryForGas,
       categorySource,
       allowedCategories: FOOD_TYPES,
+      likeLevel,
+      baseImagePrompt: BASE_IMAGE_PROMPT,
       // 互換：旧キー
       food: foodInfo.raw,
       foodType: categoryForGas,
@@ -632,13 +792,19 @@ async function handleFeed(raw, fromQuick=false){
       nonce: String(Date.now()) + '-' + Math.random(),
       wantImage: true,
     };
-    state.lastPayload = payload;
-    const gasData = await callGas(payload, 30000);
+    const gasData = await callGas(payload, 120000);
+    state.lastGasData = gasData;
+    state.lastGasTrace = (gasData && gasData.__trace) ? gasData.__trace : null;
+    state.lastGasTraces = (gasData && gasData.__traces) ? gasData.__traces : (state.lastGasTrace ? [state.lastGasTrace] : null);
+    state.lastGasTraces = (gasData && gasData.__traces) ? gasData.__traces : (state.lastGasTrace ? [state.lastGasTrace] : null);
     if(myReq !== state.reqId) return;
 
     if(!gasData || gasData.ok===false){
-      debugState.gas = gasData ? (gasData.error||'ng') : 'ng';
+      const err = gasData ? (gasData.error||'ng') : 'ng';
+      debugState.gas = err;
       renderDebug();
+      console.warn('[gas] failed', gasData && gasData.__trace ? gasData.__trace : gasData);
+      setPlaceholderState('error', err==='timeout' ? 'タイムアウト：GASの処理に時間がかかっています' : ('えらー：' + err));
       return;
     }
     debugState.gas = 'ok';
@@ -658,12 +824,6 @@ async function handleFeed(raw, fromQuick=false){
     if(!src){
       debugState.gas = 'ok-noimg';
       renderDebug();
-      if(el.resultImagePlaceholder){
-        el.resultImagePlaceholder.style.display = 'grid';
-        const t = el.resultImagePlaceholder.querySelector('.phTitle');
-        if(t) t.textContent = 'イラストが うまく でませんでした…';
-        if(el.btnRetryImage) el.btnRetryImage.style.display = 'inline-flex';
-      }
     }
 
     if(src && el.resultImageWrap && el.resultImage){
@@ -672,6 +832,9 @@ async function handleFeed(raw, fromQuick=false){
       el.resultImage.classList.remove('isHidden');
       if(el.resultImagePlaceholder) el.resultImagePlaceholder.style.display = 'none';
       el.resultImageWrap.classList.remove('isHidden');
+    } else {
+      console.warn('[gas] ok but no image', gasData && gasData.__trace ? gasData.__trace : gasData);
+      setPlaceholderState('noimg', (gasData && (gasData.imageError || gasData.image_error)) ? (gasData.imageError || gasData.image_error) : null);
     }
   } finally {
     setLoading(false);
@@ -682,17 +845,18 @@ async function handleFeed(raw, fromQuick=false){
 async function retryImage(){
   if(state.locked) return;
   if(!state.lastPayload) return;
-  if(!el.resultImageWrap) return;
   state.locked = true;
-  debugState.gas = 'retry';
-  renderDebug();
+  setPlaceholderState('loading');
   setLoading(true);
   try{
     const payload = { ...state.lastPayload, nonce: String(Date.now()) + '-' + Math.random(), wantImage: true };
-    const gasData = await callGas(payload, 30000);
+    const gasData = await callGas(payload, 120000);
+    state.lastGasData = gasData;
+    state.lastGasTrace = (gasData && gasData.__trace) ? gasData.__trace : null;
+    state.lastGasTraces = (gasData && gasData.__traces) ? gasData.__traces : (state.lastGasTrace ? [state.lastGasTrace] : null);
     if(!gasData || gasData.ok === false){
-      debugState.gas = gasData ? (gasData.error||'ng') : 'ng';
-      renderDebug();
+      const err = gasData ? (gasData.error||'ng') : 'ng';
+      setPlaceholderState('error', err==='timeout' ? 'タイムアウト：GASの処理に時間がかかっています' : ('えらー：' + err));
       return;
     }
     const src = extractImageSrc(gasData);
@@ -700,17 +864,8 @@ async function retryImage(){
       el.resultImage.src = src;
       el.resultImage.classList.remove('isHidden');
       if(el.resultImagePlaceholder) el.resultImagePlaceholder.style.display = 'none';
-      debugState.gas = 'ok';
-      renderDebug();
     } else {
-      debugState.gas = 'ok-noimg';
-      renderDebug();
-      if(el.resultImagePlaceholder){
-        el.resultImagePlaceholder.style.display = 'grid';
-        const t = el.resultImagePlaceholder.querySelector('.phTitle');
-        if(t) t.textContent = 'イラストが うまく でませんでした…';
-        if(el.btnRetryImage) el.btnRetryImage.style.display = 'inline-flex';
-      }
+      setPlaceholderState('noimg', (gasData && (gasData.imageError || gasData.image_error)) ? (gasData.imageError || gasData.image_error) : null);
     }
   } finally {
     setLoading(false);
@@ -760,8 +915,6 @@ function bind(){
     if(e.key==='Enter'){ e.preventDefault(); el.btnSend?.click(); }
   });
 
-  el.btnRetryImage?.addEventListener('click', safeRun(()=>{ sfx.click(); return retryImage(); }));
-
   el.btnResultBack?.addEventListener('click', safeRun(()=>{
     sfx.click();
     gotoSelect();
@@ -772,14 +925,7 @@ function bind(){
     el.toast?.classList.remove('show');
   });
 
-  el.resultImage?.addEventListener('error', ()=>{
-    if(el.resultImagePlaceholder){
-      el.resultImagePlaceholder.style.display = 'grid';
-      const t = el.resultImagePlaceholder.querySelector('.phTitle');
-      if(t) t.textContent = 'イラストの よみこみに しっぱいしました…';
-      if(el.btnRetryImage) el.btnRetryImage.style.display = 'inline-flex';
-    }
-  });
+  el.resultImage?.addEventListener('error', ()=>{ setPlaceholderState('noimg', 'よみこみに しっぱい…'); });
 
   el.resultImage?.addEventListener('click', ()=>{
     if(el.resultImage?.src){
@@ -793,6 +939,11 @@ function bind(){
     closeImageModal();
   });
   el.imgModalBackdrop?.addEventListener('click', ()=>closeImageModal());
+
+  // 結果イラスト用のボタン（動的生成されるので、毎回bind時に再解決）
+  ensureResultPlaceholder();
+  el.btnRetryImage?.addEventListener('click', safeRun(()=>{ sfx.click(); return retryImage(); }));
+  el.btnCopyGas?.addEventListener('click', safeRun(()=>{ sfx.click(); return copyGasResponse(); }));
 
   renderDebug();
 }

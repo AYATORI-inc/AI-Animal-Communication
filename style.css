@@ -285,7 +285,9 @@ body{
   display:grid;
   gap: 12px;
   min-height: 0;
-  grid-template-rows: minmax(0, 1fr) auto;
+  /* v39: テキストが1frで伸びすぎてイラストが見えなくなるのを防ぐ */
+  grid-template-rows: auto auto;
+  align-content: start;
 }
 .resultImageWrap{
   border-radius: 18px;
@@ -1187,9 +1189,7 @@ body{
 }
 
 
-/* =========================
-   v37: 結果イラストのプレースホルダー（画像が無い/読み込み失敗時）
-   ========================= */
+/* v38: 結果イラストのプレースホルダー */
 .resultImagePlaceholder{
   width: 100%;
   border-radius: 14px;
@@ -1210,4 +1210,82 @@ body{
   font-size: 12px;
   color: rgba(240,245,255,.74);
 }
+.resultImagePlaceholder .phBtns{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 .resultImage.isHidden{ display:none; }
+
+
+/* v39 resultText clamp: 文章が短い時に余白が巨大化しない */
+.resultText{
+  max-height: 26vh;
+}
+@media (max-width: 760px){
+  .resultText{ max-height: 22vh; }
+}
+
+
+/* v39: プレースホルダーのボタンを見つけやすく */
+.resultImagePlaceholder .btn.small{
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 1000;
+}
+
+
+/* =========================
+   v40: 結果画面の“でっかい箱”対策
+   - 文章枠が無駄に大きくならないように高さを制限してスクロール
+   - イラスト枠が常に見えるようにカード内部を上詰め
+   ========================= */
+#screenResult .card{
+  max-height: 84vh;
+  overflow: hidden;
+}
+.resultMain{
+  align-items: start;
+}
+.resultRight{
+  align-content: start;
+}
+
+/* 文章エリアをコンパクトに */
+.resultText{
+  max-height: 18vh !important;
+  overflow: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+@media (max-width: 760px){
+  .resultText{ max-height: 16vh !important; }
+}
+
+/* イラスト枠を見やすく、枠内に収める */
+.resultImageWrap{
+  max-height: 52vh;
+  overflow: hidden;
+}
+
+
+/* =========================
+   v43: 結果画面の“でっかい箱”/Tabしないと画像が見えない問題
+   - 画像（resultImageWrap）を上段、テキスト（resultText）を下段に並べ替え
+   ========================= */
+.resultRight{
+  /* 既存gridのまま上詰め */
+  align-content: start;
+}
+.resultRight .resultImageWrap{
+  grid-row: 1;
+}
+.resultRight .resultText{
+  grid-row: 2;
+  /* さらにコンパクト（画像が隠れない） */
+  max-height: 14vh !important;
+}
+@media (max-width: 760px){
+  .resultRight .resultText{ max-height: 12vh !important; }
+}
