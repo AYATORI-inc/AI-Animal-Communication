@@ -1,141 +1,208 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>どうぶつえさやりひろば</title>
-<link href="style.css" rel="stylesheet"/>
-  <meta name="gas-url" content="https://script.google.com/a/macros/happy-epo8.com/s/AKfycbzNsriAaYZoBL9JTyqlbiWc9oSUcU4Cj3-lZS6sG6i0Lm28QHImhCsLdFA4i37WKujvkg/exec">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>どうぶつえさやりひろば</title>
+  <meta name="gas-url" content="https://script.googleusercontent.com/a/macros/happy-epo8.com/echo?user_content_key=AY5xjrSdWJkoK3aTbQwAm_7pckNb0kfcNjsSXpDyz2CcUeQLE7trA2elCPtIm2qv_pfGX5B6xO2AQB9UoZ5ySNwojthuY7RGdro2JG1SG90AOZcBw3Gqya_c-rybyuLn1aQ-be6hO8ZjwQus07sg8_XDkTvuJPJ1vLTvQqOcK7fsPfajRJndtZH3BbFL2S21_KhMc5FWFxS3hfUc97tQa_XhmhTUKibH89MW9TK9qVBS-heioHwGo6A4l3g_9ayEe2GXefMmAKUKNR28e9z2U_QcdAMa17oz9nMYqgEHJ_VgxFWNKXvMqaf8IP9xxwSjZA&lib=MTTUCtxO1Y-zBMPQ7OIoeEZ7_d7M672O9">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- 背景（imgフォルダから参照） -->
-<div aria-hidden="true" class="bgScene"></div>
-<div class="appShell">
-<main class="main">
-<!-- タイトル（動物選択） -->
-<section aria-label="動物選択" class="screen isActive" id="screenSelect">
-<img class="selectLogoTop" src="./img/daimei.png" alt="どうぶつえさやりひろば タイトルロゴ" />
-<div class="titleScreen">
-<div class="titleTop">
-<div class="titleKicker">AIアニマル えさやり チャット</div>
-</div>
-<div aria-label="どうぶつをえらぶ" class="animalRowWide" role="group">
-<div aria-label="ライオンをえらぶ" class="pickTile" data-animal="lion" role="button" tabindex="0">
-<div class="tileFrame">
-<img alt="ライオン" class="tileImg" src="./img/raion.webp"/>
-</div>
-<div class="tileTag">ライオン</div>
-</div>
-<div aria-label="ペンギンをえらぶ" class="pickTile" data-animal="penguin" role="button" tabindex="0">
-<div class="tileFrame">
-<img alt="ペンギン" class="tileImg" src="./img/pengin.webp"/>
-</div>
-<div class="tileTag">ペンギン</div>
-</div>
-<div aria-label="カピバラをえらぶ" class="pickTile" data-animal="capybara" role="button" tabindex="0">
-<div class="tileFrame">
-<img alt="カピバラ" class="tileImg" src="./img/kapipara.webp"/>
-</div>
-<div class="tileTag">カピバラ</div>
-</div>
-<div aria-label="パンダをえらぶ" class="pickTile" data-animal="panda" role="button" tabindex="0">
-<div class="tileFrame">
-<img alt="パンダ" class="tileImg" src="./img/panda.webp"/>
-</div>
-<div class="tileTag">パンダ</div>
-</div>
-</div>
-<div aria-label="案内" class="titlePrompt">どの　どうぶつに　えさを　あげる？</div>
-</div>
-</section>
-<!-- えさ選択 -->
-<section aria-label="えさをあげる" class="screen" id="screenGame">
-<div class="card gameCard">
-<div class="gameStack">
-<div aria-label="おねだり" class="begBox bigBeg">
-<div class="begLabel">おねだり</div>
-<div class="begLine" id="begLine">…</div>
-</div>
-<div aria-label="どうぶつ" class="animalShow">
-<img alt="" id="animalImg" src=""/>
-</div>
-<div aria-label="えさのせんたく" class="foodArea">
-<div aria-label="クイック" class="quickRow">
-<button class="btn foodBtn" data-quick="にく" type="button"><img class="foodBtnIcon" src="./img/oniku1.png" alt="" aria-hidden="true"/> にく</button>
-<button class="btn foodBtn" data-quick="くさ" type="button"><img class="foodBtnIcon" src="./img/kusa2.png" alt="" aria-hidden="true"/> くさ</button>
-<button class="btn foodBtn" data-quick="たいや" type="button"><img class="foodBtnIcon" src="./img/taiya3.png" alt="" aria-hidden="true"/> たいや</button>
-<button class="btn foodBtn" data-quick="げきからりょうり" type="button"><img class="foodBtnIcon" src="./img/gekikara4.png" alt="" aria-hidden="true"/> げきからりょうり</button>
-</div>
-</div>
-<div aria-label="自由入力" class="freeRow">
-<label class="srOnly" for="freeInput">自由入力</label>
-<input class="input" id="freeInput" maxlength="50" placeholder="じゆうに えさを いれてね（例：魔法のジュース/お母さんの手作りハンバーグなど）" type="text"/>
-<button class="btn primary" id="btnSend" type="button">えさを あげる</button>
-</div>
-</div>
-</div>
-</section>
-<!-- 結果（個別ページ） -->
-<section aria-label="けっか" class="screen" id="screenResult">
-<div class="card resultCard">
-<div class="resultTop">
-<div aria-hidden="true" class="resultIcon">🏁</div>
-<div class="resultTitleBlock">
-<div class="resultTitle">けっか</div>
-<div class="resultSub" id="resultSub">入力：—</div>
-</div>
-</div>
-<div class="resultGrid">
-<div class="resultLeft">
-<div class="resultAnimal">
-<div aria-hidden="true" class="resultEmoji" id="resultEmoji">✨</div>
-<div class="resultAnimalPic"><img alt="" id="resultAnimalImg" src=""/></div>
-</div>
-</div>
-<div class="resultRight">
-<pre class="resultText" id="resultText">—</pre>
-<div aria-label="生成画像" class="resultImageWrap isHidden" id="resultImageWrap">
-<div class="resultImageLabel">イラスト</div>
-<div class="resultImageMeta"><span class="badge" id="resultFoodBadge">—</span><span class="badge badgeMood" id="resultMoodBadge">—</span></div>
-<img alt="" aria-label="生成画像を拡大表示" class="resultImage" id="resultImage" role="button" src="" tabindex="0"/>
-</div>
-</div>
-</div>
-<div class="resultActions">
-<button class="btn primary" id="btnResultBack" type="button">どうぶつせんたくへ</button>
-</div>
-</div>
-</section>
-<!-- トースト（通常は短時間、エラー時は×で閉じるまで表示） -->
-<div aria-atomic="true" aria-live="polite" class="toast" id="toast" role="status">
-<span class="toastText" id="toastText"></span>
-<button aria-label="閉じる" class="toastClose" id="toastClose" type="button">×</button>
-</div>
-<!-- 待機演出：もぐもぐ（上下に揺れる） -->
-<div aria-hidden="true" class="loadingOverlay" id="loadingOverlay">
-<div class="loadingCard">
-<div class="loadingAnimal bob">
-<img alt="" id="loadingAnimalImg" src=""/>
-</div>
-<div class="loadingText">
-<strong>もぐもぐ…</strong>
-<p id="loadingLine">動物が味わっています…</p></div>
-</div>
-</div>
-</main>
-<footer class="appFooter">
-<span class="small muted">©AYATORI-INC</span>
-</footer>
-</div>
-<!-- 画像拡大モーダル -->
-<div aria-hidden="true" class="imgModal isHidden" id="imgModal">
-<div aria-hidden="true" class="imgModalBackdrop" id="imgModalBackdrop"></div>
-<div aria-label="画像拡大表示" aria-modal="true" class="imgModalPanel" role="dialog">
-<button aria-label="閉じる" class="imgModalClose" id="imgModalClose" type="button">×</button>
-<img alt="" class="imgModalImg" id="imgModalImg" src=""/>
-</div>
-</div>
-<script src="script.js"></script>
+  <div class="bgScene" aria-hidden="true"></div>
+
+  <div class="appShell">
+    <main class="appMain">
+      <!-- 動物選択 -->
+      <section class="screen isActive" id="screenSelect" aria-label="動物選択">
+        <div class="titleScreen">
+          <div class="selectLogoWrap">
+            <img class="selectLogoTop" src="./img/daimei.png" alt="どうぶつえさやりひろば タイトルロゴ">
+          </div>
+
+          <div class="animalRowWide" role="group" aria-label="どうぶつをえらぶ">
+            <button class="pickTile" data-animal="lion" type="button">
+              <span class="tileFrame">
+                <img class="tileImg" src="./img/raion.webp" alt="ライオン">
+              </span>
+              <span class="tileTag">ライオン</span>
+            </button>
+
+            <button class="pickTile" data-animal="penguin" type="button">
+              <span class="tileFrame">
+                <img class="tileImg" src="./img/pengin.webp" alt="ペンギン">
+              </span>
+              <span class="tileTag">ペンギン</span>
+            </button>
+
+            <button class="pickTile" data-animal="capybara" type="button">
+              <span class="tileFrame">
+                <img class="tileImg" src="./img/kapipara.webp" alt="カピバラ">
+              </span>
+              <span class="tileTag">カピバラ</span>
+            </button>
+
+            <button class="pickTile" data-animal="panda" type="button">
+              <span class="tileFrame">
+                <img class="tileImg" src="./img/panda.webp" alt="パンダ">
+              </span>
+              <span class="tileTag">パンダ</span>
+            </button>
+          </div>
+
+          <div class="titlePrompt">どの　どうぶつに　えさを　あげる？</div>
+        </div>
+      </section>
+
+      <!-- えさ選択 -->
+      <section class="screen" id="screenGame" aria-label="えさ選択">
+        <div class="card gameCard">
+          <div class="gameLayout">
+            <aside class="gameAnimalCol">
+              <div class="begBox">
+                <div class="begLabel">おねだり</div>
+                <div class="begLine" id="begLine">…</div>
+              </div>
+
+              <div class="animalShow">
+                <img id="animalImg" src="" alt="">
+              </div>
+            </aside>
+
+            <section class="gameActionCol">
+              <h2 class="panelTitle">えさを えらんでね</h2>
+
+              <div class="foodGrid" aria-label="えさのせんたく">
+                <button class="foodBtn" data-quick="にく" type="button">
+                  <img class="foodBtnIcon" src="./img/oniku1.png" alt="">
+                  <span>にく</span>
+                </button>
+
+                <button class="foodBtn" data-quick="くさ" type="button">
+                  <img class="foodBtnIcon" src="./img/kusa2.png" alt="">
+                  <span>くさ</span>
+                </button>
+
+                <button class="foodBtn" data-quick="たいや" type="button">
+                  <img class="foodBtnIcon" src="./img/taiya3.png" alt="">
+                  <span>たいや</span>
+                </button>
+
+                <button class="foodBtn" data-quick="げきからりょうり" type="button">
+                  <img class="foodBtnIcon" src="./img/gekikara4.png" alt="">
+                  <span>げきからりょうり</span>
+                </button>
+              </div>
+
+              <div class="freeBox">
+                <label class="srOnly" for="freeInput">自由入力</label>
+                <input
+                  id="freeInput"
+                  class="input"
+                  type="text"
+                  maxlength="50"
+                  placeholder="じゆうに えさを いれてね（例：魔法のジュース / 手作りハンバーグ）"
+                >
+                <div class="freeActions">
+                  <button id="btnSend" class="btn primary" type="button">えさを あげる</button>
+                  <button id="btnBackToSelect" class="btn ghost" type="button">どうぶつを かえる</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- 結果 -->
+      <section class="screen" id="screenResult" aria-label="けっか">
+        <div class="card resultCard">
+          <div class="resultHeader">
+            <div class="resultHeaderIcon">🏁</div>
+            <div>
+              <div class="resultTitle">けっか</div>
+              <div class="resultSub" id="resultSub">入力：—</div>
+            </div>
+          </div>
+
+          <div class="resultBody">
+            <div class="resultLeft">
+              <div class="resultAnimalPanel">
+                <div class="resultEmoji" id="resultEmoji">✨</div>
+
+                <div class="resultAnimalPic">
+                  <img id="resultAnimalImg" src="" alt="">
+                </div>
+
+                <div class="resultBadges">
+                  <span class="badge" id="resultFoodBadge">えさ：—</span>
+                  <span class="badge badgeMood" id="resultMoodBadge">きぶん：—</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="resultRight">
+              <div class="resultTextPanel">
+                <div class="resultSectionTitle">かんそう</div>
+                <pre class="resultText" id="resultText">—</pre>
+              </div>
+
+              <div class="resultImagePanel" id="resultImageWrap">
+                <div class="resultSectionTitle">イラスト</div>
+
+                <div class="resultImagePlaceholder" id="resultImagePlaceholder">
+                  <div class="phTitle">イラストを じゅんびしています…</div>
+                  <div class="phSub">ちょっと まってね…</div>
+                </div>
+
+                <img
+                  class="resultImage isHidden"
+                  id="resultImage"
+                  src=""
+                  alt=""
+                  tabindex="0"
+                  role="button"
+                  aria-label="生成画像を拡大表示"
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="resultActions">
+            <button id="btnRetryImage" class="btn" type="button">もういちど</button>
+            <button id="btnCopyGas" class="btn ghost" type="button">れすぽんす を こぴー</button>
+            <button id="btnResultBack" class="btn primary" type="button">どうぶつせんたくへ</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="appFooter">©AYATORI-INC</footer>
+  </div>
+
+  <div class="loadingOverlay" id="loadingOverlay" aria-hidden="true">
+    <div class="loadingCard">
+      <div class="loadingAnimal bob">
+        <img id="loadingAnimalImg" src="" alt="">
+      </div>
+      <div class="loadingText">
+        <strong>もぐもぐ…</strong>
+        <p id="loadingLine">動物が味わっています…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <span id="toastText"></span>
+    <button id="toastClose" class="toastClose" type="button" aria-label="閉じる">×</button>
+  </div>
+
+  <div class="imgModal isHidden" id="imgModal" aria-hidden="true">
+    <div class="imgModalBackdrop" id="imgModalBackdrop"></div>
+    <div class="imgModalPanel" role="dialog" aria-modal="true" aria-label="画像拡大表示">
+      <button id="imgModalClose" class="imgModalClose" type="button" aria-label="閉じる">×</button>
+      <img id="imgModalImg" class="imgModalImg" src="" alt="">
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
