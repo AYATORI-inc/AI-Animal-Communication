@@ -1,7 +1,7 @@
 'use strict';
 
-const VERSION = 'v51-sfx-restore';
-const GAS_FALLBACK_URL = 'https://script.googleusercontent.com/a/macros/happy-epo8.com/echo?user_content_key=AY5xjrSdWJkoK3aTbQwAm_7pckNb0kfcNjsSXpDyz2CcUeQLE7trA2elCPtIm2qv_pfGX5B6xO2AQB9UoZ5ySNwojthuY7RGdro2JG1SG90AOZcBw3Gqya_c-rybyuLn1aQ-be6hO8ZjwQus07sg8_XDkTvuJPJ1vLTvQqOcK7fsPfajRJndtZH3BbFL2S21_KhMc5FWFxS3hfUc97tQa_XhmhTUKibH89MW9TK9qVBS-heioHwGo6A4l3g_9ayEe2GXefMmAKUKNR28e9z2U_QcdAMa17oz9nMYqgEHJ_VgxFWNKXvMqaf8IP9xxwSjZA&lib=MTTUCtxO1Y-zBMPQ7OIoeEZ7_d7M672O9';
+const VERSION = 'v53-direct-exec';
+const GAS_FALLBACK_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbxN_lNgpMEsQ1_bCu2uPeMZT_byjb0bId_g9IbBWAecG6hFVWTpuvgzrkLVT0affBXpqA/exec';
 
 const GAS_ENDPOINT = (() => {
   const meta = document.querySelector('meta[name="gas-url"]');
@@ -355,7 +355,7 @@ function normalizeFood(input) {
   const raw = String(input || '').trim();
   const lower = raw.toLowerCase();
 
-  if (!raw) return { raw: '', category: 'にく' };
+  if (!raw) return { raw: '', category: 'にく', likeLevel: '普通' };
 
   const direct = [
     { words: ['にく', '肉'], category: 'にく' },
@@ -366,23 +366,27 @@ function normalizeFood(input) {
 
   for (const item of direct) {
     if (item.words.some(word => word === raw || word.toLowerCase() === lower)) {
-      return { raw: item.category, category: item.category };
+      return {
+        raw: item.category,
+        category: item.category,
+        likeLevel: ['たいや', 'げきからりょうり'].includes(item.category) ? 'きらい' : '普通'
+      };
     }
   }
 
   if (['たいや', 'タイヤ', 'ホイール', '車輪', 'ゴム', 'くるま', 'バイク'].some(word => lower.includes(word.toLowerCase()))) {
-    return { raw, category: 'たいや' };
+    return { raw, category: 'たいや', likeLevel: 'きらい' };
   }
 
   if (['げきから', '激辛', '辛', '辛い', '唐辛子', 'ハバネロ', '火鍋', 'カレー', 'わさび'].some(word => lower.includes(word.toLowerCase()))) {
-    return { raw, category: 'げきからりょうり' };
+    return { raw, category: 'げきからりょうり', likeLevel: 'きらい' };
   }
 
   if (['くさ', '草', '笹', '葉', 'はっぱ', '竹', 'たけ', '牧草', 'クローバー'].some(word => lower.includes(word.toLowerCase()))) {
-    return { raw, category: 'くさ' };
+    return { raw, category: 'くさ', likeLevel: '普通' };
   }
 
-  return { raw, category: 'にく' };
+  return { raw, category: 'にく', likeLevel: '普通' };
 }
 
 function makeLocalComment(animal, foodInfo) {
@@ -421,7 +425,8 @@ function buildImagePrompt(animal, foodInfo) {
   const reaction = ['たいや', 'げきからりょうり'].includes(foodInfo.category) ? 'disgusted' : 'delighted';
 
   return [
-    'Square 1:1. kawaii mascot 2D illustration, pastel, soft shading, thick clean outlines, children picture book style.',
+    'Square 1:1.',
+    'kawaii mascot 2D illustration, pastel, soft shading, thick clean outlines, children picture book style.',
     `Animal: ${animal.name} ${animal.emoji}. Medium close-up, centered.`,
     `FOOD MUST MATCH EXACTLY: "${foodInfo.raw}".`,
     `ONLY FOOD: ${foodVisual}. This is the only food in the image.`,
@@ -447,12 +452,16 @@ function extractImageSrc(data) {
     data.outputImageUrl,
     data.output_image_url,
     data.resultImageUrl,
-    data.result_image_url
+    data.result_image_url,
+    data.generatedImageUrl,
+    data.generated_image_url,
+    data.imageSrc,
+    data.image_src
   ].find(Boolean);
 
   if (direct) return String(direct);
 
-  const base64 = data.imageBase64 || data.base64 || data.image_base64;
+  const base64 = data.imageBase64 || data.base64 || data.image_base64 || data.generatedImageBase64 || data.generated_image_base64;
   if (base64) {
     const clean = String(base64).replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
     return `data:image/png;base64,${clean}`;
@@ -470,9 +479,6 @@ function isBadAiLine(line) {
 }
 
 function buildPayload(animal, foodInfo, fromQuick) {
-  const categorySource = fromQuick ? 'fixed' : 'auto_requested';
-  const categoryForGas = fromQuick ? foodInfo.category : '';
-
   const imagePrompt = buildImagePrompt(animal, foodInfo);
   const commentPrompt = buildCommentPrompt(animal, foodInfo);
 
@@ -485,11 +491,12 @@ function buildPayload(animal, foodInfo, fromQuick) {
     animalPersonality: animal.personality,
     animalFirst: animal.first,
     foodRaw: foodInfo.raw,
-    category: categoryForGas,
-    categorySource,
-    food: foodInfo.raw,
-    foodType: categoryForGas,
+    foodType: foodInfo.category,
+    category: foodInfo.category,
+    freeWord: fromQuick ? '' : foodInfo.raw,
+    likeLevel: foodInfo.likeLevel || '普通',
     imagePrompt,
+    baseImagePrompt: imagePrompt,
     commentPrompt,
     prompt: imagePrompt,
     text: commentPrompt,
@@ -502,13 +509,22 @@ async function callGasJsonp(payload, timeoutMs = 120000) {
   const params = new URLSearchParams();
   const callbackName = `__gas_cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
-  if (payload.animalType) params.set('animalType', payload.animalType);
-  if (payload.foodRaw && payload.categorySource !== 'fixed') params.set('freeWord', payload.foodRaw);
-  if (payload.categorySource === 'fixed' && payload.category) params.set('foodType', payload.category);
-  if (payload.imagePrompt) params.set('imagePrompt', payload.imagePrompt.slice(0, 1800));
-  if (payload.commentPrompt) params.set('commentPrompt', payload.commentPrompt.slice(0, 600));
-  if (payload.gameVersion) params.set('gameVersion', payload.gameVersion);
   params.set('callback', callbackName);
+  params.set('animalType', payload.animalType || '');
+  params.set('foodType', payload.foodType || '');
+  params.set('category', payload.category || '');
+  params.set('foodRaw', payload.foodRaw || '');
+  params.set('food', payload.foodRaw || '');
+  params.set('likeLevel', payload.likeLevel || '普通');
+  params.set('gameVersion', payload.gameVersion || VERSION);
+  params.set('wantImage', 'true');
+
+  if (payload.freeWord) params.set('freeWord', payload.freeWord);
+  if (payload.imagePrompt) params.set('imagePrompt', payload.imagePrompt.slice(0, 1800));
+  if (payload.baseImagePrompt) params.set('baseImagePrompt', payload.baseImagePrompt.slice(0, 1800));
+  if (payload.commentPrompt) params.set('commentPrompt', payload.commentPrompt.slice(0, 600));
+  if (payload.text) params.set('text', payload.text.slice(0, 600));
+  if (payload.prompt) params.set('prompt', payload.prompt.slice(0, 1800));
 
   const url = `${GAS_ENDPOINT}${GAS_ENDPOINT.includes('?') ? '&' : '?'}${params.toString()}`;
 
@@ -531,7 +547,7 @@ async function callGasJsonp(payload, timeoutMs = 120000) {
       if (done) return;
       cleanup();
       if (data && typeof data === 'object') {
-        data.__trace = { mode: 'jsonp', urlSample: url.slice(0, 800) };
+        data.__trace = { mode: 'jsonp', urlSample: url.slice(0, 900) };
       }
       resolve(data);
     };
@@ -542,7 +558,7 @@ async function callGasJsonp(payload, timeoutMs = 120000) {
       resolve({
         success: false,
         error: 'script_load_failed',
-        __trace: { mode: 'jsonp', urlSample: url.slice(0, 800) }
+        __trace: { mode: 'jsonp', urlSample: url.slice(0, 900) }
       });
     };
 
@@ -552,7 +568,7 @@ async function callGasJsonp(payload, timeoutMs = 120000) {
       resolve({
         success: false,
         error: 'timeout',
-        __trace: { mode: 'jsonp', urlSample: url.slice(0, 800) }
+        __trace: { mode: 'jsonp', urlSample: url.slice(0, 900) }
       });
     }, timeoutMs);
 
@@ -609,7 +625,7 @@ async function handleFeed(raw, fromQuick) {
     if (!gasData || gasData.ok === false || gasData.success === false) {
       const error = gasData?.error || 'ng';
       const detail = error === 'script_load_failed'
-        ? 'GASがJSONP(callback)未対応の可能性があります'
+        ? 'GASのJSONP callback が実行されませんでした'
         : error === 'timeout'
           ? 'タイムアウト：GASの処理に時間がかかっています'
           : `えらー：${error}`;
@@ -617,7 +633,14 @@ async function handleFeed(raw, fromQuick) {
       return;
     }
 
-    const line = firstLine(gasData.message || gasData.comment || gasData.text);
+    const line = firstLine(
+      gasData.message ||
+      gasData.comment ||
+      gasData.text ||
+      gasData.reply ||
+      gasData.responseText
+    );
+
     if (line && !isBadAiLine(line) && el.resultText) {
       el.resultText.textContent = line;
     }
@@ -629,7 +652,14 @@ async function handleFeed(raw, fromQuick) {
       el.resultImage.classList.remove('isHidden');
       el.resultImagePlaceholder?.classList.add('isHidden');
     } else {
-      setPlaceholderState('noimg', gasData?.imageError || gasData?.image_error || '画像URLかbase64が返っていません');
+      setPlaceholderState(
+        'noimg',
+        gasData?.imageError ||
+        gasData?.image_error ||
+        gasData?.errorDetail ||
+        gasData?.error_detail ||
+        '画像URLかbase64が返っていません'
+      );
     }
   } finally {
     setLoading(false);
@@ -658,7 +688,7 @@ async function retryImage() {
       setPlaceholderState(
         'error',
         error === 'script_load_failed'
-          ? 'GASがJSONP(callback)未対応の可能性があります'
+          ? 'GASのJSONP callback が実行されませんでした'
           : `えらー：${error}`
       );
       return;
@@ -670,7 +700,14 @@ async function retryImage() {
       el.resultImage.classList.remove('isHidden');
       el.resultImagePlaceholder?.classList.add('isHidden');
     } else {
-      setPlaceholderState('noimg', gasData?.imageError || gasData?.image_error || '画像URLかbase64が返っていません');
+      setPlaceholderState(
+        'noimg',
+        gasData?.imageError ||
+        gasData?.image_error ||
+        gasData?.errorDetail ||
+        gasData?.error_detail ||
+        '画像URLかbase64が返っていません'
+      );
     }
   } finally {
     setLoading(false);
