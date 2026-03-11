@@ -377,9 +377,9 @@ img{ display:block; max-width:100%; }
 ---------------------------- */
 
 .resultCard{
-  overflow:auto;
+  overflow:hidden;
   display:grid;
-  grid-template-rows:auto 1fr auto;
+  grid-template-rows:auto minmax(0,1fr) auto;
   gap:18px;
 }
 
@@ -387,6 +387,7 @@ img{ display:block; max-width:100%; }
   display:flex;
   align-items:center;
   gap:14px;
+  min-height:0;
 }
 
 .resultHeaderIcon,
@@ -412,13 +413,22 @@ img{ display:block; max-width:100%; }
 
 .resultBody{
   min-height:0;
+  overflow:auto;
+  padding-right:4px;
   display:grid;
   grid-template-columns:minmax(250px, 330px) minmax(0,1fr);
   gap:18px;
+  align-items:start;
+}
+
+.resultLeft,
+.resultRight{
+  min-height:0;
 }
 
 .resultAnimalPanel{
   height:100%;
+  min-height:0;
   display:grid;
   grid-template-rows:auto 1fr auto;
   gap:14px;
@@ -466,7 +476,6 @@ img{ display:block; max-width:100%; }
 }
 
 .resultRight{
-  min-height:0;
   display:grid;
   grid-template-rows:minmax(180px, auto) minmax(260px, 1fr);
   gap:18px;
@@ -524,6 +533,21 @@ img{ display:block; max-width:100%; }
   object-fit:contain;
   border-radius:22px;
   background:rgba(255,255,255,.06);
+}
+
+.resultActions{
+  position:relative;
+  z-index:3;
+  justify-content:flex-end;
+  align-items:center;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg, rgba(9,18,35,0), rgba(9,18,35,.32));
+  flex-shrink:0;
+}
+
+.resultActions .btn{
+  flex:0 0 auto;
 }
 
 .isHidden{ display:none !important; }
@@ -679,6 +703,12 @@ img{ display:block; max-width:100%; }
   }
 }
 
+@media (max-width: 1100px){
+  .resultActions{
+    justify-content:center;
+  }
+}
+
 @media (max-width: 980px){
   body{
     overflow:auto;
@@ -731,12 +761,25 @@ img{ display:block; max-width:100%; }
     height:auto;
   }
 
+  .resultCard{
+    overflow:visible;
+  }
+
+  .resultBody{
+    overflow:visible;
+    padding-right:0;
+  }
+
   .resultRight{
     grid-template-rows:auto auto;
   }
 
   .resultText{
     font-size:24px;
+  }
+
+  .resultActions{
+    justify-content:center;
   }
 }
 
@@ -807,5 +850,15 @@ img{ display:block; max-width:100%; }
   .btn,
   .input{
     font-size:16px;
+  }
+
+  .resultActions{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+
+  .resultActions .btn{
+    width:100%;
   }
 }

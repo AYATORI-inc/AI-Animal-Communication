@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = 'v50-full-replace';
+const VERSION = 'v51-sfx-restore';
 const GAS_FALLBACK_URL = 'https://script.googleusercontent.com/a/macros/happy-epo8.com/echo?user_content_key=AY5xjrSdWJkoK3aTbQwAm_7pckNb0kfcNjsSXpDyz2CcUeQLE7trA2elCPtIm2qv_pfGX5B6xO2AQB9UoZ5ySNwojthuY7RGdro2JG1SG90AOZcBw3Gqya_c-rybyuLn1aQ-be6hO8ZjwQus07sg8_XDkTvuJPJ1vLTvQqOcK7fsPfajRJndtZH3BbFL2S21_KhMc5FWFxS3hfUc97tQa_XhmhTUKibH89MW9TK9qVBS-heioHwGo6A4l3g_9ayEe2GXefMmAKUKNR28e9z2U_QcdAMa17oz9nMYqgEHJ_VgxFWNKXvMqaf8IP9xxwSjZA&lib=MTTUCtxO1Y-zBMPQ7OIoeEZ7_d7M672O9';
 
 const GAS_ENDPOINT = (() => {
@@ -109,6 +109,106 @@ const el = {
   imgModalImg: $('#imgModalImg')
 };
 
+/* ================================
+   効果音
+================================ */
+
+let audioCtx = null;
+let audioUnlocked = false;
+let loadingSfxTimer = null;
+
+function ensureAudio() {
+  if (audioCtx) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  audioCtx = new Ctx();
+}
+
+async function unlockAudio() {
+  ensureAudio();
+  if (!audioCtx) return false;
+
+  if (audioCtx.state === 'suspended') {
+    try {
+      await audioCtx.resume();
+    } catch (_error) {}
+  }
+
+  audioUnlocked = audioCtx.state === 'running';
+  return audioUnlocked;
+}
+
+function tone(freq = 440, dur = 0.08, gain = 0.05, type = 'sine') {
+  if (!audioUnlocked || !audioCtx) return;
+
+  const t0 = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const amp = audioCtx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+
+  amp.gain.setValueAtTime(0.0001, t0);
+  amp.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+  amp.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+  osc.connect(amp);
+  amp.connect(audioCtx.destination);
+
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.02);
+}
+
+const sfx = {
+  click: () => tone(520, 0.06, 0.04, 'square'),
+  select: () => {
+    tone(440, 0.06, 0.035, 'sine');
+    setTimeout(() => tone(660, 0.07, 0.035, 'sine'), 60);
+  },
+  feed: () => {
+    tone(240, 0.05, 0.03, 'triangle');
+    setTimeout(() => tone(180, 0.06, 0.03, 'triangle'), 70);
+  },
+  ok: () => {
+    tone(660, 0.07, 0.04, 'sine');
+    setTimeout(() => tone(880, 0.09, 0.04, 'sine'), 80);
+  },
+  ng: () => tone(220, 0.10, 0.05, 'sawtooth'),
+  mogumogu: () => {
+    tone(260, 0.05, 0.018, 'triangle');
+    setTimeout(() => tone(190, 0.06, 0.018, 'triangle'), 70);
+  }
+};
+
+async function playSfx(name) {
+  await unlockAudio();
+  if (sfx[name]) sfx[name]();
+}
+
+function startLoadingSfx() {
+  if (loadingSfxTimer) return;
+  if (!audioUnlocked) return;
+
+  sfx.mogumogu();
+  loadingSfxTimer = setInterval(() => {
+    sfx.mogumogu();
+  }, 850);
+}
+
+function stopLoadingSfx() {
+  if (!loadingSfxTimer) return;
+  clearInterval(loadingSfxTimer);
+  loadingSfxTimer = null;
+}
+
+window.addEventListener('pointerdown', () => {
+  unlockAudio();
+}, { once: true });
+
+/* ================================
+   共通
+================================ */
+
 function showToast(message, isError = false) {
   if (!el.toast || !el.toastText) return;
   el.toastText.textContent = message;
@@ -142,8 +242,15 @@ function showScreen(name) {
 }
 
 function setLoading(show) {
+  if (show) {
+    startLoadingSfx();
+  } else {
+    stopLoadingSfx();
+  }
+
   if (!el.loadingOverlay) return;
   el.loadingOverlay.classList.toggle('show', show);
+
   if (show && el.loadingLine) {
     el.loadingLine.textContent = pick(LOADING_LINES);
   }
@@ -227,6 +334,8 @@ function gotoSelect() {
   state.animal = null;
   state.locked = false;
   stopBegLoop();
+  setLoading(false);
+  closeImageModal();
   if (el.freeInput) el.freeInput.value = '';
   showScreen('select');
 }
@@ -282,7 +391,8 @@ function makeLocalComment(animal, foodInfo) {
   if (special) {
     return {
       text: `${pick(special.lines[animal.id] || ['やだ…'])}\n${pick(special.extra)}`,
-      mood: special.mood
+      mood: special.mood,
+      ok: false
     };
   }
 
@@ -295,7 +405,8 @@ function makeLocalComment(animal, foodInfo) {
 
   return {
     text: `${pick(normalLines[animal.id] || ['おいしい。'])}\n「${foodInfo.raw}」を もぐもぐ たべた。`,
-    mood: '😋'
+    mood: '😋',
+    ok: true
   };
 }
 
@@ -483,6 +594,7 @@ async function handleFeed(raw, fromQuick) {
 
   state.lastPayload = payload;
   applyResultBase(animal, foodInfo, localResult);
+  await playSfx(localResult.ok ? 'ok' : 'ng');
   setLoading(true);
 
   const requestId = ++state.reqId;
@@ -531,6 +643,7 @@ async function retryImage() {
   state.locked = true;
   setLoading(true);
   setPlaceholderState('loading');
+  await playSfx('click');
 
   try {
     const payload = { ...state.lastPayload, nonce: `${Date.now()}-${Math.random()}`, wantImage: true };
@@ -582,28 +695,68 @@ async function copyGasResponse() {
 
 function bind() {
   $$('[data-animal]').forEach((button) => {
-    button.addEventListener('click', () => gotoGame(button.dataset.animal));
+    button.addEventListener('click', async () => {
+      await playSfx('select');
+      gotoGame(button.dataset.animal);
+    });
   });
 
   $$('[data-quick]').forEach((button) => {
-    button.addEventListener('click', () => handleFeed(button.dataset.quick, true));
+    button.addEventListener('click', async () => {
+      await playSfx('feed');
+      handleFeed(button.dataset.quick, true);
+    });
   });
 
-  el.btnSend?.addEventListener('click', () => {
+  el.btnSend?.addEventListener('click', async () => {
+    await playSfx('feed');
     const value = el.freeInput?.value || '';
     if (el.freeInput) el.freeInput.value = '';
     handleFeed(value, false);
   });
 
-  el.btnBackToSelect?.addEventListener('click', gotoSelect);
-  el.btnResultBack?.addEventListener('click', gotoSelect);
-  el.btnRetryImage?.addEventListener('click', retryImage);
-  el.btnCopyGas?.addEventListener('click', copyGasResponse);
-  el.toastClose?.addEventListener('click', () => el.toast?.classList.remove('show'));
-  el.resultImage?.addEventListener('click', () => openImageModal(el.resultImage?.src));
-  el.resultImage?.addEventListener('error', () => setPlaceholderState('noimg', 'よみこみに しっぱい…'));
-  el.imgModalClose?.addEventListener('click', closeImageModal);
-  el.imgModalBackdrop?.addEventListener('click', closeImageModal);
+  el.btnBackToSelect?.addEventListener('click', async () => {
+    await playSfx('click');
+    gotoSelect();
+  });
+
+  el.btnResultBack?.addEventListener('click', async () => {
+    await playSfx('click');
+    gotoSelect();
+  });
+
+  el.btnRetryImage?.addEventListener('click', () => {
+    retryImage();
+  });
+
+  el.btnCopyGas?.addEventListener('click', async () => {
+    await playSfx('click');
+    copyGasResponse();
+  });
+
+  el.toastClose?.addEventListener('click', async () => {
+    await playSfx('click');
+    el.toast?.classList.remove('show');
+  });
+
+  el.resultImage?.addEventListener('click', async () => {
+    if (!el.resultImage?.src) return;
+    await playSfx('click');
+    openImageModal(el.resultImage.src);
+  });
+
+  el.resultImage?.addEventListener('error', () => {
+    setPlaceholderState('noimg', 'よみこみに しっぱい…');
+  });
+
+  el.imgModalClose?.addEventListener('click', async () => {
+    await playSfx('click');
+    closeImageModal();
+  });
+
+  el.imgModalBackdrop?.addEventListener('click', () => {
+    closeImageModal();
+  });
 
   el.freeInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
