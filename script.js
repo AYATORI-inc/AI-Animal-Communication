@@ -24,6 +24,8 @@ const MASCOT_STYLE_BASE = {
     'One character only.',
     'Please limit the number of animals in the image to one.',
     '1 animal only, no duplicate character, no extra face, no second pose.',
+    'No preview, mini view, thumbnail preview, or 3-view required.',
+    'Animals should be in front view.',
     'Multiple angles such as three-dimensional views are not required.',
     'Multiple reactions are not required.',
     'No thumbnails or color palettes are needed when generating images.',
