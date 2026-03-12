@@ -1,8 +1,7 @@
-'use strict';
+﻿'use strict';
 
-const VERSION = 'v53-direct-exec';
+const VERSION = 'v55-rebuild-fetch';
 const GAS_FALLBACK_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbxN_lNgpMEsQ1_bCu2uPeMZT_byjb0bId_g9IbBWAecG6hFVWTpuvgzrkLVT0affBXpqA/exec';
-
 const GAS_ENDPOINT = (() => {
   const meta = document.querySelector('meta[name="gas-url"]');
   return meta && meta.content ? meta.content.trim() : GAS_FALLBACK_URL;
@@ -10,71 +9,135 @@ const GAS_ENDPOINT = (() => {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
-const firstLine = (value) => String(value || '').split(/\r?\n/).map(v => v.trim()).find(Boolean) || '';
+const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
 
-const FOOD_ICON_SRC = {
-  'にく': './img/oniku1.png',
-  'くさ': './img/kusa2.png',
-  'たいや': './img/taiya3.png',
-  'げきからりょうり': './img/gekikara4.png'
+const ANIMALS = {
+  lion: {
+    id: 'lion',
+    name: 'ライオン',
+    emoji: '🦁',
+    img: './img/raion.webp',
+    first: 'オレ',
+    personality: '自信満々でワイルド',
+    imageStyle: 'golden plush mascot lion, fluffy curly mane, toy-like body, big round head, short legs, front-facing, confident smile, soft 3d plush texture'
+  },
+  penguin: {
+    id: 'penguin',
+    name: 'ペンギン',
+    emoji: '🐧',
+    img: './img/pengin.webp',
+    first: 'ぼく',
+    personality: 'まじめでのんびり',
+    imageStyle: 'baby blue penguin mascot, fluffy plush texture, white belly, tiny crown, round body, wings spread, cheerful front-facing pose, big sparkling eyes'
+  },
+  capybara: {
+    id: 'capybara',
+    name: 'カピバラ',
+    emoji: '🦫',
+    img: './img/kapipara.webp',
+    first: 'わたし',
+    personality: 'おっとりしてやさしい',
+    imageStyle: 'cute capybara mascot, beige fluffy fur, sleepy half-closed eyes, chubby round body, tiny paws, seated front-facing pose, soft plush toy look'
+  },
+  panda: {
+    id: 'panda',
+    name: 'パンダ',
+    emoji: '🐼',
+    img: './img/panda.webp',
+    first: 'ぼく',
+    personality: 'マイペースで食いしんぼう',
+    imageStyle: 'cute panda mascot, fluffy black and white fur, oversized round head, pink cheeks, seated front-facing pose, plush doll look, playful expression'
+  }
 };
 
-const ANIMALS = [
-  { id: 'lion', name: 'ライオン', emoji: '🦁', img: './img/raion.webp', first: 'オレ', personality: '自信家で王様気質' },
-  { id: 'penguin', name: 'ペンギン', emoji: '🐧', img: './img/pengin.webp', first: 'ぼく', personality: '元気で好奇心旺盛' },
-  { id: 'capybara', name: 'カピバラ', emoji: '🦫', img: './img/kapipara.webp', first: 'わたし', personality: 'のんびりマイペース' },
-  { id: 'panda', name: 'パンダ', emoji: '🐼', img: './img/panda.webp', first: 'ぼく', personality: 'おっとりで食いしんぼう' }
-];
+const QUICK_FOODS = {
+  'にく': {
+    key: 'meat',
+    label: 'にく',
+    category: 'にく',
+    visual: 'a juicy steak',
+    imageStyle: 'thick raw marbled meat slices arranged on a wooden board, isolated object, premium food asset look'
+  },
+  'くさ': {
+    key: 'grass',
+    label: 'くさ',
+    category: 'くさ',
+    visual: 'a bundle of fresh green grass',
+    imageStyle: 'fresh green grass and wild herbs piled on a wooden board, isolated object, clean cutout asset look'
+  },
+  'たいや': {
+    key: 'tire',
+    label: 'たいや',
+    category: 'たいや',
+    visual: 'a worn rubber tire on the ground, isolated object, simple cutout asset look'
+  },
+  'げきからりょうり': {
+    key: 'spicy',
+    label: 'げきからりょうり',
+    category: 'げきからりょうり',
+    visual: 'an extremely spicy dish with red chili peppers',
+    imageStyle: 'bright red extra spicy dish covered with many chili peppers on a wooden board, isolated object, dramatic food asset look'
+  }
+};
+
+const REACTIONS = {
+  lion: {
+    meat: { likeLevel: '大好き', mood: '😍', text: 'うまい！ これはテンションが上がるぜ！' },
+    grass: { likeLevel: '嫌い', mood: '😖', text: 'くさはちょっと違うかな…。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやは食べものじゃないぞ！？' },
+    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からすぎる！ でも気合いで食べる…！' },
+    free: { likeLevel: '普通', mood: '😐', text: 'どんな味か、まずは食べてみるぞ。' }
+  },
+  penguin: {
+    meat: { likeLevel: '好き', mood: '😊', text: 'おいしいね。もぐもぐ食べちゃう。' },
+    grass: { likeLevel: '嫌い', mood: '😕', text: 'くさは、ちょっと食べにくいかな…。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやは食べられないよ…。' },
+    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からくてびっくりした…。' },
+    free: { likeLevel: '普通', mood: '🙂', text: 'どきどきするけど、ひとくち食べてみるね。' }
+  },
+  capybara: {
+    grass: { likeLevel: '大好き', mood: '😍', text: 'これは落ち着く味だねぇ。' },
+    meat: { likeLevel: '普通', mood: '😐', text: '食べられるけど、いつもの感じではないかな。' },
+    tire: { likeLevel: '嫌い', mood: '😖', text: 'かたいよ…。これはえさじゃないかも。' },
+    spicy: { likeLevel: '大嫌い', mood: '🤢', text: 'からいのは苦手なんだ…。' },
+    free: { likeLevel: '普通', mood: '🙂', text: 'のんびり味見してみるね。' }
+  },
+  panda: {
+    grass: { likeLevel: '好き', mood: '😊', text: 'しゃきしゃきしていい感じ。' },
+    meat: { likeLevel: '嫌い', mood: '😖', text: 'ぼくはもっと別のものが食べたいな…。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやはむり！ ぜったいむり！' },
+    spicy: { likeLevel: '大嫌い', mood: '🥵', text: 'からい！ みずー！' },
+    free: { likeLevel: '普通', mood: '😐', text: 'まずはひとくち、ためしてみるよ。' }
+  }
+};
 
 const BEG_LINES = {
-  lion: ['腹が減ったぜ…', 'なにかくれよ！', 'うまいの頼む！'],
-  penguin: ['おなかすいた〜', 'なんかある？', 'もぐもぐしたい！'],
-  capybara: ['のんびり…食べたい…', 'なにか…ちょうだい…', 'おなか…すいた…'],
-  panda: ['たけ…ほしい…', 'もぐもぐ…したい…', 'なにか…ある？']
+  lion: ['おなかすいた！', 'がっつり食べたい！', 'うまいものをくれ！'],
+  penguin: ['なにをくれるの？', 'おさかな以外も気になる…', 'ひとくち食べたいな'],
+  capybara: ['のんびり食べたいな', 'やさしい味だとうれしい', 'もぐもぐしたい気分'],
+  panda: ['おいしいものある？', 'おなかぺこぺこだよ', 'いっぱい食べたい！']
 };
 
 const LOADING_LINES = [
-  'もぐもぐ準備中…',
-  'えさを はこんでいます…',
-  'いただきます の じゅんび…',
-  'ゆっくり かみかみ…',
-  'あじを たしかめています…',
-  'おまちどうさま…',
-  'もぐもぐ…もうすぐ！'
+  '動物が味わっています…',
+  'イラストを作っています…',
+  'もぐもぐコメントを考えています…',
+  'あとちょっとでできそう…'
 ];
-
-const MEGA_DISLIKE = {
-  'たいや': {
-    mood: '😵',
-    lines: {
-      lion: ['それ食べものじゃねぇ！', 'ゴム臭っ！ムリだ！', '歯が折れるって！'],
-      penguin: ['それ、食べものじゃないよ〜！', 'くちばし痛い…！', 'ゴムはやだ…'],
-      capybara: ['ごむ…むり…', 'かたい…やめる…', 'におい…だめ…'],
-      panda: ['たけじゃない…だめ…', 'ころころ…いらない…', 'むり…ゴム…']
-    },
-    extra: ['見た瞬間、距離をとった…！', 'かじりかけて、ぷいっとした…', '一口で完全に固まった…']
-  },
-  'げきからりょうり': {
-    mood: '🥵',
-    lines: {
-      lion: ['か、辛っ！舌が燃える！', '口の中が火事だ！', 'これ…戦いか！？'],
-      penguin: ['からいっ！水〜！', 'くちがヒリヒリ…！', 'あつい…むり…'],
-      capybara: ['からい…むり…', 'ひりひり…やめる…', 'むせる…'],
-      panda: ['うぅ…辛い…', 'たけ…たけ…（求）', 'しびれる…やめる…']
-    },
-    extra: ['一口で目がうるうる…！', 'からすぎて、しばらくフリーズ…！', '舌がヒリヒリして大あわて…！']
-  }
-};
 
 const state = {
   animal: null,
   begTimer: null,
+  loadingTimer: null,
+  loadingSfxTimer: null,
+  audioCtx: null,
+  audioReady: false,
   locked: false,
   reqId: 0,
   lastPayload: null,
   lastGasData: null,
-  lastGasTrace: null
+  lastGasTrace: null,
+  toastTimer: null
 };
 
 const el = {
@@ -109,336 +172,345 @@ const el = {
   imgModalImg: $('#imgModalImg')
 };
 
-/* ================================
-   効果音
-================================ */
-
-let audioCtx = null;
-let audioUnlocked = false;
-let loadingSfxTimer = null;
-
 function ensureAudio() {
-  if (audioCtx) return;
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!Ctx) return;
-  audioCtx = new Ctx();
-}
-
-async function unlockAudio() {
-  ensureAudio();
-  if (!audioCtx) return false;
-
-  if (audioCtx.state === 'suspended') {
-    try {
-      await audioCtx.resume();
-    } catch (_error) {}
+  if (!window.AudioContext && !window.webkitAudioContext) return null;
+  if (!state.audioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    state.audioCtx = new AudioCtx();
   }
-
-  audioUnlocked = audioCtx.state === 'running';
-  return audioUnlocked;
+  if (state.audioCtx.state === 'suspended') {
+    state.audioCtx.resume().catch(() => {});
+  }
+  state.audioReady = true;
+  return state.audioCtx;
 }
 
-function tone(freq = 440, dur = 0.08, gain = 0.05, type = 'sine') {
-  if (!audioUnlocked || !audioCtx) return;
+function playTone(freq, duration, type, gainValue, delay = 0) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
 
-  const t0 = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const amp = audioCtx.createGain();
+  const now = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
 
   osc.type = type;
-  osc.frequency.setValueAtTime(freq, t0);
+  osc.frequency.setValueAtTime(freq, now);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(gainValue, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-  amp.gain.setValueAtTime(0.0001, t0);
-  amp.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
-  amp.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-
-  osc.connect(amp);
-  amp.connect(audioCtx.destination);
-
-  osc.start(t0);
-  osc.stop(t0 + dur + 0.02);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
 }
 
-const sfx = {
-  click: () => tone(520, 0.06, 0.04, 'square'),
-  select: () => {
-    tone(440, 0.06, 0.035, 'sine');
-    setTimeout(() => tone(660, 0.07, 0.035, 'sine'), 60);
-  },
-  feed: () => {
-    tone(240, 0.05, 0.03, 'triangle');
-    setTimeout(() => tone(180, 0.06, 0.03, 'triangle'), 70);
-  },
-  ok: () => {
-    tone(660, 0.07, 0.04, 'sine');
-    setTimeout(() => tone(880, 0.09, 0.04, 'sine'), 80);
-  },
-  ng: () => tone(220, 0.10, 0.05, 'sawtooth'),
-  mogumogu: () => {
-    tone(260, 0.05, 0.018, 'triangle');
-    setTimeout(() => tone(190, 0.06, 0.018, 'triangle'), 70);
-  }
-};
+function playSfx(kind) {
+  if (!state.audioReady && kind !== 'unlock') return;
 
-async function playSfx(name) {
-  await unlockAudio();
-  if (sfx[name]) sfx[name]();
+  switch (kind) {
+    case 'unlock':
+      ensureAudio();
+      break;
+    case 'select':
+      playTone(660, 0.08, 'triangle', 0.05);
+      playTone(880, 0.09, 'triangle', 0.04, 0.05);
+      break;
+    case 'click':
+      playTone(520, 0.07, 'square', 0.04);
+      break;
+    case 'ok':
+      playTone(523.25, 0.09, 'triangle', 0.05);
+      playTone(659.25, 0.1, 'triangle', 0.045, 0.06);
+      playTone(783.99, 0.12, 'triangle', 0.04, 0.12);
+      break;
+    case 'ng':
+      playTone(320, 0.12, 'sawtooth', 0.045);
+      playTone(220, 0.16, 'sawtooth', 0.04, 0.07);
+      break;
+    case 'munch':
+      playTone(220, 0.06, 'triangle', 0.022);
+      playTone(180, 0.07, 'triangle', 0.02, 0.09);
+      playTone(300, 0.04, 'sine', 0.012, 0.18);
+      break;
+    default:
+      break;
+  }
 }
 
 function startLoadingSfx() {
-  if (loadingSfxTimer) return;
-  if (!audioUnlocked) return;
-
-  sfx.mogumogu();
-  loadingSfxTimer = setInterval(() => {
-    sfx.mogumogu();
-  }, 850);
+  if (!state.audioReady) return;
+  stopLoadingSfx();
+  playSfx('munch');
+  state.loadingSfxTimer = window.setInterval(() => {
+    playSfx('munch');
+  }, 900);
 }
 
 function stopLoadingSfx() {
-  if (!loadingSfxTimer) return;
-  clearInterval(loadingSfxTimer);
-  loadingSfxTimer = null;
-}
-
-window.addEventListener('pointerdown', () => {
-  unlockAudio();
-}, { once: true });
-
-/* ================================
-   共通
-================================ */
-
-function showToast(message, isError = false) {
-  if (!el.toast || !el.toastText) return;
-  el.toastText.textContent = message;
-  el.toast.classList.toggle('isError', isError);
-  el.toast.classList.add('show');
-
-  if (!isError) {
-    clearTimeout(showToast.timer);
-    showToast.timer = setTimeout(() => {
-      el.toast.classList.remove('show');
-    }, 1800);
+  if (state.loadingSfxTimer) {
+    window.clearInterval(state.loadingSfxTimer);
+    state.loadingSfxTimer = null;
   }
 }
 
 function showScreen(name) {
-  const map = {
-    select: el.screenSelect,
-    game: el.screenGame,
-    result: el.screenResult
-  };
-
-  Object.entries(map).forEach(([key, node]) => {
-    if (!node) return;
-    node.classList.toggle('isActive', key === name);
+  [el.screenSelect, el.screenGame, el.screenResult].forEach((screen) => {
+    if (!screen) return;
+    screen.classList.toggle('isActive', screen.id === `screen${name[0].toUpperCase()}${name.slice(1)}`);
   });
-
-  if (name === 'result') {
-    const card = document.querySelector('#screenResult .resultCard');
-    if (card) card.scrollTop = 0;
-  }
 }
 
-function setLoading(show) {
-  if (show) {
-    startLoadingSfx();
-  } else {
-    stopLoadingSfx();
-  }
-
-  if (!el.loadingOverlay) return;
-  el.loadingOverlay.classList.toggle('show', show);
-
-  if (show && el.loadingLine) {
-    el.loadingLine.textContent = pick(LOADING_LINES);
-  }
-}
-
-function setImgSafe(img, src, alt) {
+function setImage(img, src, alt) {
   if (!img) return;
   img.src = src || '';
   img.alt = alt || '';
 }
 
-function setFoodBadge(category, raw) {
-  if (!el.resultFoodBadge) return;
-  el.resultFoodBadge.textContent = '';
-  el.resultFoodBadge.append('えさ：');
-
-  const icon = document.createElement('img');
-  icon.className = 'badgeFoodIcon';
-  icon.alt = '';
-  icon.src = FOOD_ICON_SRC[category] || '';
-  el.resultFoodBadge.append(icon);
-  el.resultFoodBadge.append(` ${raw}`);
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)];
 }
 
-function openImageModal(src) {
-  if (!src || !el.imgModal || !el.imgModalImg) return;
-  el.imgModalImg.src = src;
-  el.imgModal.classList.remove('isHidden');
-}
-
-function closeImageModal() {
-  el.imgModal?.classList.add('isHidden');
-  if (el.imgModalImg) el.imgModalImg.src = '';
-}
-
-function setPlaceholderState(kind, detail = '') {
-  if (!el.resultImagePlaceholder) return;
-
-  const title = el.resultImagePlaceholder.querySelector('.phTitle');
-  const sub = el.resultImagePlaceholder.querySelector('.phSub');
-
-  if (kind === 'loading') {
-    if (title) title.textContent = 'イラストを じゅんびしています…';
-    if (sub) sub.textContent = 'ちょっと まってね…';
-  } else if (kind === 'error') {
-    if (title) title.textContent = 'イラストの じゅんびに しっぱいしました…';
-    if (sub) sub.textContent = detail || 'つうしんが うまくいかなかったみたい…';
-  } else {
-    if (title) title.textContent = 'イラストが うまく でませんでした…';
-    if (sub) sub.textContent = detail || '「もういちど」で やりなおせます';
+function startBegging(animal) {
+  stopBegging();
+  const lines = BEG_LINES[animal.id] || ['なにか食べたいな'];
+  if (el.begLine) {
+    el.begLine.textContent = randomItem(lines);
   }
-
-  el.resultImagePlaceholder.classList.remove('isHidden');
-  el.resultImage?.classList.add('isHidden');
-  if (el.resultImage) el.resultImage.src = '';
+  state.begTimer = window.setInterval(() => {
+    if (el.begLine) {
+      el.begLine.textContent = randomItem(lines);
+    }
+  }, 2200);
 }
 
-function stopBegLoop() {
+function stopBegging() {
   if (state.begTimer) {
-    clearTimeout(state.begTimer);
+    window.clearInterval(state.begTimer);
     state.begTimer = null;
   }
 }
 
-function startBegLoop() {
-  stopBegLoop();
-  if (!state.animal || !el.begLine) return;
+function setLoading(show) {
+  if (!el.loadingOverlay) return;
 
-  const lines = BEG_LINES[state.animal.id] || ['おなかすいた…'];
+  el.loadingOverlay.classList.toggle('show', Boolean(show));
+  el.loadingOverlay.setAttribute('aria-hidden', show ? 'false' : 'true');
+  setImage(el.loadingAnimalImg, state.animal ? state.animal.img : '', state.animal ? state.animal.name : '');
 
-  const tick = () => {
-    if (!state.animal || !el.begLine) return;
-    el.begLine.textContent = pick(lines);
-    state.begTimer = setTimeout(tick, 2400 + Math.random() * 1600);
-  };
+  if (state.loadingTimer) {
+    window.clearInterval(state.loadingTimer);
+    state.loadingTimer = null;
+  }
 
-  tick();
+  stopLoadingSfx();
+
+  if (show && el.loadingLine) {
+    el.loadingLine.textContent = randomItem(LOADING_LINES);
+    state.loadingTimer = window.setInterval(() => {
+      el.loadingLine.textContent = randomItem(LOADING_LINES);
+    }, 1600);
+    startLoadingSfx();
+  }
 }
 
-function gotoSelect() {
-  state.animal = null;
-  state.locked = false;
-  stopBegLoop();
-  setLoading(false);
-  closeImageModal();
-  if (el.freeInput) el.freeInput.value = '';
-  showScreen('select');
+function setPlaceholderState(type, detail) {
+  if (!el.resultImagePlaceholder) return;
+
+  const title = el.resultImagePlaceholder.querySelector('.phTitle');
+  const sub = el.resultImagePlaceholder.querySelector('.phSub');
+  const message = detail || '';
+
+  el.resultImagePlaceholder.classList.remove('isHidden');
+  if (el.resultImage) {
+    el.resultImage.classList.add('isHidden');
+    el.resultImage.removeAttribute('src');
+  }
+
+  if (!title || !sub) return;
+
+  if (type === 'loading') {
+    title.textContent = 'イラストを じゅんびしています…';
+    sub.textContent = 'ちょっと まってね…';
+    return;
+  }
+
+  if (type === 'error') {
+    title.textContent = 'つうしんで エラーが でました';
+    sub.innerHTML = `${message || 'つうしんに しっぱいしました'}<br><strong>もういちどをおしてみてね</strong>`;
+    return;
+  }
+
+  if (type === 'noimg') {
+    title.textContent = 'イラストが つくれませんでした';
+    sub.innerHTML = `${message || 'れすぽんすを かくにんしてね'}<br><strong>もういちどをおしてみてね</strong>`;
+    return;
+  }
+
+  title.textContent = 'イラストを じゅんびしています…';
+  sub.textContent = 'ちょっと まってね…';
 }
 
-function gotoGame(animalId) {
-  const animal = ANIMALS.find(item => item.id === animalId);
-  if (!animal) return;
+function showToast(message, isError) {
+  if (!el.toast || !el.toastText) return;
 
-  state.animal = animal;
-  setImgSafe(el.animalImg, animal.img, animal.name);
-  setImgSafe(el.loadingAnimalImg, animal.img, animal.name);
-  startBegLoop();
-  showScreen('game');
+  if (state.toastTimer) {
+    window.clearTimeout(state.toastTimer);
+    state.toastTimer = null;
+  }
+
+  el.toastText.textContent = message;
+  el.toast.classList.toggle('isError', Boolean(isError));
+  el.toast.classList.add('show');
+
+  state.toastTimer = window.setTimeout(() => {
+    el.toast.classList.remove('show');
+  }, 2600);
+}
+
+function closeToast() {
+  if (!el.toast) return;
+  el.toast.classList.remove('show');
+}
+
+function openImageModal() {
+  if (!el.imgModal || !el.imgModalImg || !el.resultImage || el.resultImage.classList.contains('isHidden')) {
+    return;
+  }
+  el.imgModalImg.src = el.resultImage.src;
+  el.imgModalImg.alt = el.resultImage.alt || '生成画像';
+  el.imgModal.classList.remove('isHidden');
+  el.imgModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeImageModal() {
+  if (!el.imgModal) return;
+  el.imgModal.classList.add('isHidden');
+  el.imgModal.setAttribute('aria-hidden', 'true');
 }
 
 function normalizeFood(input) {
   const raw = String(input || '').trim();
-  const lower = raw.toLowerCase();
+  const normalized = raw.replace(/\s+/g, '').toLowerCase();
+  const quick = QUICK_FOODS[normalized] || null;
 
-  if (!raw) return { raw: '', category: 'にく', likeLevel: '普通' };
-
-  const direct = [
-    { words: ['にく', '肉'], category: 'にく' },
-    { words: ['くさ', '草'], category: 'くさ' },
-    { words: ['たいや', 'タイヤ'], category: 'たいや' },
-    { words: ['げきからりょうり', '激辛料理', '激辛'], category: 'げきからりょうり' }
-  ];
-
-  for (const item of direct) {
-    if (item.words.some(word => word === raw || word.toLowerCase() === lower)) {
-      return {
-        raw: item.category,
-        category: item.category,
-        likeLevel: ['たいや', 'げきからりょうり'].includes(item.category) ? 'きらい' : '普通'
-      };
-    }
-  }
-
-  if (['たいや', 'タイヤ', 'ホイール', '車輪', 'ゴム', 'くるま', 'バイク'].some(word => lower.includes(word.toLowerCase()))) {
-    return { raw, category: 'たいや', likeLevel: 'きらい' };
-  }
-
-  if (['げきから', '激辛', '辛', '辛い', '唐辛子', 'ハバネロ', '火鍋', 'カレー', 'わさび'].some(word => lower.includes(word.toLowerCase()))) {
-    return { raw, category: 'げきからりょうり', likeLevel: 'きらい' };
-  }
-
-  if (['くさ', '草', '笹', '葉', 'はっぱ', '竹', 'たけ', '牧草', 'クローバー'].some(word => lower.includes(word.toLowerCase()))) {
-    return { raw, category: 'くさ', likeLevel: '普通' };
-  }
-
-  return { raw, category: 'にく', likeLevel: '普通' };
-}
-
-function makeLocalComment(animal, foodInfo) {
-  const special = MEGA_DISLIKE[foodInfo.category];
-
-  if (special) {
+  if (quick) {
     return {
-      text: `${pick(special.lines[animal.id] || ['やだ…'])}\n${pick(special.extra)}`,
-      mood: special.mood,
-      ok: false
+      raw,
+      label: quick.label,
+      key: quick.key,
+      category: quick.category,
+      visual: quick.visual,
+      isFreeWord: false
     };
   }
 
-  const normalLines = {
-    lion: ['ふーん。悪くないな。', 'なかなか うまいじゃん！', 'これは けっこう 好きだ。'],
-    penguin: ['わーい、いい感じ！', 'もぐもぐ…おいしい！', 'これ、けっこう好き！'],
-    capybara: ['のんびり…おいしい…', 'これ、落ちつく味…', 'もぐもぐ…いいかんじ…'],
-    panda: ['うん、わるくない。', 'もぐもぐ…好きかも。', 'これは ちょっと うれしい。']
-  };
-
   return {
-    text: `${pick(normalLines[animal.id] || ['おいしい。'])}\n「${foodInfo.raw}」を もぐもぐ たべた。`,
-    mood: '😋',
-    ok: true
+    raw,
+    label: raw,
+    key: 'free',
+    category: '',
+    visual: raw,
+    isFreeWord: true
   };
 }
 
-function buildImagePrompt(animal, foodInfo) {
-  const foodVisual = {
-    'にく': 'a juicy steak',
-    'くさ': 'a bundle of fresh green grass',
-    'たいや': 'a rubber tire',
-    'げきからりょうり': 'an extremely spicy dish with red chili peppers'
-  }[foodInfo.category] || foodInfo.raw;
+function getReaction(animal, foodInfo) {
+  const table = REACTIONS[animal.id] || {};
+  return table[foodInfo.key] || table.free || { likeLevel: '普通', mood: '🙂', text: '食べてみるね。' };
+}
 
-  const reaction = ['たいや', 'げきからりょうり'].includes(foodInfo.category) ? 'disgusted' : 'delighted';
+function buildImagePrompt(animal, foodInfo, reaction) {
+  const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
+  const animalStyle = animal.imageStyle || `cute ${animal.name} mascot`;
+  const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
+  const emotionMap = {
+    '大好き': 'very happy, sparkling eyes, excited, eager to eat',
+    '好き': 'happy, pleased, smiling',
+    '普通': 'calm, curious, neutral smile',
+    '嫌い': 'reluctant, awkward, slightly troubled face',
+    '大嫌い': 'disgusted, recoiling, dramatic grossed-out reaction'
+  };
+  const emotion = emotionMap[reaction.likeLevel] || 'curious expression';
 
   return [
-    'Square 1:1.',
-    'kawaii mascot 2D illustration, pastel, soft shading, thick clean outlines, children picture book style.',
-    `Animal: ${animal.name} ${animal.emoji}. Medium close-up, centered.`,
-    `FOOD MUST MATCH EXACTLY: "${foodInfo.raw}".`,
-    `ONLY FOOD: ${foodVisual}. This is the only food in the image.`,
-    `Show the food clearly in the animal mouth or paws: ${foodVisual}.`,
-    `Reaction: ${reaction}.`,
-    'Background: simple pastel studio background. No scenery.',
-    'Negative: photorealistic, realistic animal, cinematic lighting, 3D render, landscape, mountains, ocean, extra animals, extra foods, text, logo.'
-  ].join('\n');
+    'Square 1:1 composition.',
+    'Create a polished character illustration that matches a cute mascot asset used in a Japanese children app.',
+    `Animal design reference: ${animalStyle}.`,
+    'Keep the mascot proportions consistent with a toy-like app character: oversized head, compact body, short limbs, centered composition.',
+    `Animal: ${animal.name} ${animal.emoji}.`,
+    `Food design reference: ${foodStyle}.`,
+    `Only one food item is shown and it must clearly read as ${subjectFood}.`,
+    `The animal is eating or holding ${subjectFood}.`,
+    `Expression and mood: ${emotion}.`,
+    'Use a clean isolated composition, transparent or very simple plain background, no scenery, no extra props, no text, no logo.',
+    'Soft high-quality 3d mascot render, fluffy texture, bright kid-friendly lighting, image asset style.'
+  ].join(' ');
 }
 
-function buildCommentPrompt(animal, foodInfo) {
-  return `あなたは「${animal.name}」という動物です。性格は「${animal.personality}」。今「${foodInfo.raw}」を食べました。${animal.first}の口調で、60文字以内で感想を言ってください。`;
+function buildPayload(animal, foodInfo, reaction) {
+  const baseImagePrompt = buildImagePrompt(animal, foodInfo, reaction);
+
+  return {
+    gameVersion: VERSION,
+    animalType: animal.name,
+    foodType: foodInfo.isFreeWord ? '' : foodInfo.label,
+    freeWord: foodInfo.isFreeWord ? foodInfo.raw : '',
+    likeLevel: reaction.likeLevel,
+    baseImagePrompt,
+    wantImage: true,
+    nonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  };
+}
+
+async function callGas(payload, timeoutMs = 45000) {
+  const params = new URLSearchParams();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') return;
+    params.set(key, String(value));
+  });
+
+  const url = `${GAS_ENDPOINT}${GAS_ENDPOINT.includes('?') ? '&' : '?'}${params.toString()}`;
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    const text = await response.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (_error) {
+      return {
+        success: false,
+        error: 'invalid_json',
+        errorDetail: text.slice(0, 1000),
+        __trace: { mode: 'fetch', status: response.status, urlSample: url.slice(0, 900) }
+      };
+    }
+
+    if (!data || typeof data !== 'object') {
+      data = { success: false, error: 'invalid_payload' };
+    }
+
+    data.__trace = { mode: 'fetch', status: response.status, urlSample: url.slice(0, 900) };
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      error: error && error.name === 'AbortError' ? 'timeout' : 'fetch_failed',
+      errorDetail: error ? String(error) : '',
+      __trace: { mode: 'fetch', urlSample: url.slice(0, 900) }
+    };
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 function extractImageSrc(data) {
@@ -474,223 +546,112 @@ function extractImageSrc(data) {
   return '';
 }
 
-function isBadAiLine(line) {
-  return ['AI', '生成しました', '画像', 'プロンプト'].some(word => line.includes(word));
-}
-
-function buildPayload(animal, foodInfo, fromQuick) {
-  const imagePrompt = buildImagePrompt(animal, foodInfo);
-  const commentPrompt = buildCommentPrompt(animal, foodInfo);
-
-  return {
-    mode: 'feed',
-    gameVersion: VERSION,
-    animalId: animal.id,
-    animalName: animal.name,
-    animalType: animal.name,
-    animalPersonality: animal.personality,
-    animalFirst: animal.first,
-    foodRaw: foodInfo.raw,
-    foodType: foodInfo.category,
-    category: foodInfo.category,
-    freeWord: fromQuick ? '' : foodInfo.raw,
-    likeLevel: foodInfo.likeLevel || '普通',
-    imagePrompt,
-    baseImagePrompt: imagePrompt,
-    commentPrompt,
-    prompt: imagePrompt,
-    text: commentPrompt,
-    wantImage: true,
-    nonce: `${Date.now()}-${Math.random()}`
-  };
-}
-
-async function callGasJsonp(payload, timeoutMs = 120000) {
-  const params = new URLSearchParams();
-  const callbackName = `__gas_cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-
-  params.set('callback', callbackName);
-  params.set('animalType', payload.animalType || '');
-  params.set('foodType', payload.foodType || '');
-  params.set('category', payload.category || '');
-  params.set('foodRaw', payload.foodRaw || '');
-  params.set('food', payload.foodRaw || '');
-  params.set('likeLevel', payload.likeLevel || '普通');
-  params.set('gameVersion', payload.gameVersion || VERSION);
-  params.set('wantImage', 'true');
-
-  if (payload.freeWord) params.set('freeWord', payload.freeWord);
-  if (payload.imagePrompt) params.set('imagePrompt', payload.imagePrompt.slice(0, 1800));
-  if (payload.baseImagePrompt) params.set('baseImagePrompt', payload.baseImagePrompt.slice(0, 1800));
-  if (payload.commentPrompt) params.set('commentPrompt', payload.commentPrompt.slice(0, 600));
-  if (payload.text) params.set('text', payload.text.slice(0, 600));
-  if (payload.prompt) params.set('prompt', payload.prompt.slice(0, 1800));
-
-  const url = `${GAS_ENDPOINT}${GAS_ENDPOINT.includes('?') ? '&' : '?'}${params.toString()}`;
-
-  return new Promise((resolve) => {
-    let done = false;
-    const script = document.createElement('script');
-
-    const cleanup = () => {
-      done = true;
-      clearTimeout(timer);
-      try {
-        delete window[callbackName];
-      } catch (_error) {
-        window[callbackName] = undefined;
-      }
-      script.remove();
-    };
-
-    window[callbackName] = (data) => {
-      if (done) return;
-      cleanup();
-      if (data && typeof data === 'object') {
-        data.__trace = { mode: 'jsonp', urlSample: url.slice(0, 900) };
-      }
-      resolve(data);
-    };
-
-    script.onerror = () => {
-      if (done) return;
-      cleanup();
-      resolve({
-        success: false,
-        error: 'script_load_failed',
-        __trace: { mode: 'jsonp', urlSample: url.slice(0, 900) }
-      });
-    };
-
-    const timer = setTimeout(() => {
-      if (done) return;
-      cleanup();
-      resolve({
-        success: false,
-        error: 'timeout',
-        __trace: { mode: 'jsonp', urlSample: url.slice(0, 900) }
-      });
-    }, timeoutMs);
-
-    script.src = url;
-    script.async = true;
-    document.body.appendChild(script);
-  });
-}
-
-function applyResultBase(animal, foodInfo, localResult) {
-  setImgSafe(el.resultAnimalImg, animal.img, animal.name);
-
+function applyResultBase(animal, foodInfo, reaction) {
+  setImage(el.resultAnimalImg, animal.img, animal.name);
   if (el.resultSub) el.resultSub.textContent = `入力：${foodInfo.raw}`;
-  if (el.resultEmoji) el.resultEmoji.textContent = localResult.mood;
-  if (el.resultMoodBadge) el.resultMoodBadge.textContent = `きぶん：${localResult.mood}`;
-  setFoodBadge(foodInfo.category, foodInfo.raw);
-
-  if (el.resultText) el.resultText.textContent = localResult.text;
-
+  if (el.resultEmoji) el.resultEmoji.textContent = reaction.mood;
+  if (el.resultFoodBadge) el.resultFoodBadge.textContent = `えさ：${foodInfo.raw}`;
+  if (el.resultMoodBadge) el.resultMoodBadge.textContent = `きぶん：${reaction.likeLevel}`;
+  if (el.resultText) el.resultText.textContent = reaction.text;
   setPlaceholderState('loading');
   showScreen('result');
 }
 
-async function handleFeed(raw, fromQuick) {
-  const input = String(raw || '').trim();
-
-  if (!input) {
-    showToast('なにか入力してね', true);
-    return;
+function applyGasResult(animal, foodInfo, gasData) {
+  const line = firstLine(gasData.message || gasData.comment || gasData.text || gasData.reply || gasData.responseText);
+  if (line && el.resultText) {
+    el.resultText.textContent = line;
   }
 
+  const src = extractImageSrc(gasData);
+  if (src && el.resultImage) {
+    el.resultImage.src = src;
+    el.resultImage.alt = `${animal.name}が${foodInfo.raw}を食べているイラスト`;
+    el.resultImage.classList.remove('isHidden');
+    if (el.resultImagePlaceholder) {
+      el.resultImagePlaceholder.classList.add('isHidden');
+    }
+  } else {
+    setPlaceholderState(
+      'noimg',
+      gasData.imageError || gasData.image_error || gasData.errorDetail || gasData.error_detail || '画像URLが返ってきませんでした'
+    );
+  }
+}
+
+function gasErrorMessage(gasData) {
+  const error = gasData && gasData.error ? gasData.error : 'unknown_error';
+
+  if (error === 'timeout') return 'GASの処理がタイムアウトしました';
+  if (error === 'fetch_failed') return 'GASへの接続に失敗しました';
+  if (error === 'invalid_json') return 'GASの応答がJSONではありませんでした';
+  if (gasData && gasData.errorDetail) return gasData.errorDetail;
+  return error;
+}
+
+async function handleFeed(raw) {
+  const input = String(raw || '').trim();
+  if (!input) {
+    showToast('えさを入力してね', true);
+    return;
+  }
   if (state.locked || !state.animal) return;
+
   state.locked = true;
-
-  const animal = state.animal;
-  const foodInfo = normalizeFood(input);
-  const localResult = makeLocalComment(animal, foodInfo);
-  const payload = buildPayload(animal, foodInfo, fromQuick);
-
-  state.lastPayload = payload;
-  applyResultBase(animal, foodInfo, localResult);
-  await playSfx(localResult.ok ? 'ok' : 'ng');
+  playSfx('click');
   setLoading(true);
 
   const requestId = ++state.reqId;
+  const animal = state.animal;
+  const foodInfo = normalizeFood(input);
+  const reaction = getReaction(animal, foodInfo);
+  const payload = buildPayload(animal, foodInfo, reaction);
+
+  state.lastPayload = payload;
+  applyResultBase(animal, foodInfo, reaction);
+  playSfx(['大好き', '好き'].includes(reaction.likeLevel) ? 'ok' : 'ng');
 
   try {
-    const gasData = await callGasJsonp(payload);
+    const gasData = await callGas(payload);
     if (requestId !== state.reqId) return;
 
     state.lastGasData = gasData;
     state.lastGasTrace = gasData && gasData.__trace ? gasData.__trace : null;
 
-    if (!gasData || gasData.ok === false || gasData.success === false) {
-      const error = gasData?.error || 'ng';
-      const detail = error === 'script_load_failed'
-        ? 'GASのJSONP callback が実行されませんでした'
-        : error === 'timeout'
-          ? 'タイムアウト：GASの処理に時間がかかっています'
-          : `えらー：${error}`;
-      setPlaceholderState('error', detail);
+    if (!gasData || gasData.success === false || gasData.ok === false) {
+      setPlaceholderState('error', gasErrorMessage(gasData));
       return;
     }
 
-    const line = firstLine(
-      gasData.message ||
-      gasData.comment ||
-      gasData.text ||
-      gasData.reply ||
-      gasData.responseText
-    );
-
-    if (line && !isBadAiLine(line) && el.resultText) {
-      el.resultText.textContent = line;
-    }
-
-    const src = extractImageSrc(gasData);
-    if (src && el.resultImage) {
-      el.resultImage.src = src;
-      el.resultImage.alt = `${animal.name}が${foodInfo.raw}を食べているイラスト`;
-      el.resultImage.classList.remove('isHidden');
-      el.resultImagePlaceholder?.classList.add('isHidden');
-    } else {
-      setPlaceholderState(
-        'noimg',
-        gasData?.imageError ||
-        gasData?.image_error ||
-        gasData?.errorDetail ||
-        gasData?.error_detail ||
-        '画像URLかbase64が返っていません'
-      );
-    }
+    applyGasResult(animal, foodInfo, gasData);
   } finally {
-    setLoading(false);
     state.locked = false;
+    setLoading(false);
   }
 }
 
 async function retryImage() {
-  if (state.locked || !state.lastPayload) return;
+  if (state.locked || !state.lastPayload || !state.animal) return;
 
   state.locked = true;
+  playSfx('click');
   setLoading(true);
   setPlaceholderState('loading');
-  await playSfx('click');
+
+  const payload = {
+    ...state.lastPayload,
+    nonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  };
+
+  state.lastPayload = payload;
 
   try {
-    const payload = { ...state.lastPayload, nonce: `${Date.now()}-${Math.random()}`, wantImage: true };
-    state.lastPayload = payload;
-
-    const gasData = await callGasJsonp(payload);
+    const gasData = await callGas(payload);
     state.lastGasData = gasData;
     state.lastGasTrace = gasData && gasData.__trace ? gasData.__trace : null;
 
-    if (!gasData || gasData.ok === false || gasData.success === false) {
-      const error = gasData?.error || 'ng';
-      setPlaceholderState(
-        'error',
-        error === 'script_load_failed'
-          ? 'GASのJSONP callback が実行されませんでした'
-          : `えらー：${error}`
-      );
+    if (!gasData || gasData.success === false || gasData.ok === false) {
+      setPlaceholderState('error', gasErrorMessage(gasData));
       return;
     }
 
@@ -698,20 +659,18 @@ async function retryImage() {
     if (src && el.resultImage) {
       el.resultImage.src = src;
       el.resultImage.classList.remove('isHidden');
-      el.resultImagePlaceholder?.classList.add('isHidden');
+      if (el.resultImagePlaceholder) {
+        el.resultImagePlaceholder.classList.add('isHidden');
+      }
     } else {
       setPlaceholderState(
         'noimg',
-        gasData?.imageError ||
-        gasData?.image_error ||
-        gasData?.errorDetail ||
-        gasData?.error_detail ||
-        '画像URLかbase64が返っていません'
+        gasData.imageError || gasData.image_error || gasData.errorDetail || gasData.error_detail || '画像URLが返ってきませんでした'
       );
     }
   } finally {
-    setLoading(false);
     state.locked = false;
+    setLoading(false);
   }
 }
 
@@ -724,89 +683,121 @@ async function copyGasResponse() {
 
   try {
     await navigator.clipboard.writeText(text);
-    showToast('こぴー しました');
+    showToast('レスポンスをコピーしました');
   } catch (_error) {
-    window.prompt('このテキストを こぴーして おくってね', text);
+    window.prompt('この内容をコピーしてください', text);
   }
 }
 
+function goToSelect() {
+  state.animal = null;
+  stopBegging();
+  showScreen('select');
+  setLoading(false);
+  closeImageModal();
+}
+
+function goToGame(animalId) {
+  const animal = ANIMALS[animalId];
+  if (!animal) return;
+
+  state.animal = animal;
+  setImage(el.animalImg, animal.img, animal.name);
+  setImage(el.loadingAnimalImg, animal.img, animal.name);
+  if (el.freeInput) el.freeInput.value = '';
+  startBegging(animal);
+  showScreen('game');
+  window.setTimeout(() => {
+    if (el.freeInput) el.freeInput.focus();
+  }, 0);
+}
+
 function bind() {
+  window.addEventListener('pointerdown', () => {
+    playSfx('unlock');
+  }, { once: true });
+
   $$('[data-animal]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      await playSfx('select');
-      gotoGame(button.dataset.animal);
+    button.addEventListener('click', () => {
+      playSfx('select');
+      goToGame(button.dataset.animal);
     });
   });
 
   $$('[data-quick]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      await playSfx('feed');
-      handleFeed(button.dataset.quick, true);
+    button.addEventListener('click', () => {
+      handleFeed(button.dataset.quick || '');
     });
   });
 
-  el.btnSend?.addEventListener('click', async () => {
-    await playSfx('feed');
-    const value = el.freeInput?.value || '';
-    if (el.freeInput) el.freeInput.value = '';
-    handleFeed(value, false);
-  });
+  if (el.btnSend) {
+    el.btnSend.addEventListener('click', () => {
+      handleFeed(el.freeInput ? el.freeInput.value : '');
+    });
+  }
 
-  el.btnBackToSelect?.addEventListener('click', async () => {
-    await playSfx('click');
-    gotoSelect();
-  });
+  if (el.freeInput) {
+    el.freeInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleFeed(el.freeInput.value);
+      }
+    });
+  }
 
-  el.btnResultBack?.addEventListener('click', async () => {
-    await playSfx('click');
-    gotoSelect();
-  });
+  if (el.btnBackToSelect) {
+    el.btnBackToSelect.addEventListener('click', () => {
+      playSfx('click');
+      goToSelect();
+    });
+  }
+  if (el.btnResultBack) {
+    el.btnResultBack.addEventListener('click', () => {
+      playSfx('click');
+      goToSelect();
+    });
+  }
+  if (el.btnRetryImage) el.btnRetryImage.addEventListener('click', retryImage);
+  if (el.btnCopyGas) {
+    el.btnCopyGas.addEventListener('click', () => {
+      playSfx('click');
+      copyGasResponse();
+    });
+  }
+  if (el.toastClose) {
+    el.toastClose.addEventListener('click', () => {
+      playSfx('click');
+      closeToast();
+    });
+  }
+  if (el.resultImage) {
+    el.resultImage.addEventListener('click', openImageModal);
+    el.resultImage.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openImageModal();
+      }
+    });
+  }
+  if (el.imgModalBackdrop) {
+    el.imgModalBackdrop.addEventListener('click', () => {
+      playSfx('click');
+      closeImageModal();
+    });
+  }
+  if (el.imgModalClose) {
+    el.imgModalClose.addEventListener('click', () => {
+      playSfx('click');
+      closeImageModal();
+    });
+  }
 
-  el.btnRetryImage?.addEventListener('click', () => {
-    retryImage();
-  });
-
-  el.btnCopyGas?.addEventListener('click', async () => {
-    await playSfx('click');
-    copyGasResponse();
-  });
-
-  el.toastClose?.addEventListener('click', async () => {
-    await playSfx('click');
-    el.toast?.classList.remove('show');
-  });
-
-  el.resultImage?.addEventListener('click', async () => {
-    if (!el.resultImage?.src) return;
-    await playSfx('click');
-    openImageModal(el.resultImage.src);
-  });
-
-  el.resultImage?.addEventListener('error', () => {
-    setPlaceholderState('noimg', 'よみこみに しっぱい…');
-  });
-
-  el.imgModalClose?.addEventListener('click', async () => {
-    await playSfx('click');
-    closeImageModal();
-  });
-
-  el.imgModalBackdrop?.addEventListener('click', () => {
-    closeImageModal();
-  });
-
-  el.freeInput?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      el.btnSend?.click();
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeImageModal();
     }
   });
-
-  window.addEventListener('error', (event) => console.warn(event.error || event.message));
-  window.addEventListener('unhandledrejection', (event) => console.warn(event.reason));
-
-  showScreen('select');
 }
 
 bind();
-console.info(`[${VERSION}] GAS_ENDPOINT`, GAS_ENDPOINT);
+showScreen('select');
