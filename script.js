@@ -12,11 +12,11 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
 
 const MASCOT_STYLE_BASE = {
-  medium: 'single cute 3d mascot asset for a Japanese children app',
-  render: 'soft fluffy plush texture, toy-like finish, polished 3d mascot render, kid-friendly lighting',
-  composition: 'front-facing, centered, full body visible, one character only, isolated cutout asset style',
-  proportions: 'oversized head, compact rounded body, short limbs, simplified silhouette, very readable shape',
-  background: 'transparent background look or very plain clean background, no scenery, no extra props, no text, no logo'
+  medium: 'cute stylized 3d mascot character for a Japanese children app',
+  render: 'soft furry volume, clear character silhouette, polished game asset render',
+  composition: 'front-facing, centered, full body visible, one character only',
+  proportions: 'very large head, compact rounded body, short limbs',
+  background: 'very simple clean background, no scenery, no text, no logo'
 };
 
 const ANIMALS = {
@@ -28,11 +28,11 @@ const ANIMALS = {
     first: 'オレ',
     personality: '自信満々でワイルド',
     profile: {
-      silhouette: 'golden lion mascot with a very large fluffy curly mane, round head, compact torso, short legs, rounded paws, tail with fluffy tuft',
-      pose: 'standing proudly with legs apart and arms crossed in front of the chest',
-      face: 'confident smile, bright eyes, cute rounded muzzle, self-assured and friendly expression',
-      details: 'small colorful crown on top of the mane, neat plush fur, clean toy-like paws',
-      palette: 'warm golden yellow fur, creamy white belly, soft orange shadows'
+      silhouette: 'golden lion mascot with a huge messy curly mane and a separate visible face inside the mane',
+      pose: 'standing proudly with arms crossed',
+      face: 'confident noble smile with bright eyes',
+      details: 'small colorful crown on the mane and clearly white belly',
+      palette: 'golden yellow fur with white belly'
     }
   },
   penguin: {
@@ -43,11 +43,11 @@ const ANIMALS = {
     first: 'ぼく',
     personality: 'まじめでのんびり',
     profile: {
-      silhouette: 'baby penguin mascot with a very round body, oversized head, tiny feet, tiny beak, fluffy wings',
-      pose: 'standing front-facing with both wings raised wide in an energetic celebration pose',
-      face: 'big sparkling blue eyes, open happy mouth, excited cheerful expression',
-      details: 'small glittering silver crown, white face and belly, plush soft surface',
-      palette: 'pastel ice blue feathers, clean white belly, yellow beak and feet, soft pink cheeks'
+      silhouette: 'round baby penguin mascot with a very large head and tiny feet',
+      pose: 'standing front-facing with both wings raised wide',
+      face: 'very large blue eyes and open happy beak',
+      details: 'small silver crown',
+      palette: 'pastel blue and white body with yellow beak and feet'
     }
   },
   capybara: {
@@ -58,11 +58,11 @@ const ANIMALS = {
     first: 'わたし',
     personality: 'おっとりしてやさしい',
     profile: {
-      silhouette: 'chubby capybara mascot with a large rounded head, potato-like body, tiny hands, tiny feet, seated front-facing',
-      pose: 'sitting calmly with both little hands gathered in front of the chest and feet visible forward',
-      face: 'sleepy half-closed eyes, small relaxed smile, front teeth slightly showing, peaceful expression',
-      details: 'soft plush fur, small ears, big rounded nose, subtle blush on cheeks',
-      palette: 'warm beige fur, cream belly, brown paws and nose'
+      silhouette: 'chubby capybara mascot with a large rounded head and potato-like body',
+      pose: 'sitting front-facing with tiny hands near the chest',
+      face: 'sleepy half-closed eyes, visible front teeth, peaceful smile',
+      details: 'big rounded nose',
+      palette: 'warm beige fur with cream belly'
     }
   },
   panda: {
@@ -73,11 +73,11 @@ const ANIMALS = {
     first: 'ぼく',
     personality: 'マイペースで食いしんぼう',
     profile: {
-      silhouette: 'cute panda mascot with an oversized round head, fluffy rounded body, seated front-facing, thick plush arms and legs',
-      pose: 'sitting relaxed with legs open forward and arms resting naturally at the sides',
-      face: 'sleepy half-closed eyes, tiny tongue sticking out, playful lazy smile',
-      details: 'soft pink cheeks, very fluffy fur, round ears, visible paw pads on the feet',
-      palette: 'clean white fur, deep black ears and limbs, soft pink blush accents'
+      silhouette: 'cute panda mascot with an oversized round head and rounded seated body',
+      pose: 'sitting front-facing with legs open forward',
+      face: 'sleepy half-closed eyes and tiny tongue sticking out',
+      details: 'soft pink cheeks',
+      palette: 'black and white fur'
     }
   }
 };
@@ -478,14 +478,15 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     `Animal silhouette: ${animalProfile.silhouette || `cute ${animal.name} mascot`}.`,
     `Animal pose: ${animalProfile.pose || 'front-facing mascot pose'}.`,
     `Animal face: ${animalProfile.face || 'cute friendly face'}.`,
-    `Animal details: ${animalProfile.details || 'soft plush details'}.`,
+    `Animal details: ${animalProfile.details || 'soft fur details'}.`,
     `Animal colors: ${animalProfile.palette || 'soft character colors'}.`,
+    'The animal must have visible fluffy fur volume and a soft furry outline, not a smooth doll-like surface.',
     `Food design reference: ${foodStyle}.`,
     `Only one food item is shown and it must clearly read as ${subjectFood}.`,
     `The animal is eating or holding ${subjectFood}.`,
     `Expression and mood: ${emotion}.`,
-    'Use a clean isolated composition with the same kind of mascot readability as a game asset sheet.',
-    'Do not add realism, background scenery, extra accessories, extra food, extra animals, photorealism, or text.'
+    'Use a clean isolated composition with strong mascot readability.',
+    'Do not make the animal smooth, plastic, glossy, photorealistic, or doll-like.'
   ].join(' ');
 }
 
