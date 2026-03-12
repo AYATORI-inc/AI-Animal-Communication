@@ -22,6 +22,11 @@ const MASCOT_STYLE_BASE = {
     'Centered.',
     'Full body visible.',
     'One character only.',
+    'Please limit the number of animals in the image to one.',
+    '1 animal only, no duplicate character, no extra face, no second pose.',
+    'Multiple angles such as three-dimensional views are not required.',
+    'Multiple reactions are not required.',
+    'No thumbnails or color palettes are needed when generating images.',
     'Very large head.',
     'Compact rounded body.',
     'Short limbs.',
@@ -29,6 +34,11 @@ const MASCOT_STYLE_BASE = {
     'No scenery.',
     'No text.',
     'No logo.',
+    'No tray.',
+    'No plate.',
+    'No wooden board.',
+    'No pedestal.',
+    'No panel.',
     'Visible fluffy fur volume and a soft furry outline.',
     'Not a smooth doll-like surface.',
     'Strong mascot readability.',
@@ -54,7 +64,7 @@ const ANIMALS = {
     personality: '自信満々でワイルド',
     personalityEn: 'proud, wild, noble, confident',
     profile: {
-      silhouette: 'Golden lion mascot. Huge messy curly mane. Face clearly separated from the mane.',
+      silhouette: 'Golden lion mascot. Huge messy curly mane made of thick yarn-like curls. Face clearly separated from the mane.',
       pose: 'Standing proudly. Arms crossed.',
       face: 'Confident noble smile. Bright eyes.',
       details: 'Small colorful crown on the mane. Clearly white belly.',
@@ -88,7 +98,7 @@ const ANIMALS = {
     profile: {
       silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body.',
       pose: 'Sitting front-facing. Tiny hands near the chest.',
-      face: 'Sleepy half-closed eyes. Visible front teeth. Peaceful smile.',
+      face: 'Usually sleepy half-closed eyes. Eyes open when surprised. Visible front teeth. Peaceful smile.',
       details: 'Big rounded nose.',
       palette: 'Warm beige fur with cream belly.'
     }
@@ -117,14 +127,14 @@ const QUICK_FOODS = {
     label: 'にく',
     category: 'にく',
     visual: 'a juicy steak',
-    imageStyle: 'thick raw marbled meat slices arranged on a wooden board, isolated object, premium food asset look'
+    imageStyle: 'thick raw marbled meat slices, isolated object, premium food asset look'
   },
   'くさ': {
     key: 'grass',
     label: 'くさ',
     category: 'くさ',
     visual: 'a bundle of fresh green grass',
-    imageStyle: 'fresh green grass and wild herbs piled on a wooden board, isolated object, clean cutout asset look'
+    imageStyle: 'fresh green grass and wild herbs, isolated object, clean cutout asset look'
   },
   'たいや': {
     key: 'tire',
@@ -137,7 +147,7 @@ const QUICK_FOODS = {
     label: 'げきからりょうり',
     category: 'げきからりょうり',
     visual: 'an extremely spicy dish with red chili peppers',
-    imageStyle: 'bright red extra spicy dish covered with many chili peppers on a wooden board, isolated object, dramatic food asset look'
+    imageStyle: 'bright red extra spicy dish covered with many chili peppers, isolated object, dramatic food asset look'
   }
 };
 
