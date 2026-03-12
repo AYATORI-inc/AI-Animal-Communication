@@ -12,11 +12,36 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
 
 const MASCOT_STYLE_BASE = {
-  medium: 'cute stylized 3d mascot character for a Japanese children app',
-  render: 'soft furry volume, clear character silhouette, polished game asset render',
-  composition: 'front-facing, centered, full body visible, one character only',
-  proportions: 'very large head, compact rounded body, short limbs',
-  background: 'very simple clean background, no scenery, no text, no logo'
+  common: [
+    'Square 1:1 composition.',
+    'Cute stylized 3D mascot character for a Japanese children app.',
+    'Soft furry volume.',
+    'Clear character silhouette.',
+    'Polished game asset render.',
+    'Front-facing.',
+    'Centered.',
+    'Full body visible.',
+    'One character only.',
+    'Very large head.',
+    'Compact rounded body.',
+    'Short limbs.',
+    'Very simple clean background.',
+    'No scenery.',
+    'No text.',
+    'No logo.',
+    'Visible fluffy fur volume and a soft furry outline.',
+    'Not a smooth doll-like surface.',
+    'Strong mascot readability.',
+    'Do not make the animal smooth, plastic, glossy, photorealistic, or doll-like.'
+  ],
+  priorities: [
+    'Animal silhouette.',
+    'Animal pose.',
+    'Animal face.',
+    'Animal personality reflected in pose and facial expression.',
+    'Animal details.',
+    'Animal colors.'
+  ]
 };
 
 const ANIMALS = {
@@ -27,12 +52,13 @@ const ANIMALS = {
     img: './img/raion.webp',
     first: 'オレ',
     personality: '自信満々でワイルド',
+    personalityEn: 'proud, wild, noble, confident',
     profile: {
-      silhouette: 'golden lion mascot with a huge messy curly mane and a separate visible face inside the mane',
-      pose: 'standing proudly with arms crossed',
-      face: 'confident noble smile with bright eyes',
-      details: 'small colorful crown on the mane and clearly white belly',
-      palette: 'golden yellow fur with white belly'
+      silhouette: 'Golden lion mascot. Huge messy curly mane. Face clearly separated from the mane.',
+      pose: 'Standing proudly. Arms crossed.',
+      face: 'Confident noble smile. Bright eyes.',
+      details: 'Small colorful crown on the mane. Clearly white belly.',
+      palette: 'Golden yellow fur with white belly.'
     }
   },
   penguin: {
@@ -42,12 +68,13 @@ const ANIMALS = {
     img: './img/pengin.webp',
     first: 'ぼく',
     personality: 'まじめでのんびり',
+    personalityEn: 'cheerful, innocent, energetic, bright',
     profile: {
-      silhouette: 'round baby penguin mascot with a very large head and tiny feet',
-      pose: 'standing front-facing with both wings raised wide',
-      face: 'very large blue eyes and open happy beak',
-      details: 'small silver crown',
-      palette: 'pastel blue and white body with yellow beak and feet'
+      silhouette: 'Round baby penguin mascot. Very large head. Tiny feet.',
+      pose: 'Front-facing standing pose. Both wings raised wide.',
+      face: 'Very large blue eyes. Open happy beak.',
+      details: 'Small silver crown.',
+      palette: 'Pastel blue and white body. Yellow beak and feet.'
     }
   },
   capybara: {
@@ -57,12 +84,13 @@ const ANIMALS = {
     img: './img/kapipara.webp',
     first: 'わたし',
     personality: 'おっとりしてやさしい',
+    personalityEn: 'gentle, calm, sleepy, peaceful',
     profile: {
-      silhouette: 'chubby capybara mascot with a large rounded head and potato-like body',
-      pose: 'sitting front-facing with tiny hands near the chest',
-      face: 'sleepy half-closed eyes, visible front teeth, peaceful smile',
-      details: 'big rounded nose',
-      palette: 'warm beige fur with cream belly'
+      silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body.',
+      pose: 'Sitting front-facing. Tiny hands near the chest.',
+      face: 'Sleepy half-closed eyes. Visible front teeth. Peaceful smile.',
+      details: 'Big rounded nose.',
+      palette: 'Warm beige fur with cream belly.'
     }
   },
   panda: {
@@ -72,12 +100,13 @@ const ANIMALS = {
     img: './img/panda.webp',
     first: 'ぼく',
     personality: 'マイペースで食いしんぼう',
+    personalityEn: 'lazy, playful, easygoing, mischievous',
     profile: {
-      silhouette: 'cute panda mascot with an oversized round head and rounded seated body',
-      pose: 'sitting front-facing with legs open forward',
-      face: 'sleepy half-closed eyes and tiny tongue sticking out',
-      details: 'soft pink cheeks',
-      palette: 'black and white fur'
+      silhouette: 'Cute panda mascot. Oversized round head. Rounded seated body.',
+      pose: 'Sitting front-facing. Legs open forward.',
+      face: 'Sleepy half-closed eyes. Tiny tongue sticking out.',
+      details: 'Soft pink cheeks.',
+      palette: 'Black and white fur.'
     }
   }
 };
@@ -466,28 +495,25 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     '大嫌い': 'disgusted, recoiling, dramatic grossed-out reaction'
   };
   const emotion = emotionMap[reaction.likeLevel] || 'curious expression';
-
-  return [
-    'Square 1:1 composition.',
-    `Style base: ${MASCOT_STYLE_BASE.medium}.`,
-    `Rendering base: ${MASCOT_STYLE_BASE.render}.`,
-    `Composition base: ${MASCOT_STYLE_BASE.composition}.`,
-    `Proportion base: ${MASCOT_STYLE_BASE.proportions}.`,
-    `Background base: ${MASCOT_STYLE_BASE.background}.`,
+  const lines = [
+    ...MASCOT_STYLE_BASE.common,
+    ...MASCOT_STYLE_BASE.priorities,
     `Animal: ${animal.name} ${animal.emoji}.`,
-    `Animal silhouette: ${animalProfile.silhouette || `cute ${animal.name} mascot`}.`,
-    `Animal pose: ${animalProfile.pose || 'front-facing mascot pose'}.`,
-    `Animal face: ${animalProfile.face || 'cute friendly face'}.`,
-    `Animal details: ${animalProfile.details || 'soft fur details'}.`,
-    `Animal colors: ${animalProfile.palette || 'soft character colors'}.`,
-    'The animal must have visible fluffy fur volume and a soft furry outline, not a smooth doll-like surface.',
-    `Food design reference: ${foodStyle}.`,
-    `Only one food item is shown and it must clearly read as ${subjectFood}.`,
+    animalProfile.silhouette || `Cute ${animal.name} mascot.`,
+    animalProfile.pose || 'Front-facing mascot pose.',
+    animalProfile.face || 'Cute friendly face.',
+    `Animal personality: ${animal.personalityEn || animal.personality}.`,
+    'The pose and facial expression should clearly reflect the personality.',
+    animalProfile.details || 'Visible fluffy fur volume.',
+    animalProfile.palette || 'Soft character colors.',
+    `Food design reference is included: ${foodStyle}.`,
+    'Only one food item is shown.',
+    `The food must be clearly readable as ${subjectFood}.`,
     `The animal is eating or holding ${subjectFood}.`,
-    `Expression and mood: ${emotion}.`,
-    'Use a clean isolated composition with strong mascot readability.',
-    'Do not make the animal smooth, plastic, glossy, photorealistic, or doll-like.'
-  ].join(' ');
+    `Emotion: ${emotion}.`
+  ];
+
+  return lines.join(' ');
 }
 
 function buildPayload(animal, foodInfo, reaction) {
