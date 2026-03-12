@@ -58,6 +58,7 @@ const ANIMALS = {
   lion: {
     id: 'lion',
     name: 'ライオン',
+    speciesEn: 'lion',
     emoji: '🦁',
     img: './img/raion.webp',
     first: 'オレ',
@@ -74,6 +75,7 @@ const ANIMALS = {
   penguin: {
     id: 'penguin',
     name: 'ペンギン',
+    speciesEn: 'penguin',
     emoji: '🐧',
     img: './img/pengin.webp',
     first: 'ぼく',
@@ -90,6 +92,7 @@ const ANIMALS = {
   capybara: {
     id: 'capybara',
     name: 'カピバラ',
+    speciesEn: 'capybara',
     emoji: '🦫',
     img: './img/kapipara.webp',
     first: 'わたし',
@@ -106,6 +109,7 @@ const ANIMALS = {
   panda: {
     id: 'panda',
     name: 'パンダ',
+    speciesEn: 'panda',
     emoji: '🐼',
     img: './img/panda.webp',
     first: 'ぼく',
@@ -497,6 +501,10 @@ function buildImagePrompt(animal, foodInfo, reaction) {
   const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
   const animalProfile = animal.profile || {};
   const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
+  const excludedAnimals = Object.values(ANIMALS)
+    .filter((candidate) => candidate.id !== animal.id)
+    .map((candidate) => candidate.speciesEn || candidate.id)
+    .join(', ');
   const emotionMap = {
     '大好き': 'very happy, sparkling eyes, excited, eager to eat',
     '好き': 'happy, pleased, smiling',
@@ -509,6 +517,9 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     ...MASCOT_STYLE_BASE.common,
     ...MASCOT_STYLE_BASE.priorities,
     `Animal: ${animal.name} ${animal.emoji}.`,
+    `This image must show exactly one ${animal.speciesEn || animal.id}.`,
+    `The generated animal must match the selected animal and must not be any other animal.`,
+    `Do not generate these animals: ${excludedAnimals}.`,
     animalProfile.silhouette || `Cute ${animal.name} mascot.`,
     animalProfile.pose || 'Front-facing mascot pose.',
     animalProfile.face || 'Cute friendly face.',
