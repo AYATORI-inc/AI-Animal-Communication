@@ -501,10 +501,6 @@ function buildImagePrompt(animal, foodInfo, reaction) {
   const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
   const animalProfile = animal.profile || {};
   const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
-  const excludedAnimals = Object.values(ANIMALS)
-    .filter((candidate) => candidate.id !== animal.id)
-    .map((candidate) => candidate.speciesEn || candidate.id)
-    .join(', ');
   const emotionMap = {
     '大好き': 'very happy, sparkling eyes, excited, eager to eat',
     '好き': 'happy, pleased, smiling',
@@ -514,19 +510,19 @@ function buildImagePrompt(animal, foodInfo, reaction) {
   };
   const emotion = emotionMap[reaction.likeLevel] || 'curious expression';
   const lines = [
-    ...MASCOT_STYLE_BASE.common,
-    ...MASCOT_STYLE_BASE.priorities,
-    `Animal: ${animal.name} ${animal.emoji}.`,
-    `This image must show exactly one ${animal.speciesEn || animal.id}.`,
-    `The generated animal must match the selected animal and must not be any other animal.`,
-    `Do not generate these animals: ${excludedAnimals}.`,
-    animalProfile.silhouette || `Cute ${animal.name} mascot.`,
+    'Create one image only.',
+    `The animal must be a ${animal.speciesEn || animal.id}.`,
+    `This is definitely a ${animal.speciesEn || animal.id}, not any other animal.`,
+    animalProfile.silhouette || `Cute ${animal.speciesEn || animal.id} mascot.`,
     animalProfile.pose || 'Front-facing mascot pose.',
     animalProfile.face || 'Cute friendly face.',
-    `Animal personality: ${animal.personalityEn || animal.personality}.`,
-    'The pose and facial expression should clearly reflect the personality.',
     animalProfile.details || 'Visible fluffy fur volume.',
     animalProfile.palette || 'Soft character colors.',
+    `Animal personality: ${animal.personalityEn || animal.personality}.`,
+    'The pose and facial expression should clearly reflect the personality.',
+    ...MASCOT_STYLE_BASE.common,
+    `This image must show exactly one ${animal.speciesEn || animal.id}.`,
+    'No duplicate character. No extra face. No second pose. No other animal.',
     `Food design reference is included: ${foodStyle}.`,
     'Only one food item is shown.',
     `The food must be clearly readable as ${subjectFood}.`,
