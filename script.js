@@ -11,6 +11,14 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
 
+const MASCOT_STYLE_BASE = {
+  medium: 'single cute 3d mascot asset for a Japanese children app',
+  render: 'soft fluffy plush texture, toy-like finish, polished 3d mascot render, kid-friendly lighting',
+  composition: 'front-facing, centered, full body visible, one character only, isolated cutout asset style',
+  proportions: 'oversized head, compact rounded body, short limbs, simplified silhouette, very readable shape',
+  background: 'transparent background look or very plain clean background, no scenery, no extra props, no text, no logo'
+};
+
 const ANIMALS = {
   lion: {
     id: 'lion',
@@ -19,7 +27,13 @@ const ANIMALS = {
     img: './img/raion.webp',
     first: 'オレ',
     personality: '自信満々でワイルド',
-    imageStyle: 'golden plush mascot lion, fluffy curly mane, toy-like body, big round head, short legs, front-facing, confident smile, soft 3d plush texture'
+    profile: {
+      silhouette: 'golden lion mascot with a very large fluffy curly mane, round head, compact torso, short legs, rounded paws, tail with fluffy tuft',
+      pose: 'standing proudly with legs apart and arms crossed in front of the chest',
+      face: 'confident smile, bright eyes, cute rounded muzzle, self-assured and friendly expression',
+      details: 'small colorful crown on top of the mane, neat plush fur, clean toy-like paws',
+      palette: 'warm golden yellow fur, creamy white belly, soft orange shadows'
+    }
   },
   penguin: {
     id: 'penguin',
@@ -28,7 +42,13 @@ const ANIMALS = {
     img: './img/pengin.webp',
     first: 'ぼく',
     personality: 'まじめでのんびり',
-    imageStyle: 'baby blue penguin mascot, fluffy plush texture, white belly, tiny crown, round body, wings spread, cheerful front-facing pose, big sparkling eyes'
+    profile: {
+      silhouette: 'baby penguin mascot with a very round body, oversized head, tiny feet, tiny beak, fluffy wings',
+      pose: 'standing front-facing with both wings raised wide in an energetic celebration pose',
+      face: 'big sparkling blue eyes, open happy mouth, excited cheerful expression',
+      details: 'small glittering silver crown, white face and belly, plush soft surface',
+      palette: 'pastel ice blue feathers, clean white belly, yellow beak and feet, soft pink cheeks'
+    }
   },
   capybara: {
     id: 'capybara',
@@ -37,7 +57,13 @@ const ANIMALS = {
     img: './img/kapipara.webp',
     first: 'わたし',
     personality: 'おっとりしてやさしい',
-    imageStyle: 'cute capybara mascot, beige fluffy fur, sleepy half-closed eyes, chubby round body, tiny paws, seated front-facing pose, soft plush toy look'
+    profile: {
+      silhouette: 'chubby capybara mascot with a large rounded head, potato-like body, tiny hands, tiny feet, seated front-facing',
+      pose: 'sitting calmly with both little hands gathered in front of the chest and feet visible forward',
+      face: 'sleepy half-closed eyes, small relaxed smile, front teeth slightly showing, peaceful expression',
+      details: 'soft plush fur, small ears, big rounded nose, subtle blush on cheeks',
+      palette: 'warm beige fur, cream belly, brown paws and nose'
+    }
   },
   panda: {
     id: 'panda',
@@ -46,7 +72,13 @@ const ANIMALS = {
     img: './img/panda.webp',
     first: 'ぼく',
     personality: 'マイペースで食いしんぼう',
-    imageStyle: 'cute panda mascot, fluffy black and white fur, oversized round head, pink cheeks, seated front-facing pose, plush doll look, playful expression'
+    profile: {
+      silhouette: 'cute panda mascot with an oversized round head, fluffy rounded body, seated front-facing, thick plush arms and legs',
+      pose: 'sitting relaxed with legs open forward and arms resting naturally at the sides',
+      face: 'sleepy half-closed eyes, tiny tongue sticking out, playful lazy smile',
+      details: 'soft pink cheeks, very fluffy fur, round ears, visible paw pads on the feet',
+      palette: 'clean white fur, deep black ears and limbs, soft pink blush accents'
+    }
   }
 };
 
@@ -401,6 +433,7 @@ function normalizeFood(input) {
       key: quick.key,
       category: quick.category,
       visual: quick.visual,
+      imageStyle: quick.imageStyle || '',
       isFreeWord: false
     };
   }
@@ -411,6 +444,7 @@ function normalizeFood(input) {
     key: 'free',
     category: '',
     visual: raw,
+    imageStyle: '',
     isFreeWord: true
   };
 }
@@ -422,7 +456,7 @@ function getReaction(animal, foodInfo) {
 
 function buildImagePrompt(animal, foodInfo, reaction) {
   const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
-  const animalStyle = animal.imageStyle || `cute ${animal.name} mascot`;
+  const animalProfile = animal.profile || {};
   const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
   const emotionMap = {
     '大好き': 'very happy, sparkling eyes, excited, eager to eat',
@@ -435,16 +469,23 @@ function buildImagePrompt(animal, foodInfo, reaction) {
 
   return [
     'Square 1:1 composition.',
-    'Create a polished character illustration that matches a cute mascot asset used in a Japanese children app.',
-    `Animal design reference: ${animalStyle}.`,
-    'Keep the mascot proportions consistent with a toy-like app character: oversized head, compact body, short limbs, centered composition.',
+    `Style base: ${MASCOT_STYLE_BASE.medium}.`,
+    `Rendering base: ${MASCOT_STYLE_BASE.render}.`,
+    `Composition base: ${MASCOT_STYLE_BASE.composition}.`,
+    `Proportion base: ${MASCOT_STYLE_BASE.proportions}.`,
+    `Background base: ${MASCOT_STYLE_BASE.background}.`,
     `Animal: ${animal.name} ${animal.emoji}.`,
+    `Animal silhouette: ${animalProfile.silhouette || `cute ${animal.name} mascot`}.`,
+    `Animal pose: ${animalProfile.pose || 'front-facing mascot pose'}.`,
+    `Animal face: ${animalProfile.face || 'cute friendly face'}.`,
+    `Animal details: ${animalProfile.details || 'soft plush details'}.`,
+    `Animal colors: ${animalProfile.palette || 'soft character colors'}.`,
     `Food design reference: ${foodStyle}.`,
     `Only one food item is shown and it must clearly read as ${subjectFood}.`,
     `The animal is eating or holding ${subjectFood}.`,
     `Expression and mood: ${emotion}.`,
-    'Use a clean isolated composition, transparent or very simple plain background, no scenery, no extra props, no text, no logo.',
-    'Soft high-quality 3d mascot render, fluffy texture, bright kid-friendly lighting, image asset style.'
+    'Use a clean isolated composition with the same kind of mascot readability as a game asset sheet.',
+    'Do not add realism, background scenery, extra accessories, extra food, extra animals, photorealism, or text.'
   ].join(' ');
 }
 
