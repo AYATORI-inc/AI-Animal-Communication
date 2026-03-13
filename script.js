@@ -42,6 +42,12 @@ const MASCOT_STYLE_BASE = {
     'No wooden board.',
     'No pedestal.',
     'No panel.',
+    'No character sheet.',
+    'No reference sheet.',
+    'No multiple views.',
+    'No side view.',
+    'No color palette.',
+    'No grid.',
     'Visible fluffy fur volume and a soft furry outline.',
     'Not a smooth doll-like surface.',
     'Strong mascot readability.',
@@ -102,8 +108,8 @@ const ANIMALS = {
     personality: 'やさしくて穏やか',
     personalityEn: 'gentle, kind, calm',
     profile: {
-      silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body.',
-      pose: 'Sitting front-facing. Tiny hands near the chest.',
+      silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body. Single front-facing character only.',
+      pose: 'Sitting front-facing. Tiny hands near the chest. No side view. No multiple views.',
       face: 'Usually sleepy half-closed eyes. Eyes open when surprised. Visible front teeth. Peaceful smile.',
       details: 'Big rounded nose.',
       palette: 'Warm beige fur with cream belly.'
