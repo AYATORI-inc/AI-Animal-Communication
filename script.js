@@ -26,6 +26,7 @@ const MASCOT_STYLE_BASE = {
     '1 animal only, no duplicate character, no extra face, no second pose.',
     'No preview, mini view, thumbnail preview, or 3-view required.',
     'Do not mix preview sheet style, three-view style, or mini-view formats.',
+    'Please refrain from using left-right comparison compositions.',
     'Animals should be in front view.',
     'Multiple angles such as three-dimensional views are not required.',
     'Multiple reactions are not required.',
@@ -62,6 +63,16 @@ const MASCOT_STYLE_BASE = {
     'Animal colors.'
   ]
 };
+
+const FOOD_STYLE_BASE = [
+  'Prioritize recognizability of the food item.',
+  'The food must not overshadow the animal.',
+  'Basically no base, plate, dish, tray, or wooden board.',
+  'Only one food item.',
+  'Easy to see from the front.',
+  'Slightly stylized 3D representation that matches the animal world.',
+  '3D mascot-like food representation that matches the animal.'
+];
 
 const ANIMALS = {
   lion: {
@@ -140,27 +151,28 @@ const QUICK_FOODS = {
     label: 'にく',
     category: 'にく',
     visual: 'a juicy steak',
-    imageStyle: 'thick raw marbled meat slices, isolated object, premium food asset look'
+    imageStyle: 'recognizable meat item, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food'
   },
   'くさ': {
     key: 'grass',
     label: 'くさ',
     category: 'くさ',
     visual: 'a bundle of fresh green grass',
-    imageStyle: 'fresh green grass and wild herbs, isolated object, clean cutout asset look'
+    imageStyle: 'recognizable grass bundle, green leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food'
   },
   'たいや': {
     key: 'tire',
     label: 'たいや',
     category: 'たいや',
-    visual: 'a worn rubber tire on the ground, isolated object, simple cutout asset look'
+    visual: 'a worn rubber tire',
+    imageStyle: 'recognizable single tire, round silhouette, slightly worn but easy to identify, slightly stylized 3D mascot-like object'
   },
   'げきからりょうり': {
     key: 'spicy',
     label: 'げきからりょうり',
     category: 'げきからりょうり',
     visual: 'an extremely spicy dish with red chili peppers',
-    imageStyle: 'bright red extra spicy dish covered with many chili peppers, isolated object, dramatic food asset look'
+    imageStyle: 'recognizable extra spicy dish, very red, chili peppers clearly visible, spicy look at first glance, slightly stylized 3D mascot-like food'
   }
 };
 
@@ -522,6 +534,12 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     'Create one image only.',
     `The animal must be a ${animal.speciesEn || animal.id}.`,
     `This is definitely a ${animal.speciesEn || animal.id}, not any other animal.`,
+    ...FOOD_STYLE_BASE,
+    `The selected food item is ${subjectFood}.`,
+    `The food must clearly and visibly appear as ${subjectFood}.`,
+    `The image must include exactly one clearly recognizable food item: ${subjectFood}.`,
+    `The animal is eating or holding ${subjectFood}.`,
+    `Food design reference: ${foodStyle}.`,
     animalProfile.silhouette || `Cute ${animal.speciesEn || animal.id} mascot.`,
     animalProfile.pose || 'Front-facing mascot pose.',
     animalProfile.face || 'Cute friendly face.',
@@ -532,10 +550,8 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     ...MASCOT_STYLE_BASE.common,
     `This image must show exactly one ${animal.speciesEn || animal.id}.`,
     'No duplicate character. No extra face. No second pose. No other animal.',
-    `Food design reference is included: ${foodStyle}.`,
     'Only one food item is shown.',
-    `The food must be clearly readable as ${subjectFood}.`,
-    `The animal is eating or holding ${subjectFood}.`,
+    `Do not omit or hide the selected food item: ${subjectFood}.`,
     `Emotion: ${emotion}.`
   ];
 
@@ -646,8 +662,8 @@ function sanitizeAnimalComment(animal, line) {
 
   if (animal && animal.id === 'lion') {
     return text
-      .replace(/(?:にゃ|ニャ)([。！!？?〜～…]*)$/u, '$1')
-      .replace(/(?:だにゃ|だニャ)([。！!？?〜～…]*)$/u, 'だ$1')
+      .replace(/(?:にゃ|ニャ|にゃん|ニャン)([。！!？?〜～…]*)$/u, '$1')
+      .replace(/(?:だにゃ|だニャ|だにゃん|だニャン)([。！!？?〜～…]*)$/u, 'だ$1')
       .trim();
   }
 
