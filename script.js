@@ -158,7 +158,7 @@ const QUICK_FOODS = {
     label: 'くさ',
     category: 'くさ',
     visual: 'a bundle of fresh green grass',
-    imageStyle: 'recognizable grass bundle, green leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food'
+    imageStyle: 'recognizable bundle of long fresh green grass blades, clearly visible leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food'
   },
   'たいや': {
     key: 'tire',
@@ -199,7 +199,7 @@ const REACTIONS = {
     free: { likeLevel: '普通', mood: '🙂', text: 'やさしく味わってみるね。どんな味でも落ち着いてたしかめるよ。' }
   },
   panda: {
-    grass: { likeLevel: '好き', mood: '😊', text: 'いいね。こういうのは止まらない。まだまだ食べたくなる。' },
+    grass: { likeLevel: '好き', mood: '😊', text: 'おいしいけど、ぼくは笹の方がうれしいな。' },
     meat: { likeLevel: '嫌い', mood: '😖', text: 'ぼくは食べるのが大好きだけど、これはあんまり進まないな。' },
     tire: { likeLevel: '大嫌い', mood: '🤢', text: 'それはさすがに食べものじゃないよ。食いしんぼうのぼくでも無理だ。' },
     spicy: { likeLevel: '大嫌い', mood: '🥵', text: 'からいとたくさん食べられない。ぼくはおいしく山ほど食べたいんだ。' },
@@ -522,6 +522,7 @@ function buildImagePrompt(animal, foodInfo, reaction) {
   const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
   const animalProfile = animal.profile || {};
   const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
+  const isGrassDislikeCase = foodInfo.key === 'grass' && (animal.id === 'lion' || animal.id === 'penguin');
   const emotionMap = {
     '大好き': 'very happy, sparkling eyes, excited, eager to eat',
     '好き': 'happy, pleased, smiling',
@@ -539,6 +540,12 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     `The food must clearly and visibly appear as ${subjectFood}.`,
     `The image must include exactly one clearly recognizable food item: ${subjectFood}.`,
     `The animal is eating or holding ${subjectFood}.`,
+    ...(isGrassDislikeCase ? [
+      `Even if unusual for a ${animal.speciesEn || animal.id}, the ${animal.speciesEn || animal.id} must clearly be shown actually eating the grass.`,
+      'The grass must be visibly in the mouth or held right in front of the mouth while being eaten.',
+      'Do not replace the grass with any other food.',
+      'The reaction must clearly look like dislike, reluctance, or discomfort while still eating the grass.'
+    ] : []),
     `Food design reference: ${foodStyle}.`,
     animalProfile.silhouette || `Cute ${animal.speciesEn || animal.id} mascot.`,
     animalProfile.pose || 'Front-facing mascot pose.',
@@ -662,8 +669,8 @@ function sanitizeAnimalComment(animal, line) {
 
   if (animal && animal.id === 'lion') {
     return text
-      .replace(/(?:にゃ|ニャ|にゃん|ニャン)([。！!？?〜～…]*)$/u, '$1')
-      .replace(/(?:だにゃ|だニャ|だにゃん|だニャン)([。！!？?〜～…]*)$/u, 'だ$1')
+      .replace(/だ(?:にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, 'だ$1')
+      .replace(/(?:にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, '$1')
       .trim();
   }
 
@@ -687,7 +694,8 @@ function applyResultBase(animal, foodInfo, reaction) {
 
 function applyGasResult(animal, foodInfo, gasData) {
   const line = firstLine(gasData.message || gasData.comment || gasData.text || gasData.reply || gasData.responseText);
-  const sanitizedLine = sanitizeAnimalComment(animal, line);
+  const keepLocalReactionComment = foodInfo && foodInfo.key === 'grass' && (animal.id === 'lion' || animal.id === 'penguin' || animal.id === 'panda');
+  const sanitizedLine = keepLocalReactionComment ? '' : sanitizeAnimalComment(animal, line);
   if (sanitizedLine && el.resultText) {
     el.resultText.textContent = sanitizedLine;
   }
