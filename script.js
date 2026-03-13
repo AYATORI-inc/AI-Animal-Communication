@@ -645,6 +645,10 @@ function sanitizeAnimalComment(animal, line) {
       .trim();
   }
 
+  if (animal && animal.id === 'penguin') {
+    return text.replace(/めちゃくちゃ/g, 'とっても').trim();
+  }
+
   return text;
 }
 
