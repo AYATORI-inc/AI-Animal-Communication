@@ -25,6 +25,7 @@ const MASCOT_STYLE_BASE = {
     'Please limit the number of animals in the image to one.',
     '1 animal only, no duplicate character, no extra face, no second pose.',
     'No preview, mini view, thumbnail preview, or 3-view required.',
+    'Do not mix preview sheet style, three-view style, or mini-view formats.',
     'Animals should be in front view.',
     'Multiple angles such as three-dimensional views are not required.',
     'Multiple reactions are not required.',
@@ -64,8 +65,8 @@ const ANIMALS = {
     emoji: '🦁',
     img: './img/raion.webp',
     first: 'オレ',
-    personality: '自信満々でワイルド',
-    personalityEn: 'proud, wild, noble, confident',
+    personality: '自信満々でワイルド、王者らしい',
+    personalityEn: 'confident, wild, regal',
     profile: {
       silhouette: 'Golden lion mascot. Huge messy curly mane made of thick yarn-like curls. Face clearly separated from the mane.',
       pose: 'Standing proudly. Arms crossed.',
@@ -81,8 +82,8 @@ const ANIMALS = {
     emoji: '🐧',
     img: './img/pengin.webp',
     first: 'ぼく',
-    personality: 'まじめでのんびり',
-    personalityEn: 'cheerful, innocent, energetic, bright',
+    personality: 'まじめでのんびり、でも明るい',
+    personalityEn: 'serious, laid-back, cheerful',
     profile: {
       silhouette: 'Round baby penguin mascot. Very large head. Tiny feet.',
       pose: 'Front-facing standing pose. Both wings raised wide.',
@@ -98,8 +99,8 @@ const ANIMALS = {
     emoji: '🦫',
     img: './img/kapipara.webp',
     first: 'わたし',
-    personality: 'おっとりしてやさしい',
-    personalityEn: 'gentle, calm, sleepy, peaceful',
+    personality: 'やさしくて穏やか',
+    personalityEn: 'gentle, kind, calm',
     profile: {
       silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body.',
       pose: 'Sitting front-facing. Tiny hands near the chest.',
@@ -115,8 +116,8 @@ const ANIMALS = {
     emoji: '🐼',
     img: './img/panda.webp',
     first: 'ぼく',
-    personality: 'マイペースで食いしんぼう',
-    personalityEn: 'lazy, playful, easygoing, mischievous',
+    personality: 'マイペースで食べるのが大好き',
+    personalityEn: 'goes at his own pace, loves to eat',
     profile: {
       silhouette: 'Cute panda mascot. Oversized round head. Rounded seated body.',
       pose: 'Sitting front-facing. Legs open forward.',
@@ -159,32 +160,32 @@ const QUICK_FOODS = {
 
 const REACTIONS = {
   lion: {
-    meat: { likeLevel: '大好き', mood: '😍', text: 'うまい！ これはテンションが上がるぜ！' },
-    grass: { likeLevel: '嫌い', mood: '😖', text: 'くさはちょっと違うかな…。' },
-    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやは食べものじゃないぞ！？' },
-    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からすぎる！ でも気合いで食べる…！' },
-    free: { likeLevel: '普通', mood: '😐', text: 'どんな味か、まずは食べてみるぞ。' }
+    meat: { likeLevel: '大好き', mood: '😍', text: '見事だ。王者であるオレが口にしても、十分に満足できる味だ。' },
+    grass: { likeLevel: '嫌い', mood: '😖', text: 'オレには似合わない。王者が求める一皿とは言いがたい。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'これは論外だ。オレの前に出すなら、食べものとしての品格を備えてこい。' },
+    spicy: { likeLevel: '嫌い', mood: '🥵', text: '勢いは認める。だが、味わうには刺激が強すぎる。' },
+    free: { likeLevel: '普通', mood: '😐', text: '悪くはない。まずは静かに味を見極めよう。' }
   },
   penguin: {
-    meat: { likeLevel: '好き', mood: '😊', text: 'おいしいね。もぐもぐ食べちゃう。' },
-    grass: { likeLevel: '嫌い', mood: '😕', text: 'くさは、ちょっと食べにくいかな…。' },
-    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやは食べられないよ…。' },
-    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からくてびっくりした…。' },
-    free: { likeLevel: '普通', mood: '🙂', text: 'どきどきするけど、ひとくち食べてみるね。' }
+    meat: { likeLevel: '好き', mood: '😊', text: 'まじめに味見したけど、これはけっこう好きかも。' },
+    grass: { likeLevel: '嫌い', mood: '😕', text: 'ちゃんと食べてみたけど、くさは少しのんびりしすぎる味だね。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'これはさすがに食べものじゃないよ。ぼくでもそれはわかるよ。' },
+    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からくてびっくりしたけど、なんだかちょっと笑っちゃうね。' },
+    free: { likeLevel: '普通', mood: '🙂', text: 'よし、落ち着いてひとくち。どんな味かたしかめてみるね。' }
   },
   capybara: {
-    grass: { likeLevel: '大好き', mood: '😍', text: 'これは落ち着く味だねぇ。' },
-    meat: { likeLevel: '普通', mood: '😐', text: '食べられるけど、いつもの感じではないかな。' },
-    tire: { likeLevel: '嫌い', mood: '😖', text: 'かたいよ…。これはえさじゃないかも。' },
-    spicy: { likeLevel: '大嫌い', mood: '🤢', text: 'からいのは苦手なんだ…。' },
-    free: { likeLevel: '普通', mood: '🙂', text: 'のんびり味見してみるね。' }
+    grass: { likeLevel: '大好き', mood: '😍', text: 'やさしい味でほっとするね。これはとても好きだな。' },
+    meat: { likeLevel: '普通', mood: '😐', text: '食べられるけれど、ぼくにはもう少し穏やかな味が合うかな。' },
+    tire: { likeLevel: '嫌い', mood: '😖', text: 'かたくてびっくりしたよ。これは食べないほうがよさそうだね。' },
+    spicy: { likeLevel: '大嫌い', mood: '🤢', text: 'からいのは苦手なんだ。落ち着いて食べられる味がいいな。' },
+    free: { likeLevel: '普通', mood: '🙂', text: 'やさしく味わってみるね。どんな味でも落ち着いてたしかめるよ。' }
   },
   panda: {
-    grass: { likeLevel: '好き', mood: '😊', text: 'しゃきしゃきしていい感じ。' },
-    meat: { likeLevel: '嫌い', mood: '😖', text: 'ぼくはもっと別のものが食べたいな…。' },
-    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやはむり！ ぜったいむり！' },
-    spicy: { likeLevel: '大嫌い', mood: '🥵', text: 'からい！ みずー！' },
-    free: { likeLevel: '普通', mood: '😐', text: 'まずはひとくち、ためしてみるよ。' }
+    grass: { likeLevel: '好き', mood: '😊', text: 'いいね。こういうのは止まらない。まだまだ食べたくなる。' },
+    meat: { likeLevel: '嫌い', mood: '😖', text: 'ぼくは食べるのが大好きだけど、これはあんまり進まないな。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'それはさすがに食べものじゃないよ。食いしんぼうのぼくでも無理だ。' },
+    spicy: { likeLevel: '大嫌い', mood: '🥵', text: 'からいとたくさん食べられない。ぼくはおいしく山ほど食べたいんだ。' },
+    free: { likeLevel: '普通', mood: '😐', text: 'まずはひとくち。でも、おいしかったらもっと食べたい。' }
   }
 };
 
@@ -633,6 +634,20 @@ function extractImageSrc(data) {
   return '';
 }
 
+function sanitizeAnimalComment(animal, line) {
+  const text = String(line || '').trim();
+  if (!text) return '';
+
+  if (animal && animal.id === 'lion') {
+    return text
+      .replace(/(?:にゃ|ニャ)([。！!？?〜～…]*)$/u, '$1')
+      .replace(/(?:だにゃ|だニャ)([。！!？?〜～…]*)$/u, 'だ$1')
+      .trim();
+  }
+
+  return text;
+}
+
 function applyResultBase(animal, foodInfo, reaction) {
   setImage(el.resultAnimalImg, animal.img, animal.name);
   if (el.resultSub) el.resultSub.textContent = `入力：${foodInfo.raw}`;
@@ -646,8 +661,9 @@ function applyResultBase(animal, foodInfo, reaction) {
 
 function applyGasResult(animal, foodInfo, gasData) {
   const line = firstLine(gasData.message || gasData.comment || gasData.text || gasData.reply || gasData.responseText);
-  if (line && el.resultText) {
-    el.resultText.textContent = line;
+  const sanitizedLine = sanitizeAnimalComment(animal, line);
+  if (sanitizedLine && el.resultText) {
+    el.resultText.textContent = sanitizedLine;
   }
 
   const src = extractImageSrc(gasData);
