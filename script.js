@@ -93,6 +93,7 @@ const QUICK_FOODS = {
   'にく': {
     key: 'meat',
     label: 'にく',
+    gasWord: 'Meat',
     category: 'にく',
     visual: 'a juicy steak',
     imageStyle: 'single clearly visible juicy steak, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food, not grass, not leaves, not vegetables'
@@ -100,6 +101,7 @@ const QUICK_FOODS = {
   'くさ': {
     key: 'grass',
     label: 'くさ',
+    gasWord: 'grass',
     category: 'くさ',
     visual: 'a bundle of fresh green grass',
     imageStyle: 'single clearly visible bundle of long fresh green grass blades, clearly visible green leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food, not meat, not steak, not red flesh'
@@ -107,6 +109,7 @@ const QUICK_FOODS = {
   'たいや': {
     key: 'tire',
     label: 'たいや',
+    gasWord: 'tires',
     category: 'たいや',
     visual: 'a worn rubber tire',
     imageStyle: 'recognizable single tire, round silhouette, slightly worn but easy to identify, slightly stylized 3D mascot-like object'
@@ -114,6 +117,7 @@ const QUICK_FOODS = {
   'げきからりょうり': {
     key: 'spicy',
     label: 'げきからりょうり',
+    gasWord: 'extremely spicy food',
     category: 'げきからりょうり',
     visual: 'an extremely spicy dish with red chili peppers',
     imageStyle: 'recognizable extra spicy dish, very red, chili peppers clearly visible, spicy look at first glance, slightly stylized 3D mascot-like food'
@@ -438,6 +442,7 @@ function normalizeFood(input) {
     return {
       raw,
       label: quick.label,
+      gasWord: quick.gasWord || quick.label,
       key: quick.key,
       category: quick.category,
       visual: quick.visual,
@@ -449,6 +454,7 @@ function normalizeFood(input) {
   return {
     raw,
     label: raw,
+    gasWord: raw,
     key: 'free',
     category: '',
     visual: raw,
@@ -472,8 +478,8 @@ function buildPayload(animal, foodInfo, reaction) {
   return {
     gameVersion: VERSION,
     animalType: animal.name,
-    foodType: foodInfo.isFreeWord ? '' : foodInfo.label,
-    freeWord: foodInfo.isFreeWord ? foodInfo.raw : '',
+    foodType: foodInfo.isFreeWord ? '' : (foodInfo.gasWord || foodInfo.label),
+    freeWord: foodInfo.isFreeWord ? (foodInfo.gasWord || foodInfo.raw) : '',
     likeLevel: reaction.likeLevel,
     baseImagePrompt,
     wantImage: true,
