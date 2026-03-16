@@ -11,73 +11,11 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
 
-const MASCOT_STYLE_BASE = {
-  common: [
-    'Square 1:1 composition.',
-    'Cute stylized 3D mascot character for a Japanese children app.',
-    'Clearly a high-quality 3D mascot character, not a flat illustration.',
-    'Soft furry volume.',
-    'Clear character silhouette.',
-    'Polished game asset render.',
-    'A single animal, only one subject, centrally positioned.',
-    'Full body visible.',
-    'One character only.',
-    'Please limit the number of animals in the image to one.',
-    '1 animal only, no duplicate character, no extra face, no second pose.',
-    'No preview, mini view, thumbnail preview, or 3-view required.',
-    'Do not mix preview sheet style, three-view style, or mini-view formats.',
-    'Please refrain from using left-right comparison compositions.',
-    'Multiple angles such as three-dimensional views are not required.',
-    'Multiple reactions are not required.',
-    'No thumbnails or color palettes are needed when generating images.',
-    'Very large head.',
-    'Compact rounded body.',
-    'Short limbs.',
-    'A dynamic, lively, fun illustration is allowed as long as the animal remains clear and readable.',
-    'No text.',
-    'No logo.',
-    'No tray.',
-    'No plate.',
-    'No wooden board.',
-    'No pedestal.',
-    'No panel.',
-    'No character sheet.',
-    'No reference sheet.',
-    'No multiple views.',
-    'No color palette.',
-    'No grid.',
-    'Visible fluffy fur volume and a soft furry outline.',
-    'Not a smooth doll-like surface.',
-    'Strong mascot readability.',
-    'Do not make the animal smooth, plastic, glossy, photorealistic, or doll-like.'
-  ],
-  priorities: [
-    'Animal silhouette.',
-    'Animal pose.',
-    'Animal face.',
-    'Animal personality reflected in pose and facial expression.',
-    'Animal details.',
-    'Animal colors.'
-  ]
-};
-
-const FOOD_STYLE_BASE = [
-  'Prioritize recognizability of the food item.',
-  'The food must not overshadow the animal.',
-  'Basically no base, plate, dish, tray, or wooden board.',
-  'Only one food item.',
-  'Easy to see from the front.',
-  'Slightly stylized 3D representation that matches the animal world.',
-  '3D mascot-like food representation that matches the animal.'
-];
-
-const ZOO_BACKGROUND_BASE = [
-  'Use the same common zoo background for all animals.',
-  'The background must clearly look like a cheerful zoo environment, not a blank or plain studio background.',
-  'Show a bright playful zoo setting with soft blue sky, green grass, a few trees, a simple fence in the distance, and a clean dirt path.',
-  'The zoo background must be visibly present behind the animal.',
-  'Do not use a plain white background, plain gradient background, empty background, or backgroundless composition.',
-  'Keep the background child-friendly, soft, colorful, and non-distracting so the animal remains the clear main subject.'
+const IMAGE_STYLE_BASE_PROMPT = [
+  'Rendering Quality: High-quality 3D mascot character style, polished like a professional game asset render with visible three-dimensional depth and rounded volume.',
+  'Surface Texture: Features visible fluffy fur volume and a soft furry outline; strictly avoid smooth, plastic, glossy, or doll-like surfaces.',
+  'Zoo Background: A bright, cheerful, and child-friendly zoo environment featuring a soft blue sky, green grass, a few trees, a clean dirt path, and a simple distant fence.',
+  'Strict Exclusions: No flat or orthographic designs, and no plain white, gradient, or empty backgrounds.'
 ];
 
 const ANIMALS = {
@@ -525,72 +463,7 @@ function getReaction(animal, foodInfo) {
 }
 
 function buildImagePrompt(animal, foodInfo, reaction) {
-  const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
-  const animalProfile = animal.profile || {};
-  const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
-  const isGrassDislikeCase = foodInfo.key === 'grass' && (animal.id === 'lion' || animal.id === 'penguin');
-  const foodSpecificRules = {
-    meat: [
-      'The selected food must look clearly like meat.',
-      'Show one clearly visible steak with red flesh and white fat.',
-      'Do not generate grass, leaves, salad, vegetables, or plants instead of the meat.'
-    ],
-    grass: [
-      'The selected food must look clearly like grass.',
-      'Show one clearly visible bundle of long green grass blades.',
-      'Do not generate meat, steak, bones, or red flesh instead of the grass.'
-    ],
-    tire: [
-      'The selected object must clearly look like one tire.',
-      'Do not replace the tire with food.'
-    ],
-    spicy: [
-      'The selected food must clearly look like an extra spicy dish.',
-      'Red chili peppers must be clearly visible.'
-    ]
-  };
-  const emotionMap = {
-    '大好き': 'very happy, sparkling eyes, excited, eager to eat',
-    '好き': 'happy, pleased, smiling',
-    '普通': 'calm, curious, neutral smile',
-    '嫌い': 'reluctant, awkward, slightly troubled face',
-    '大嫌い': 'disgusted, recoiling, dramatic grossed-out reaction'
-  };
-  const emotion = emotionMap[reaction.likeLevel] || 'curious expression';
-  const lines = [
-    'Create one image only.',
-    `The animal must be a ${animal.speciesEn || animal.id}.`,
-    `This is definitely a ${animal.speciesEn || animal.id}, not any other animal.`,
-    ...ZOO_BACKGROUND_BASE,
-    ...FOOD_STYLE_BASE,
-    `The selected food item is ${subjectFood}.`,
-    `The food must clearly and visibly appear as ${subjectFood}.`,
-    `The image must include exactly one clearly recognizable food item: ${subjectFood}.`,
-    `The animal is eating or holding ${subjectFood}.`,
-    ...(foodSpecificRules[foodInfo.key] || []),
-    ...(isGrassDislikeCase ? [
-      `Even if unusual for a ${animal.speciesEn || animal.id}, the ${animal.speciesEn || animal.id} must clearly be shown actually eating the grass.`,
-      'The grass must be visibly in the mouth or held right in front of the mouth while being eaten.',
-      'Do not replace the grass with any other food.',
-      'The reaction must clearly look like dislike, reluctance, or discomfort while still eating the grass.'
-    ] : []),
-    `Food design reference: ${foodStyle}.`,
-    animalProfile.silhouette || `Cute ${animal.speciesEn || animal.id} mascot.`,
-    animalProfile.pose || 'Dynamic mascot pose.',
-    animalProfile.face || 'Cute friendly face.',
-    animalProfile.details || 'Visible fluffy fur volume.',
-    animalProfile.palette || 'Soft character colors.',
-    `Animal personality: ${animal.personalityEn || animal.personality}.`,
-    'The pose and facial expression should clearly reflect the personality.',
-    ...MASCOT_STYLE_BASE.common,
-    `This image must show exactly one ${animal.speciesEn || animal.id}.`,
-    'No duplicate character. No extra face. No second pose. No other animal.',
-    'Only one food item is shown.',
-    `Do not omit or hide the selected food item: ${subjectFood}.`,
-    `Emotion: ${emotion}.`
-  ];
-
-  return lines.join(' ');
+  return IMAGE_STYLE_BASE_PROMPT.join(' ');
 }
 
 function buildPayload(animal, foodInfo, reaction) {
