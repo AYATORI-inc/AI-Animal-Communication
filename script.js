@@ -15,11 +15,11 @@ const MASCOT_STYLE_BASE = {
   common: [
     'Square 1:1 composition.',
     'Cute stylized 3D mascot character for a Japanese children app.',
+    'Clearly a high-quality 3D mascot character, not a flat illustration.',
     'Soft furry volume.',
     'Clear character silhouette.',
     'Polished game asset render.',
-    'Front-facing.',
-    'Centered.',
+    'A single animal, only one subject, centrally positioned.',
     'Full body visible.',
     'One character only.',
     'Please limit the number of animals in the image to one.',
@@ -27,15 +27,13 @@ const MASCOT_STYLE_BASE = {
     'No preview, mini view, thumbnail preview, or 3-view required.',
     'Do not mix preview sheet style, three-view style, or mini-view formats.',
     'Please refrain from using left-right comparison compositions.',
-    'Animals should be in front view.',
     'Multiple angles such as three-dimensional views are not required.',
     'Multiple reactions are not required.',
     'No thumbnails or color palettes are needed when generating images.',
     'Very large head.',
     'Compact rounded body.',
     'Short limbs.',
-    'Very simple clean background.',
-    'No scenery.',
+    'A dynamic, lively, fun illustration is allowed as long as the animal remains clear and readable.',
     'No text.',
     'No logo.',
     'No tray.',
@@ -46,7 +44,6 @@ const MASCOT_STYLE_BASE = {
     'No character sheet.',
     'No reference sheet.',
     'No multiple views.',
-    'No side view.',
     'No color palette.',
     'No grid.',
     'Visible fluffy fur volume and a soft furry outline.',
@@ -74,6 +71,15 @@ const FOOD_STYLE_BASE = [
   '3D mascot-like food representation that matches the animal.'
 ];
 
+const ZOO_BACKGROUND_BASE = [
+  'Use the same common zoo background for all animals.',
+  'The background must clearly look like a cheerful zoo environment, not a blank or plain studio background.',
+  'Show a bright playful zoo setting with soft blue sky, green grass, a few trees, a simple fence in the distance, and a clean dirt path.',
+  'The zoo background must be visibly present behind the animal.',
+  'Do not use a plain white background, plain gradient background, empty background, or backgroundless composition.',
+  'Keep the background child-friendly, soft, colorful, and non-distracting so the animal remains the clear main subject.'
+];
+
 const ANIMALS = {
   lion: {
     id: 'lion',
@@ -85,10 +91,10 @@ const ANIMALS = {
     personality: '自信満々でワイルド、王者らしい',
     personalityEn: 'confident, wild, regal',
     profile: {
-      silhouette: 'Golden lion mascot. Huge messy curly mane made of thick yarn-like curls. Face clearly separated from the mane.',
-      pose: 'Standing proudly. Arms crossed.',
+      silhouette: 'Golden lion 3D mascot. Clearly a stylized 3D mascot character with visible three-dimensional depth. Huge messy curly mane made of thick yarn-like curls. Face clearly separated from the mane.',
+      pose: 'Standing proudly in a dimensional 3D pose with visible body depth. Arms crossed.',
       face: 'Confident noble smile. Bright eyes.',
-      details: 'Small colorful crown on the mane. Clearly white belly.',
+      details: 'Small colorful crown on the mane. Clearly white belly. Plush-like furry volume, but still clearly a polished 3D mascot character. The mane, face, body, and limbs must show clear depth and rounded volume. Not flat, not orthographic, not sheet-like, not a front elevation drawing.',
       palette: 'Golden yellow fur with white belly.'
     }
   },
@@ -103,7 +109,7 @@ const ANIMALS = {
     personalityEn: 'serious, laid-back, cheerful',
     profile: {
       silhouette: 'Round baby penguin mascot. Very large head. Tiny feet.',
-      pose: 'Front-facing standing pose. Both wings raised wide.',
+      pose: 'Standing in a lively playful pose. Both wings raised wide.',
       face: 'Very large blue eyes. Open happy beak.',
       details: 'Small silver crown.',
       palette: 'Pastel blue and white body. Yellow beak and feet.'
@@ -119,8 +125,8 @@ const ANIMALS = {
     personality: 'やさしくて穏やか',
     personalityEn: 'gentle, kind, calm',
     profile: {
-      silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body. Single front-facing character only.',
-      pose: 'Sitting front-facing. Tiny hands near the chest. No side view. No multiple views.',
+      silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body. Single character only.',
+      pose: 'Sitting in a gentle playful pose. Tiny hands near the chest. Single character only. No multiple views.',
       face: 'Usually sleepy half-closed eyes. Eyes open when surprised. Visible front teeth. Peaceful smile.',
       details: 'Big rounded nose.',
       palette: 'Warm beige fur with cream belly.'
@@ -136,10 +142,10 @@ const ANIMALS = {
     personality: 'マイペースで食べるのが大好き',
     personalityEn: 'goes at his own pace, loves to eat',
     profile: {
-      silhouette: 'Cute panda mascot. Oversized round head. Rounded seated body.',
-      pose: 'Sitting front-facing. Legs open forward.',
+      silhouette: 'Cute panda 3D mascot. Clearly a stylized 3D mascot character. Oversized round head. Rounded seated body.',
+      pose: 'Sitting in a relaxed playful pose. Legs open forward.',
       face: 'Sleepy half-closed eyes. Tiny tongue sticking out.',
-      details: 'Soft pink cheeks.',
+      details: 'Soft pink cheeks. Fluffy rounded fur volume, but still clearly a polished 3D mascot character.',
       palette: 'Black and white fur.'
     }
   }
@@ -151,14 +157,14 @@ const QUICK_FOODS = {
     label: 'にく',
     category: 'にく',
     visual: 'a juicy steak',
-    imageStyle: 'recognizable meat item, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food'
+    imageStyle: 'single clearly visible juicy steak, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food, not grass, not leaves, not vegetables'
   },
   'くさ': {
     key: 'grass',
     label: 'くさ',
     category: 'くさ',
     visual: 'a bundle of fresh green grass',
-    imageStyle: 'recognizable bundle of long fresh green grass blades, clearly visible leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food'
+    imageStyle: 'single clearly visible bundle of long fresh green grass blades, clearly visible green leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food, not meat, not steak, not red flesh'
   },
   'たいや': {
     key: 'tire',
@@ -523,6 +529,26 @@ function buildImagePrompt(animal, foodInfo, reaction) {
   const animalProfile = animal.profile || {};
   const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
   const isGrassDislikeCase = foodInfo.key === 'grass' && (animal.id === 'lion' || animal.id === 'penguin');
+  const foodSpecificRules = {
+    meat: [
+      'The selected food must look clearly like meat.',
+      'Show one clearly visible steak with red flesh and white fat.',
+      'Do not generate grass, leaves, salad, vegetables, or plants instead of the meat.'
+    ],
+    grass: [
+      'The selected food must look clearly like grass.',
+      'Show one clearly visible bundle of long green grass blades.',
+      'Do not generate meat, steak, bones, or red flesh instead of the grass.'
+    ],
+    tire: [
+      'The selected object must clearly look like one tire.',
+      'Do not replace the tire with food.'
+    ],
+    spicy: [
+      'The selected food must clearly look like an extra spicy dish.',
+      'Red chili peppers must be clearly visible.'
+    ]
+  };
   const emotionMap = {
     '大好き': 'very happy, sparkling eyes, excited, eager to eat',
     '好き': 'happy, pleased, smiling',
@@ -535,11 +561,13 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     'Create one image only.',
     `The animal must be a ${animal.speciesEn || animal.id}.`,
     `This is definitely a ${animal.speciesEn || animal.id}, not any other animal.`,
+    ...ZOO_BACKGROUND_BASE,
     ...FOOD_STYLE_BASE,
     `The selected food item is ${subjectFood}.`,
     `The food must clearly and visibly appear as ${subjectFood}.`,
     `The image must include exactly one clearly recognizable food item: ${subjectFood}.`,
     `The animal is eating or holding ${subjectFood}.`,
+    ...(foodSpecificRules[foodInfo.key] || []),
     ...(isGrassDislikeCase ? [
       `Even if unusual for a ${animal.speciesEn || animal.id}, the ${animal.speciesEn || animal.id} must clearly be shown actually eating the grass.`,
       'The grass must be visibly in the mouth or held right in front of the mouth while being eaten.',
@@ -548,7 +576,7 @@ function buildImagePrompt(animal, foodInfo, reaction) {
     ] : []),
     `Food design reference: ${foodStyle}.`,
     animalProfile.silhouette || `Cute ${animal.speciesEn || animal.id} mascot.`,
-    animalProfile.pose || 'Front-facing mascot pose.',
+    animalProfile.pose || 'Dynamic mascot pose.',
     animalProfile.face || 'Cute friendly face.',
     animalProfile.details || 'Visible fluffy fur volume.',
     animalProfile.palette || 'Soft character colors.',
@@ -669,8 +697,8 @@ function sanitizeAnimalComment(animal, line) {
 
   if (animal && animal.id === 'lion') {
     return text
-      .replace(/だ(?:にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, 'だ$1')
-      .replace(/(?:にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, '$1')
+      .replace(/だ(?:にゃー|ニャー|にゃあ|ニャア|にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, 'だ$1')
+      .replace(/(?:にゃー|ニャー|にゃあ|ニャア|にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, '$1')
       .trim();
   }
 
