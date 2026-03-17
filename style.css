@@ -55,7 +55,7 @@ img{ display:block; max-width:100%; }
   display:grid;
   grid-template-rows:1fr auto;
   gap:10px;
-  padding:18px 24px 14px;
+  padding:18px 24px 24px;
 }
 
 .appMain{
@@ -64,9 +64,16 @@ img{ display:block; max-width:100%; }
 }
 
 .appFooter{
+  position:fixed;
+  left:50%;
+  bottom:12px;
+  transform:translateX(-50%);
+  z-index:40;
   text-align:center;
   font-size:12px;
   color:var(--muted);
+  text-shadow:0 2px 10px rgba(0,0,0,.45);
+  pointer-events:none;
 }
 
 .screen{
@@ -95,6 +102,7 @@ img{ display:block; max-width:100%; }
   gap:20px;
   align-items:end;
   padding-top:190px;
+  padding-bottom:28px;
   position:relative;
 }
 
@@ -127,6 +135,7 @@ img{ display:block; max-width:100%; }
   align-items:end;
   gap:28px;
   padding:0 14px;
+  transform:translateY(-18px);
 }
 
 .pickTile{
@@ -196,6 +205,7 @@ img{ display:block; max-width:100%; }
   font-weight:1000;
   letter-spacing:.18em;
   box-shadow:0 16px 40px rgba(0,0,0,.20);
+  transform:translateY(-18px);
 }
 
 /* ---------------------------
@@ -216,6 +226,10 @@ img{ display:block; max-width:100%; }
 .resultCard{
   height:min(100%, 860px);
   padding:22px;
+}
+
+.gameCard{
+  margin-bottom:34px;
 }
 
 /* ---------------------------
@@ -354,6 +368,10 @@ img{ display:block; max-width:100%; }
   display:flex;
   flex-wrap:wrap;
   gap:12px;
+}
+
+.freeActions{
+  justify-content:flex-end;
 }
 
 .btn{
@@ -722,6 +740,7 @@ img{ display:block; max-width:100%; }
   .titleScreen{
     height:auto;
     padding-top:120px;
+    padding-bottom:28px;
     grid-template-rows:auto auto;
     align-items:start;
   }
@@ -741,6 +760,7 @@ img{ display:block; max-width:100%; }
     grid-template-columns:repeat(2, minmax(0,1fr));
     gap:18px 20px;
     padding:0 6px;
+    transform:translateY(-10px);
   }
 
   .pickTile{
@@ -785,11 +805,12 @@ img{ display:block; max-width:100%; }
 
 @media (max-width: 640px){
   .appShell{
-    padding:12px;
+    padding:12px 12px 24px;
   }
 
   .titleScreen{
     padding-top:90px;
+    padding-bottom:24px;
     gap:14px;
   }
 
@@ -816,6 +837,7 @@ img{ display:block; max-width:100%; }
     padding:14px 10px;
     font-size:clamp(18px, 5.4vw, 28px);
     letter-spacing:.08em;
+    transform:translateY(-10px);
   }
 
   .foodGrid{
@@ -856,6 +878,10 @@ img{ display:block; max-width:100%; }
     display:grid;
     grid-template-columns:1fr;
     gap:10px;
+  }
+
+  .freeActions{
+    justify-content:stretch;
   }
 
   .resultActions .btn{
