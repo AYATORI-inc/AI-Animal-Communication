@@ -93,7 +93,7 @@ const QUICK_FOODS = {
   'にく': {
     key: 'meat',
     label: 'にく',
-    gasWord: 'Meat',
+    gasWord: 'Meat (juicy steak)',
     category: 'にく',
     visual: 'a juicy steak',
     imageStyle: 'single clearly visible juicy steak, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food, not grass, not leaves, not vegetables'
