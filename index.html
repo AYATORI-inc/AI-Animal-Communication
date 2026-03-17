@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="utf-8">
@@ -101,8 +101,8 @@
                   placeholder="じゆうに えさを いれてね（例：魔法のジュース / 手作りハンバーグ）"
                 >
                 <div class="freeActions">
-                  <button id="btnSend" class="btn primary" type="button">えさを あげる</button>
-                  <button id="btnBackToSelect" class="btn ghost" type="button">どうぶつを かえる</button>
+                  <button id="btnBackToSelect" class="btn ghost" type="button">どうぶつをかえる</button>
+                  <button id="btnSend" class="btn primary" type="button">えさをあげる</button>
                 </div>
               </div>
             </section>
@@ -113,7 +113,7 @@
       <section class="screen" id="screenResult" aria-label="けっか">
         <div class="card resultCard">
           <div class="resultHeader">
-            <div class="resultHeaderIcon">🏁</div>
+            <div class="resultHeaderIcon">🍽</div>
             <div>
               <div class="resultTitle">けっか</div>
               <div class="resultSub" id="resultSub">入力：—</div>
@@ -123,7 +123,7 @@
           <div class="resultBody">
             <div class="resultLeft">
               <div class="resultAnimalPanel">
-                <div class="resultEmoji" id="resultEmoji">✨</div>
+                <div class="resultEmoji" id="resultEmoji">😊</div>
 
                 <div class="resultAnimalPic">
                   <img id="resultAnimalImg" src="" alt="">
@@ -139,7 +139,7 @@
             <div class="resultRight">
               <div class="resultTextPanel">
                 <div class="resultSectionTitle">かんそう</div>
-                <pre class="resultText" id="resultText">—</pre>
+                <pre class="resultText" id="resultText">…</pre>
               </div>
 
               <div class="resultImagePanel" id="resultImageWrap">
@@ -147,7 +147,7 @@
 
                 <div class="resultImagePlaceholder" id="resultImagePlaceholder">
                   <div class="phTitle">イラストを じゅんびしています…</div>
-                  <div class="phSub">ちょっと まってね…</div>
+                  <div class="phSub">ちょっと まっててね…</div>
                 </div>
 
                 <img
@@ -194,7 +194,7 @@
 
   <div class="imgModal isHidden" id="imgModal" aria-hidden="true">
     <div class="imgModalBackdrop" id="imgModalBackdrop"></div>
-    <div class="imgModalPanel" role="dialog" aria-modal="true" aria-label="画像拡大表示">
+    <div class="imgModalPanel" role="dialog" aria-modal="true" aria-label="画像を拡大表示">
       <button id="imgModalClose" class="imgModalClose" type="button" aria-label="閉じる">×</button>
       <img id="imgModalImg" class="imgModalImg" src="" alt="">
     </div>
