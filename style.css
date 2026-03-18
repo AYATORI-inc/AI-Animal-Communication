@@ -451,7 +451,10 @@ img{ display:block; max-width:100%; }
   overflow:auto;
   padding-right:4px;
   display:grid;
-  grid-template-columns:minmax(250px, 330px) minmax(0,1fr);
+  grid-template-columns:minmax(340px, 1.1fr) minmax(280px, .9fr);
+  grid-template-areas:
+    "image text"
+    "image animal";
   gap:18px;
   align-items:start;
 }
@@ -459,26 +462,31 @@ img{ display:block; max-width:100%; }
 .resultLeft,
 .resultRight{
   min-height:0;
+  display:contents;
 }
 
 .resultAnimalPanel{
+  grid-area:animal;
   height:100%;
   min-height:0;
   display:grid;
-  grid-template-rows:auto 1fr auto;
+  grid-template-rows:auto auto auto;
   gap:14px;
   padding:18px;
+  align-content:start;
+  overflow:hidden;
 }
 
 .resultAnimalPic{
   min-height:0;
   display:grid;
   place-items:center;
+  overflow:hidden;
 }
 
 .resultAnimalPic img{
-  width:min(100%, 250px);
-  max-height:300px;
+  width:min(100%, 160px);
+  max-height:180px;
   object-fit:contain;
   filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));
 }
@@ -511,15 +519,22 @@ img{ display:block; max-width:100%; }
 }
 
 .resultRight{
-  display:grid;
-  grid-template-rows:minmax(180px, auto) minmax(260px, 1fr);
-  gap:18px;
+  display:contents;
 }
 
 .resultTextPanel,
 .resultImagePanel{
   min-height:0;
   padding:18px;
+}
+
+.resultImagePanel{
+  grid-area:image;
+}
+
+.resultTextPanel{
+  grid-area:text;
+  align-self:start;
 }
 
 .resultSectionTitle{
@@ -771,6 +786,13 @@ img{ display:block; max-width:100%; }
   .gameLayout,
   .resultBody{
     grid-template-columns:1fr;
+  }
+
+  .resultBody{
+    grid-template-areas:
+      "image"
+      "text"
+      "animal";
   }
 
   .animalRowWide{
