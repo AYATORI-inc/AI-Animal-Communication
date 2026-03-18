@@ -338,19 +338,21 @@ img{ display:block; max-width:100%; }
 .foodBtn{
   min-height:168px;
   display:grid;
-  grid-template-rows:minmax(98px,1fr) auto;
+  grid-template-rows:1fr auto;
   justify-items:center;
   align-content:stretch;
-  gap:10px;
-  padding:14px 14px 16px;
+  gap:4px;
+  padding:10px 12px 12px;
   text-align:center;
   font-size:20px;
   font-weight:900;
 }
 
 .foodBtnIcon{
-  width:clamp(92px, 7.4vw, 124px);
-  height:clamp(92px, 7.4vw, 124px);
+  width:min(46%, 152px);
+  max-width:100%;
+  height:auto;
+  max-height:112px;
   object-fit:contain;
   align-self:center;
 }
@@ -798,7 +800,14 @@ img{ display:block; max-width:100%; }
 
   .foodBtn{
     min-height:160px;
-    grid-template-rows:minmax(92px,1fr) auto;
+    grid-template-rows:1fr auto;
+    gap:4px;
+    padding:10px 12px 12px;
+  }
+
+  .foodBtnIcon{
+    width:min(42%, 136px);
+    max-height:100px;
   }
 
   .resultCard{
@@ -868,14 +877,14 @@ img{ display:block; max-width:100%; }
   .foodBtn{
     min-height:132px;
     font-size:16px;
-    gap:8px;
-    padding:12px 10px 14px;
-    grid-template-rows:minmax(72px,1fr) auto;
+    gap:4px;
+    padding:8px 8px 10px;
+    grid-template-rows:1fr auto;
   }
 
   .foodBtnIcon{
-    width:72px;
-    height:72px;
+    width:min(54%, 92px);
+    max-height:72px;
   }
 
   .gameCard,
