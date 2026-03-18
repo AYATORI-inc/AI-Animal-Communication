@@ -336,21 +336,21 @@ img{ display:block; max-width:100%; }
 }
 
 .foodBtn{
-  min-height:156px;
+  min-height:168px;
   display:grid;
-  grid-template-rows:minmax(82px,1fr) auto;
+  grid-template-rows:minmax(98px,1fr) auto;
   justify-items:center;
   align-content:stretch;
-  gap:12px;
-  padding:16px 14px 18px;
+  gap:10px;
+  padding:14px 14px 16px;
   text-align:center;
-  font-size:22px;
+  font-size:20px;
   font-weight:900;
 }
 
 .foodBtnIcon{
-  width:clamp(78px, 6.6vw, 108px);
-  height:clamp(78px, 6.6vw, 108px);
+  width:clamp(92px, 7.4vw, 124px);
+  height:clamp(92px, 7.4vw, 124px);
   object-fit:contain;
   align-self:center;
 }
@@ -797,7 +797,8 @@ img{ display:block; max-width:100%; }
   }
 
   .foodBtn{
-    min-height:152px;
+    min-height:160px;
+    grid-template-rows:minmax(92px,1fr) auto;
   }
 
   .resultCard{
@@ -865,15 +866,16 @@ img{ display:block; max-width:100%; }
   }
 
   .foodBtn{
-    min-height:124px;
+    min-height:132px;
     font-size:16px;
     gap:8px;
     padding:12px 10px 14px;
+    grid-template-rows:minmax(72px,1fr) auto;
   }
 
   .foodBtnIcon{
-    width:60px;
-    height:60px;
+    width:72px;
+    height:72px;
   }
 
   .gameCard,
