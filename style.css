@@ -104,14 +104,14 @@ img{ display:block; max-width:100%; }
   grid-template-rows:1fr auto;
   gap:20px;
   align-items:end;
-  padding-top:190px;
+  padding-top:148px;
   padding-bottom:24px;
   position:relative;
 }
 
 .selectLogoWrap{
   position:absolute;
-  top:8px;
+  top:0;
   left:50%;
   transform:translateX(-50%);
   z-index:3;
@@ -122,9 +122,9 @@ img{ display:block; max-width:100%; }
 }
 
 .selectLogoTop{
-  width:min(1040px, 62vw);
+  width:min(1120px, 68vw);
   max-width:95vw;
-  max-height:260px;
+  max-height:280px;
   height:auto;
   object-fit:contain;
   filter:drop-shadow(0 12px 24px rgba(0,0,0,.22));
@@ -715,12 +715,12 @@ img{ display:block; max-width:100%; }
 
 @media (max-width: 1400px){
   .titleScreen{
-    padding-top:170px;
+    padding-top:132px;
   }
 
   .selectLogoTop{
-    width:min(900px, 64vw);
-    max-height:230px;
+    width:min(980px, 70vw);
+    max-height:246px;
   }
 
   .tileFrame{
@@ -754,15 +754,15 @@ img{ display:block; max-width:100%; }
 
   .titleScreen{
     height:auto;
-    padding-top:120px;
+    padding-top:92px;
     padding-bottom:24px;
     grid-template-rows:auto auto;
     align-items:start;
   }
 
   .selectLogoTop{
-    width:min(760px, 84vw);
-    max-height:180px;
+    width:min(820px, 88vw);
+    max-height:190px;
   }
 
   .animalRowWide,
@@ -828,14 +828,14 @@ img{ display:block; max-width:100%; }
   }
 
   .titleScreen{
-    padding-top:90px;
+    padding-top:68px;
     padding-bottom:18px;
     gap:14px;
   }
 
   .selectLogoTop{
-    width:min(92vw, 560px);
-    max-height:130px;
+    width:min(96vw, 620px);
+    max-height:148px;
   }
 
   .animalRowWide{
