@@ -452,7 +452,7 @@ img{ display:block; max-width:100%; }
   padding-right:4px;
   display:grid;
   grid-template-columns:minmax(340px, 1.1fr) minmax(280px, .9fr);
-  grid-template-rows:minmax(180px, auto) minmax(300px, auto);
+  grid-template-rows:minmax(180px, auto) minmax(480px, auto);
   grid-template-areas:
     "image text"
     "image animal";
@@ -469,9 +469,9 @@ img{ display:block; max-width:100%; }
 .resultAnimalPanel{
   grid-area:animal;
   height:100%;
-  min-height:300px;
+  min-height:540px;
   display:grid;
-  grid-template-rows:auto minmax(180px, 1fr) auto;
+  grid-template-rows:auto minmax(330px, 1fr) auto;
   gap:14px;
   padding:18px;
   align-content:stretch;
