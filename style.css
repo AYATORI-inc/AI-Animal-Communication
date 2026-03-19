@@ -469,9 +469,13 @@ img{ display:block; max-width:100%; }
 .resultAnimalPanel{
   grid-area:animal;
   height:100%;
-  min-height:540px;
+  min-height:700px;
   display:grid;
-  grid-template-rows:auto minmax(330px, 1fr) auto;
+  grid-template-columns:auto minmax(0, 1fr);
+  grid-template-rows:auto minmax(500px, 1fr);
+  grid-template-areas:
+    "emoji badges"
+    "image image";
   gap:14px;
   padding:18px;
   align-content:stretch;
@@ -479,22 +483,32 @@ img{ display:block; max-width:100%; }
 }
 
 .resultAnimalPic{
+  grid-area:image;
   min-height:0;
   display:grid;
   place-items:center;
   overflow:hidden;
+  transform:translateY(-12px);
 }
 
 .resultAnimalPic img{
-  width:min(100%, 180px);
-  max-height:200px;
+  width:min(100%, 540px);
+  max-height:520px;
   object-fit:contain;
   filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));
 }
 
 .resultBadges{
+  grid-area:badges;
   display:grid;
   gap:10px;
+  align-self:start;
+  align-content:start;
+  transform:none;
+}
+
+.resultAnimalPanel > .resultEmoji{
+  grid-area:emoji;
   align-self:start;
 }
 
