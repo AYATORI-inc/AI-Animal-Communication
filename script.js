@@ -11,73 +11,80 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
 
-const MASCOT_STYLE_BASE = {
-  medium: 'cute stylized 3d mascot character for a Japanese children app',
-  render: 'soft furry volume, clear character silhouette, polished game asset render',
-  composition: 'front-facing, centered, full body visible, one character only',
-  proportions: 'very large head, compact rounded body, short limbs',
-  background: 'very simple clean background, no scenery, no text, no logo'
-};
+const IMAGE_STYLE_BASE_PROMPT = [
+  'Rendering Quality: High-quality 3D mascot character style, polished like a professional game asset render with visible three-dimensional depth and rounded volume.',
+  'Surface Texture: Features visible fluffy fur volume and a soft furry outline; strictly avoid smooth, plastic, glossy, or doll-like surfaces.',
+  'Zoo Background: A bright, cheerful, and child-friendly zoo environment featuring a soft blue sky, green grass, a few trees, a clean dirt path, and a simple distant fence.',
+  'Strict Exclusions: No flat or orthographic designs, and no plain white, gradient, or empty backgrounds.'
+];
 
 const ANIMALS = {
   lion: {
     id: 'lion',
     name: 'ライオン',
+    speciesEn: 'lion',
     emoji: '🦁',
     img: './img/raion.webp',
     first: 'オレ',
-    personality: '自信満々でワイルド',
+    personality: '自信満々でワイルド、王者らしい',
+    personalityEn: 'confident, wild, regal',
     profile: {
-      silhouette: 'golden lion mascot with a huge messy curly mane and a separate visible face inside the mane',
-      pose: 'standing proudly with arms crossed',
-      face: 'confident noble smile with bright eyes',
-      details: 'small colorful crown on the mane and clearly white belly',
-      palette: 'golden yellow fur with white belly'
+      silhouette: 'Golden lion 3D mascot. Clearly a stylized 3D mascot character with visible three-dimensional depth. Huge messy curly mane made of thick yarn-like curls. Face clearly separated from the mane.',
+      pose: 'Standing proudly in a dimensional 3D pose with visible body depth. Arms crossed.',
+      face: 'Confident noble smile. Bright eyes.',
+      details: 'Small colorful crown on the mane. Clearly white belly. Plush-like furry volume, but still clearly a polished 3D mascot character. The mane, face, body, and limbs must show clear depth and rounded volume. Not flat, not orthographic, not sheet-like, not a front elevation drawing.',
+      palette: 'Golden yellow fur with white belly.'
     }
   },
   penguin: {
     id: 'penguin',
     name: 'ペンギン',
+    speciesEn: 'penguin',
     emoji: '🐧',
     img: './img/pengin.webp',
     first: 'ぼく',
-    personality: 'まじめでのんびり',
+    personality: 'まじめでのんびり、でも明るい',
+    personalityEn: 'serious, laid-back, cheerful',
     profile: {
-      silhouette: 'round baby penguin mascot with a very large head and tiny feet',
-      pose: 'standing front-facing with both wings raised wide',
-      face: 'very large blue eyes and open happy beak',
-      details: 'small silver crown',
-      palette: 'pastel blue and white body with yellow beak and feet'
+      silhouette: 'Round baby penguin mascot. Very large head. Tiny feet.',
+      pose: 'Standing in a lively playful pose. Both wings raised wide.',
+      face: 'Very large blue eyes. Open happy beak.',
+      details: 'Small silver crown.',
+      palette: 'Pastel blue and white body. Yellow beak and feet.'
     }
   },
   capybara: {
     id: 'capybara',
     name: 'カピバラ',
+    speciesEn: 'capybara',
     emoji: '🦫',
     img: './img/kapipara.webp',
     first: 'わたし',
-    personality: 'おっとりしてやさしい',
+    personality: 'やさしくて穏やか',
+    personalityEn: 'gentle, kind, calm',
     profile: {
-      silhouette: 'chubby capybara mascot with a large rounded head and potato-like body',
-      pose: 'sitting front-facing with tiny hands near the chest',
-      face: 'sleepy half-closed eyes, visible front teeth, peaceful smile',
-      details: 'big rounded nose',
-      palette: 'warm beige fur with cream belly'
+      silhouette: 'Chubby capybara mascot. Large rounded head. Potato-like body. Single character only.',
+      pose: 'Sitting in a gentle playful pose. Tiny hands near the chest. Single character only. No multiple views.',
+      face: 'Usually sleepy half-closed eyes. Eyes open when surprised. Visible front teeth. Peaceful smile.',
+      details: 'Big rounded nose.',
+      palette: 'Warm beige fur with cream belly.'
     }
   },
   panda: {
     id: 'panda',
     name: 'パンダ',
+    speciesEn: 'panda',
     emoji: '🐼',
     img: './img/panda.webp',
     first: 'ぼく',
-    personality: 'マイペースで食いしんぼう',
+    personality: 'マイペースで食べるのが大好き',
+    personalityEn: 'goes at his own pace, loves to eat',
     profile: {
-      silhouette: 'cute panda mascot with an oversized round head and rounded seated body',
-      pose: 'sitting front-facing with legs open forward',
-      face: 'sleepy half-closed eyes and tiny tongue sticking out',
-      details: 'soft pink cheeks',
-      palette: 'black and white fur'
+      silhouette: 'Cute panda 3D mascot. Clearly a stylized 3D mascot character. Oversized round head. Rounded seated body.',
+      pose: 'Sitting in a relaxed playful pose. Legs open forward.',
+      face: 'Sleepy half-closed eyes. Tiny tongue sticking out.',
+      details: 'Soft pink cheeks. Fluffy rounded fur volume, but still clearly a polished 3D mascot character.',
+      palette: 'Black and white fur.'
     }
   }
 };
@@ -86,60 +93,73 @@ const QUICK_FOODS = {
   'にく': {
     key: 'meat',
     label: 'にく',
+    gasWord: 'Meat (juicy steak)',
     category: 'にく',
     visual: 'a juicy steak',
-    imageStyle: 'thick raw marbled meat slices arranged on a wooden board, isolated object, premium food asset look'
+    imageStyle: 'single clearly visible juicy steak, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food, not grass, not leaves, not vegetables'
+  },
+  'さかな': {
+    key: 'meat',
+    label: 'さかな',
+    gasWord: 'fish',
+    category: 'にく',
+    visual: 'a fish',
+    imageStyle: 'single clearly visible fish, easy-to-read fish silhouette, slightly stylized 3D mascot-like food'
   },
   'くさ': {
     key: 'grass',
     label: 'くさ',
+    gasWord: 'grass',
     category: 'くさ',
     visual: 'a bundle of fresh green grass',
-    imageStyle: 'fresh green grass and wild herbs piled on a wooden board, isolated object, clean cutout asset look'
+    imageStyle: 'single clearly visible bundle of long fresh green grass blades, clearly visible green leafy mass, easy-to-read silhouette, slightly stylized 3D mascot-like food, not meat, not steak, not red flesh'
   },
   'たいや': {
     key: 'tire',
     label: 'たいや',
+    gasWord: 'tires',
     category: 'たいや',
-    visual: 'a worn rubber tire on the ground, isolated object, simple cutout asset look'
+    visual: 'a worn rubber tire',
+    imageStyle: 'recognizable single tire, round silhouette, slightly worn but easy to identify, slightly stylized 3D mascot-like object'
   },
   'げきからりょうり': {
     key: 'spicy',
     label: 'げきからりょうり',
+    gasWord: 'extremely spicy food',
     category: 'げきからりょうり',
     visual: 'an extremely spicy dish with red chili peppers',
-    imageStyle: 'bright red extra spicy dish covered with many chili peppers on a wooden board, isolated object, dramatic food asset look'
+    imageStyle: 'recognizable extra spicy dish, very red, chili peppers clearly visible, spicy look at first glance, slightly stylized 3D mascot-like food'
   }
 };
 
 const REACTIONS = {
   lion: {
-    meat: { likeLevel: '大好き', mood: '😍', text: 'うまい！ これはテンションが上がるぜ！' },
-    grass: { likeLevel: '嫌い', mood: '😖', text: 'くさはちょっと違うかな…。' },
-    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやは食べものじゃないぞ！？' },
-    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からすぎる！ でも気合いで食べる…！' },
-    free: { likeLevel: '普通', mood: '😐', text: 'どんな味か、まずは食べてみるぞ。' }
+    meat: { likeLevel: '大好き', mood: '😍', text: '見事だ。王者であるオレが口にしても、十分に満足できる味だ。' },
+    grass: { likeLevel: '嫌い', mood: '😖', text: 'オレには似合わない。王者が求める一皿とは言いがたい。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'これは論外だ。オレの前に出すなら、食べものとしての品格を備えてこい。' },
+    spicy: { likeLevel: '嫌い', mood: '🥵', text: '勢いは認める。だが、味わうには刺激が強すぎる。' },
+    free: { likeLevel: '普通', mood: '😐', text: '悪くはない。まずは静かに味を見極めよう。' }
   },
   penguin: {
-    meat: { likeLevel: '好き', mood: '😊', text: 'おいしいね。もぐもぐ食べちゃう。' },
-    grass: { likeLevel: '嫌い', mood: '😕', text: 'くさは、ちょっと食べにくいかな…。' },
-    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやは食べられないよ…。' },
-    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からくてびっくりした…。' },
-    free: { likeLevel: '普通', mood: '🙂', text: 'どきどきするけど、ひとくち食べてみるね。' }
+    meat: { likeLevel: '好き', mood: '😊', text: 'まじめに味見したけど、これはけっこう好きかも。' },
+    grass: { likeLevel: '嫌い', mood: '😕', text: 'ちゃんと食べてみたけど、くさは少しのんびりしすぎる味だね。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'これはさすがに食べものじゃないよ。ぼくでもそれはわかるよ。' },
+    spicy: { likeLevel: '嫌い', mood: '🥵', text: 'からくてびっくりしたけど、なんだかちょっと笑っちゃうね。' },
+    free: { likeLevel: '普通', mood: '🙂', text: 'よし、落ち着いてひとくち。どんな味かたしかめてみるね。' }
   },
   capybara: {
-    grass: { likeLevel: '大好き', mood: '😍', text: 'これは落ち着く味だねぇ。' },
-    meat: { likeLevel: '普通', mood: '😐', text: '食べられるけど、いつもの感じではないかな。' },
-    tire: { likeLevel: '嫌い', mood: '😖', text: 'かたいよ…。これはえさじゃないかも。' },
-    spicy: { likeLevel: '大嫌い', mood: '🤢', text: 'からいのは苦手なんだ…。' },
-    free: { likeLevel: '普通', mood: '🙂', text: 'のんびり味見してみるね。' }
+    grass: { likeLevel: '大好き', mood: '😍', text: 'やさしい味でほっとするね。これはとても好きだな。' },
+    meat: { likeLevel: '普通', mood: '😐', text: '食べられるけれど、ぼくにはもう少し穏やかな味が合うかな。' },
+    tire: { likeLevel: '嫌い', mood: '😖', text: 'かたくてびっくりしたよ。これは食べないほうがよさそうだね。' },
+    spicy: { likeLevel: '大嫌い', mood: '🤢', text: 'からいのは苦手なんだ。落ち着いて食べられる味がいいな。' },
+    free: { likeLevel: '普通', mood: '🙂', text: 'やさしく味わってみるね。どんな味でも落ち着いてたしかめるよ。' }
   },
   panda: {
-    grass: { likeLevel: '好き', mood: '😊', text: 'しゃきしゃきしていい感じ。' },
-    meat: { likeLevel: '嫌い', mood: '😖', text: 'ぼくはもっと別のものが食べたいな…。' },
-    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'たいやはむり！ ぜったいむり！' },
-    spicy: { likeLevel: '大嫌い', mood: '🥵', text: 'からい！ みずー！' },
-    free: { likeLevel: '普通', mood: '😐', text: 'まずはひとくち、ためしてみるよ。' }
+    grass: { likeLevel: '好き', mood: '😊', text: 'おいしいけど、ぼくは笹の方がうれしいな。' },
+    meat: { likeLevel: '嫌い', mood: '😖', text: 'ぼくは食べるのが大好きだけど、これはあんまり進まないな。' },
+    tire: { likeLevel: '大嫌い', mood: '🤢', text: 'それはさすがに食べものじゃないよ。食いしんぼうのぼくでも無理だ。' },
+    spicy: { likeLevel: '大嫌い', mood: '🥵', text: 'からいとたくさん食べられない。ぼくはおいしく山ほど食べたいんだ。' },
+    free: { likeLevel: '普通', mood: '😐', text: 'まずはひとくち。でも、おいしかったらもっと食べたい。' }
   }
 };
 
@@ -201,8 +221,29 @@ const el = {
   imgModal: $('#imgModal'),
   imgModalBackdrop: $('#imgModalBackdrop'),
   imgModalClose: $('#imgModalClose'),
-  imgModalImg: $('#imgModalImg')
+  imgModalImg: $('#imgModalImg'),
+  meatFoodBtn: $('[data-food-slot="meat"]')
 };
+
+function syncFoodButtons(animal) {
+  const meatButton = el.meatFoodBtn;
+  if (!meatButton) return;
+
+  const meatIcon = meatButton.querySelector('.foodBtnIcon');
+  const meatLabel = meatButton.querySelector('span');
+  const isPenguin = animal && animal.id === 'penguin';
+
+  meatButton.dataset.quick = isPenguin ? 'さかな' : 'にく';
+
+  if (meatIcon) {
+    meatIcon.src = isPenguin ? './img/fish1-B.png' : './img/oniku1.png';
+    meatIcon.alt = '';
+  }
+
+  if (meatLabel) {
+    meatLabel.textContent = isPenguin ? 'さかな' : 'にく';
+  }
+}
 
 function ensureAudio() {
   if (!window.AudioContext && !window.webkitAudioContext) return null;
@@ -430,6 +471,7 @@ function normalizeFood(input) {
     return {
       raw,
       label: quick.label,
+      gasWord: quick.gasWord || quick.label,
       key: quick.key,
       category: quick.category,
       visual: quick.visual,
@@ -441,6 +483,7 @@ function normalizeFood(input) {
   return {
     raw,
     label: raw,
+    gasWord: raw,
     key: 'free',
     category: '',
     visual: raw,
@@ -455,39 +498,7 @@ function getReaction(animal, foodInfo) {
 }
 
 function buildImagePrompt(animal, foodInfo, reaction) {
-  const subjectFood = foodInfo.isFreeWord ? foodInfo.raw : foodInfo.visual;
-  const animalProfile = animal.profile || {};
-  const foodStyle = foodInfo.imageStyle || `single food item: ${subjectFood}`;
-  const emotionMap = {
-    '大好き': 'very happy, sparkling eyes, excited, eager to eat',
-    '好き': 'happy, pleased, smiling',
-    '普通': 'calm, curious, neutral smile',
-    '嫌い': 'reluctant, awkward, slightly troubled face',
-    '大嫌い': 'disgusted, recoiling, dramatic grossed-out reaction'
-  };
-  const emotion = emotionMap[reaction.likeLevel] || 'curious expression';
-
-  return [
-    'Square 1:1 composition.',
-    `Style base: ${MASCOT_STYLE_BASE.medium}.`,
-    `Rendering base: ${MASCOT_STYLE_BASE.render}.`,
-    `Composition base: ${MASCOT_STYLE_BASE.composition}.`,
-    `Proportion base: ${MASCOT_STYLE_BASE.proportions}.`,
-    `Background base: ${MASCOT_STYLE_BASE.background}.`,
-    `Animal: ${animal.name} ${animal.emoji}.`,
-    `Animal silhouette: ${animalProfile.silhouette || `cute ${animal.name} mascot`}.`,
-    `Animal pose: ${animalProfile.pose || 'front-facing mascot pose'}.`,
-    `Animal face: ${animalProfile.face || 'cute friendly face'}.`,
-    `Animal details: ${animalProfile.details || 'soft fur details'}.`,
-    `Animal colors: ${animalProfile.palette || 'soft character colors'}.`,
-    'The animal must have visible fluffy fur volume and a soft furry outline, not a smooth doll-like surface.',
-    `Food design reference: ${foodStyle}.`,
-    `Only one food item is shown and it must clearly read as ${subjectFood}.`,
-    `The animal is eating or holding ${subjectFood}.`,
-    `Expression and mood: ${emotion}.`,
-    'Use a clean isolated composition with strong mascot readability.',
-    'Do not make the animal smooth, plastic, glossy, photorealistic, or doll-like.'
-  ].join(' ');
+  return IMAGE_STYLE_BASE_PROMPT.join(' ');
 }
 
 function buildPayload(animal, foodInfo, reaction) {
@@ -496,8 +507,8 @@ function buildPayload(animal, foodInfo, reaction) {
   return {
     gameVersion: VERSION,
     animalType: animal.name,
-    foodType: foodInfo.isFreeWord ? '' : foodInfo.label,
-    freeWord: foodInfo.isFreeWord ? foodInfo.raw : '',
+    foodType: foodInfo.isFreeWord ? '' : (foodInfo.gasWord || foodInfo.label),
+    freeWord: foodInfo.isFreeWord ? (foodInfo.gasWord || foodInfo.raw) : '',
     likeLevel: reaction.likeLevel,
     baseImagePrompt,
     wantImage: true,
@@ -588,6 +599,24 @@ function extractImageSrc(data) {
   return '';
 }
 
+function sanitizeAnimalComment(animal, line) {
+  const text = String(line || '').trim();
+  if (!text) return '';
+
+  if (animal && animal.id === 'lion') {
+    return text
+      .replace(/だ(?:にゃー|ニャー|にゃあ|ニャア|にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, 'だ$1')
+      .replace(/(?:にゃー|ニャー|にゃあ|ニャア|にゃん|ニャン|にゃ|ニャ)([。！!？?〜～…」』]*)$/u, '$1')
+      .trim();
+  }
+
+  if (animal && animal.id === 'penguin') {
+    return text.replace(/めちゃくちゃ/g, 'とっても').trim();
+  }
+
+  return text;
+}
+
 function applyResultBase(animal, foodInfo, reaction) {
   setImage(el.resultAnimalImg, animal.img, animal.name);
   if (el.resultSub) el.resultSub.textContent = `入力：${foodInfo.raw}`;
@@ -601,8 +630,10 @@ function applyResultBase(animal, foodInfo, reaction) {
 
 function applyGasResult(animal, foodInfo, gasData) {
   const line = firstLine(gasData.message || gasData.comment || gasData.text || gasData.reply || gasData.responseText);
-  if (line && el.resultText) {
-    el.resultText.textContent = line;
+  const keepLocalReactionComment = foodInfo && foodInfo.key === 'grass' && (animal.id === 'lion' || animal.id === 'penguin' || animal.id === 'panda');
+  const sanitizedLine = keepLocalReactionComment ? '' : sanitizeAnimalComment(animal, line);
+  if (sanitizedLine && el.resultText) {
+    el.resultText.textContent = sanitizedLine;
   }
 
   const src = extractImageSrc(gasData);
@@ -733,6 +764,7 @@ async function copyGasResponse() {
 
 function goToSelect() {
   state.animal = null;
+  syncFoodButtons(null);
   stopBegging();
   showScreen('select');
   setLoading(false);
@@ -744,6 +776,7 @@ function goToGame(animalId) {
   if (!animal) return;
 
   state.animal = animal;
+  syncFoodButtons(animal);
   setImage(el.animalImg, animal.img, animal.name);
   setImage(el.loadingAnimalImg, animal.img, animal.name);
   if (el.freeInput) el.freeInput.value = '';
@@ -842,4 +875,5 @@ function bind() {
 }
 
 bind();
+syncFoodButtons(null);
 showScreen('select');

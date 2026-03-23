@@ -55,7 +55,7 @@ img{ display:block; max-width:100%; }
   display:grid;
   grid-template-rows:1fr auto;
   gap:10px;
-  padding:18px 24px 14px;
+  padding:18px 24px 16px;
 }
 
 .appMain{
@@ -67,6 +67,9 @@ img{ display:block; max-width:100%; }
   text-align:center;
   font-size:12px;
   color:var(--muted);
+  text-shadow:0 2px 10px rgba(0,0,0,.45);
+  pointer-events:none;
+  padding-bottom:2px;
 }
 
 .screen{
@@ -87,6 +90,13 @@ img{ display:block; max-width:100%; }
   align-items:stretch;
 }
 
+#screenGame{
+  align-items:start;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:4px;
+}
+
 .titleScreen{
   width:100%;
   height:100%;
@@ -94,13 +104,14 @@ img{ display:block; max-width:100%; }
   grid-template-rows:1fr auto;
   gap:20px;
   align-items:end;
-  padding-top:190px;
+  padding-top:148px;
+  padding-bottom:24px;
   position:relative;
 }
 
 .selectLogoWrap{
   position:absolute;
-  top:8px;
+  top:0;
   left:50%;
   transform:translateX(-50%);
   z-index:3;
@@ -111,9 +122,9 @@ img{ display:block; max-width:100%; }
 }
 
 .selectLogoTop{
-  width:min(980px, 54vw);
-  max-width:94vw;
-  max-height:260px;
+  width:min(1120px, 68vw);
+  max-width:95vw;
+  max-height:280px;
   height:auto;
   object-fit:contain;
   filter:drop-shadow(0 12px 24px rgba(0,0,0,.22));
@@ -127,6 +138,7 @@ img{ display:block; max-width:100%; }
   align-items:end;
   gap:28px;
   padding:0 14px;
+  transform:translateY(-34px);
 }
 
 .pickTile{
@@ -196,6 +208,7 @@ img{ display:block; max-width:100%; }
   font-weight:1000;
   letter-spacing:.18em;
   box-shadow:0 16px 40px rgba(0,0,0,.20);
+  transform:translateY(-34px);
 }
 
 /* ---------------------------
@@ -216,6 +229,12 @@ img{ display:block; max-width:100%; }
 .resultCard{
   height:min(100%, 860px);
   padding:22px;
+}
+
+.gameCard{
+  margin-bottom:8px;
+  height:auto;
+  min-height:min(100%, 860px);
 }
 
 /* ---------------------------
@@ -317,21 +336,25 @@ img{ display:block; max-width:100%; }
 }
 
 .foodBtn{
-  min-height:140px;
+  min-height:168px;
   display:grid;
+  grid-template-rows:1fr auto;
   justify-items:center;
-  align-content:center;
-  gap:10px;
-  padding:16px;
+  align-content:stretch;
+  gap:4px;
+  padding:10px 12px 12px;
   text-align:center;
-  font-size:22px;
+  font-size:20px;
   font-weight:900;
 }
 
 .foodBtnIcon{
-  width:72px;
-  height:72px;
+  width:min(46%, 152px);
+  max-width:100%;
+  height:auto;
+  max-height:112px;
   object-fit:contain;
+  align-self:center;
 }
 
 .freeBox{
@@ -354,6 +377,18 @@ img{ display:block; max-width:100%; }
   display:flex;
   flex-wrap:wrap;
   gap:12px;
+}
+
+.freeActions{
+  justify-content:flex-end;
+}
+
+#btnBackToSelect{
+  order:1;
+}
+
+#btnSend{
+  order:2;
 }
 
 .btn{
@@ -416,7 +451,11 @@ img{ display:block; max-width:100%; }
   overflow:auto;
   padding-right:4px;
   display:grid;
-  grid-template-columns:minmax(250px, 330px) minmax(0,1fr);
+  grid-template-columns:minmax(340px, 1.1fr) minmax(280px, .9fr);
+  grid-template-rows:minmax(180px, auto) minmax(480px, auto);
+  grid-template-areas:
+    "image text"
+    "image animal";
   gap:18px;
   align-items:start;
 }
@@ -424,33 +463,53 @@ img{ display:block; max-width:100%; }
 .resultLeft,
 .resultRight{
   min-height:0;
+  display:contents;
 }
 
 .resultAnimalPanel{
+  grid-area:animal;
   height:100%;
-  min-height:0;
+  min-height:700px;
   display:grid;
-  grid-template-rows:auto 1fr auto;
+  grid-template-columns:auto minmax(0, 1fr);
+  grid-template-rows:auto minmax(500px, 1fr);
+  grid-template-areas:
+    "emoji badges"
+    "image image";
   gap:14px;
   padding:18px;
+  align-content:stretch;
+  overflow:visible;
 }
 
 .resultAnimalPic{
+  grid-area:image;
   min-height:0;
   display:grid;
   place-items:center;
+  overflow:hidden;
+  transform:translateY(-12px);
 }
 
 .resultAnimalPic img{
-  width:min(100%, 250px);
-  max-height:300px;
+  width:min(100%, 540px);
+  max-height:520px;
   object-fit:contain;
   filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));
 }
 
 .resultBadges{
+  grid-area:badges;
   display:grid;
   gap:10px;
+  align-self:start;
+  align-content:start;
+  transform:none;
+}
+
+.resultAnimalPanel > .resultEmoji{
+  grid-area:emoji;
+  align-self:start;
 }
 
 .badge{
@@ -476,15 +535,22 @@ img{ display:block; max-width:100%; }
 }
 
 .resultRight{
-  display:grid;
-  grid-template-rows:minmax(180px, auto) minmax(260px, 1fr);
-  gap:18px;
+  display:contents;
 }
 
 .resultTextPanel,
 .resultImagePanel{
   min-height:0;
   padding:18px;
+}
+
+.resultImagePanel{
+  grid-area:image;
+}
+
+.resultTextPanel{
+  grid-area:text;
+  align-self:start;
 }
 
 .resultSectionTitle{
@@ -682,12 +748,12 @@ img{ display:block; max-width:100%; }
 
 @media (max-width: 1400px){
   .titleScreen{
-    padding-top:165px;
+    padding-top:132px;
   }
 
   .selectLogoTop{
-    width:min(860px, 56vw);
-    max-height:230px;
+    width:min(980px, 70vw);
+    max-height:246px;
   }
 
   .tileFrame{
@@ -721,14 +787,15 @@ img{ display:block; max-width:100%; }
 
   .titleScreen{
     height:auto;
-    padding-top:120px;
+    padding-top:92px;
+    padding-bottom:24px;
     grid-template-rows:auto auto;
     align-items:start;
   }
 
   .selectLogoTop{
-    width:min(760px, 82vw);
-    max-height:180px;
+    width:min(820px, 88vw);
+    max-height:190px;
   }
 
   .animalRowWide,
@@ -737,10 +804,18 @@ img{ display:block; max-width:100%; }
     grid-template-columns:1fr;
   }
 
+  .resultBody{
+    grid-template-areas:
+      "image"
+      "text"
+      "animal";
+  }
+
   .animalRowWide{
     grid-template-columns:repeat(2, minmax(0,1fr));
     gap:18px 20px;
     padding:0 6px;
+    transform:translateY(-18px);
   }
 
   .pickTile{
@@ -759,6 +834,18 @@ img{ display:block; max-width:100%; }
   .gameCard,
   .resultCard{
     height:auto;
+  }
+
+  .foodBtn{
+    min-height:160px;
+    grid-template-rows:1fr auto;
+    gap:4px;
+    padding:10px 12px 12px;
+  }
+
+  .foodBtnIcon{
+    width:min(42%, 136px);
+    max-height:100px;
   }
 
   .resultCard{
@@ -789,13 +876,14 @@ img{ display:block; max-width:100%; }
   }
 
   .titleScreen{
-    padding-top:90px;
+    padding-top:68px;
+    padding-bottom:18px;
     gap:14px;
   }
 
   .selectLogoTop{
-    width:min(92vw, 560px);
-    max-height:130px;
+    width:min(96vw, 620px);
+    max-height:148px;
   }
 
   .animalRowWide{
@@ -816,6 +904,7 @@ img{ display:block; max-width:100%; }
     padding:14px 10px;
     font-size:clamp(18px, 5.4vw, 28px);
     letter-spacing:.08em;
+    transform:translateY(-18px);
   }
 
   .foodGrid{
@@ -824,13 +913,16 @@ img{ display:block; max-width:100%; }
   }
 
   .foodBtn{
-    min-height:120px;
+    min-height:132px;
     font-size:16px;
+    gap:4px;
+    padding:8px 8px 10px;
+    grid-template-rows:1fr auto;
   }
 
   .foodBtnIcon{
-    width:56px;
-    height:56px;
+    width:min(54%, 92px);
+    max-height:72px;
   }
 
   .gameCard,
@@ -856,6 +948,10 @@ img{ display:block; max-width:100%; }
     display:grid;
     grid-template-columns:1fr;
     gap:10px;
+  }
+
+  .freeActions{
+    justify-content:stretch;
   }
 
   .resultActions .btn{
