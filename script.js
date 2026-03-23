@@ -98,6 +98,14 @@ const QUICK_FOODS = {
     visual: 'a juicy steak',
     imageStyle: 'single clearly visible juicy steak, thick and meaty, red flesh and white fat clearly visible, easy-to-read silhouette, slightly stylized 3D mascot-like food, not grass, not leaves, not vegetables'
   },
+  'さかな': {
+    key: 'meat',
+    label: 'さかな',
+    gasWord: 'fish',
+    category: 'にく',
+    visual: 'a fish',
+    imageStyle: 'single clearly visible fish, easy-to-read fish silhouette, slightly stylized 3D mascot-like food'
+  },
   'くさ': {
     key: 'grass',
     label: 'くさ',
@@ -213,8 +221,29 @@ const el = {
   imgModal: $('#imgModal'),
   imgModalBackdrop: $('#imgModalBackdrop'),
   imgModalClose: $('#imgModalClose'),
-  imgModalImg: $('#imgModalImg')
+  imgModalImg: $('#imgModalImg'),
+  meatFoodBtn: $('[data-food-slot="meat"]')
 };
+
+function syncFoodButtons(animal) {
+  const meatButton = el.meatFoodBtn;
+  if (!meatButton) return;
+
+  const meatIcon = meatButton.querySelector('.foodBtnIcon');
+  const meatLabel = meatButton.querySelector('span');
+  const isPenguin = animal && animal.id === 'penguin';
+
+  meatButton.dataset.quick = isPenguin ? 'さかな' : 'にく';
+
+  if (meatIcon) {
+    meatIcon.src = isPenguin ? './img/fish1-B.png' : './img/oniku1.png';
+    meatIcon.alt = '';
+  }
+
+  if (meatLabel) {
+    meatLabel.textContent = isPenguin ? 'さかな' : 'にく';
+  }
+}
 
 function ensureAudio() {
   if (!window.AudioContext && !window.webkitAudioContext) return null;
@@ -735,6 +764,7 @@ async function copyGasResponse() {
 
 function goToSelect() {
   state.animal = null;
+  syncFoodButtons(null);
   stopBegging();
   showScreen('select');
   setLoading(false);
@@ -746,6 +776,7 @@ function goToGame(animalId) {
   if (!animal) return;
 
   state.animal = animal;
+  syncFoodButtons(animal);
   setImage(el.animalImg, animal.img, animal.name);
   setImage(el.loadingAnimalImg, animal.img, animal.name);
   if (el.freeInput) el.freeInput.value = '';
@@ -844,4 +875,5 @@ function bind() {
 }
 
 bind();
+syncFoodButtons(null);
 showScreen('select');
