@@ -1,7 +1,7 @@
 ﻿'use strict';
 
 const VERSION = 'v55-rebuild-fetch';
-const GAS_FALLBACK_URL = 'https://script.google.com/a/macros/happy-epo8.com/s/AKfycbxN_lNgpMEsQ1_bCu2uPeMZT_byjb0bId_g9IbBWAecG6hFVWTpuvgzrkLVT0affBXpqA/exec';
+const GAS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbxLp1t7Y1vRIgR8dnybywAsW93e7ueL3ax93E_3FhNZQz73LXaLGeKqwH6QClAm5zjN8Q/exec';
 const GAS_ENDPOINT = (() => {
   const meta = document.querySelector('meta[name="gas-url"]');
   return meta && meta.content ? meta.content.trim() : GAS_FALLBACK_URL;
@@ -10,6 +10,21 @@ const GAS_ENDPOINT = (() => {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const firstLine = (value) => String(value || '').split(/\r?\n/).map((v) => v.trim()).find(Boolean) || '';
+const DEBUG_GAS = true;
+
+function debugLog(label, data) {
+  if (!DEBUG_GAS) return;
+  try {
+    console.log(`[GAS DEBUG] ${label}`, data);
+  } catch (_error) {}
+}
+
+function debugLogJson(label, data) {
+  if (!DEBUG_GAS) return;
+  try {
+    console.log(`[GAS DEBUG] ${label} ${JSON.stringify(data)}`);
+  } catch (_error) {}
+}
 
 const IMAGE_STYLE_BASE_PROMPT = [
   'Rendering Quality: High-quality 3D mascot character style, polished like a professional game asset render with visible three-dimensional depth and rounded volume.',
@@ -509,6 +524,7 @@ function buildPayload(animal, foodInfo, reaction) {
     animalType: animal.name,
     foodType: foodInfo.isFreeWord ? '' : (foodInfo.gasWord || foodInfo.label),
     freeWord: foodInfo.isFreeWord ? (foodInfo.gasWord || foodInfo.raw) : '',
+    foodCategory: foodInfo.key || '',
     likeLevel: reaction.likeLevel,
     baseImagePrompt,
     wantImage: true,
@@ -525,6 +541,7 @@ async function callGas(payload, timeoutMs = 45000) {
   });
 
   const url = `${GAS_ENDPOINT}${GAS_ENDPOINT.includes('?') ? '&' : '?'}${params.toString()}`;
+  debugLog('Request URL', url);
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
@@ -535,11 +552,13 @@ async function callGas(payload, timeoutMs = 45000) {
       signal: controller.signal
     });
     const text = await response.text();
+    debugLog('Response text sample', text.slice(0, 300));
 
     let data;
     try {
       data = JSON.parse(text);
     } catch (_error) {
+      debugLog('Response parse error', { status: response.status, textSample: text.slice(0, 400) });
       return {
         success: false,
         error: 'invalid_json',
@@ -552,9 +571,20 @@ async function callGas(payload, timeoutMs = 45000) {
       data = { success: false, error: 'invalid_payload' };
     }
 
+    const summary = {
+      status: response.status,
+      success: data.success,
+      likeLevel: data.likeLevel || data.like_level || null,
+      moodEmoji: data.moodEmoji || data.mood_emoji || null,
+      message: firstLine(data.message || data.comment || data.text || data.reply || '').slice(0, 120)
+    };
+    debugLog('Response JSON', summary);
+    debugLogJson('Response JSON inline', summary);
+
     data.__trace = { mode: 'fetch', status: response.status, urlSample: url.slice(0, 900) };
     return data;
   } catch (error) {
+    debugLog('Fetch error', { error: String(error), urlSample: url.slice(0, 300) });
     return {
       success: false,
       error: error && error.name === 'AbortError' ? 'timeout' : 'fetch_failed',
@@ -632,9 +662,24 @@ function applyGasResult(animal, foodInfo, gasData) {
   const line = firstLine(gasData.message || gasData.comment || gasData.text || gasData.reply || gasData.responseText);
   const keepLocalReactionComment = foodInfo && foodInfo.key === 'grass' && (animal.id === 'lion' || animal.id === 'penguin' || animal.id === 'panda');
   const sanitizedLine = keepLocalReactionComment ? '' : sanitizeAnimalComment(animal, line);
+  const apiLikeLevel = firstLine(gasData.likeLevel || gasData.like_level);
+  const apiMoodEmoji = firstLine(gasData.moodEmoji || gasData.mood_emoji);
+
   if (sanitizedLine && el.resultText) {
     el.resultText.textContent = sanitizedLine;
   }
+  if (apiLikeLevel && el.resultMoodBadge) {
+    el.resultMoodBadge.textContent = `きぶん：${apiLikeLevel}`;
+  }
+  if (apiMoodEmoji && el.resultEmoji) {
+    el.resultEmoji.textContent = apiMoodEmoji;
+  }
+  debugLogJson('Applied mood', {
+    apiLikeLevel,
+    apiMoodEmoji,
+    uiMoodBadge: el.resultMoodBadge ? el.resultMoodBadge.textContent : null,
+    uiEmoji: el.resultEmoji ? el.resultEmoji.textContent : null
+  });
 
   const src = extractImageSrc(gasData);
   if (src && el.resultImage) {
@@ -679,6 +724,7 @@ async function handleFeed(raw) {
   const foodInfo = normalizeFood(input);
   const reaction = getReaction(animal, foodInfo);
   const payload = buildPayload(animal, foodInfo, reaction);
+  debugLog('Request payload', payload);
 
   state.lastPayload = payload;
   applyResultBase(animal, foodInfo, reaction);

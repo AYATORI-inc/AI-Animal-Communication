@@ -88,9 +88,19 @@ img{ display:block; max-width:100%; }
 
 #screenSelect{
   align-items:stretch;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:4px;
 }
 
 #screenGame{
+  align-items:start;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:4px;
+}
+
+#screenResult{
   align-items:start;
   overflow-y:auto;
   overscroll-behavior:contain;

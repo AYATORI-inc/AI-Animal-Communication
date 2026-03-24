@@ -5,6 +5,13 @@
  * OpenAI APIに転送して結果を返します。
  */
 
+const ANIMAL_FOOD_PREFERENCES = {
+  'ライオン': { meat: '大好き', grass: '嫌い', tire: '大嫌い', spicy: '嫌い', free: '普通' },
+  'ペンギン': { meat: '好き', grass: '嫌い', tire: '大嫌い', spicy: '嫌い', free: '普通' },
+  'カピバラ': { meat: '普通', grass: '大好き', tire: '嫌い', spicy: '大嫌い', free: '普通' },
+  'パンダ': { meat: '嫌い', grass: '好き', tire: '大嫌い', spicy: '大嫌い', free: '普通' }
+};
+
 /**
  * POSTリクエストを処理する関数
  * @param {Object} e - イベントオブジェクト（リクエスト情報を含む）
@@ -56,10 +63,16 @@ function doPost(e) {
       }
       
       // プロンプトを生成
+      const resolvedLikeLevel = resolveLikeLevel(
+        requestData.animalType,
+        requestData.foodCategory || null,
+        foodItem,
+        requestData.likeLevel || null
+      );
       prompt = buildPromptFromData(
         requestData.animalType,
         foodItem,
-        requestData.likeLevel || null,
+        resolvedLikeLevel,
         requestData.freeWord ? true : false
       );
       
@@ -81,7 +94,7 @@ function doPost(e) {
 
       // OpenAI APIにリクエストを送信
       // プロンプトにJSON形式で返すように指示を追加（画像生成用キーワードを含めるため）
-      const enhancedPrompt = prompt + '\n\n【重要】必ず以下のJSON形式のみで回答してください。余計な解説、テキスト、マークダウン記号は一切不要です。JSONのみを返してください。\n\n{\n  "message": "動物のセリフや反応（日本語、60文字以内）",\n  "imagePrompt": "画像生成用の英語プロンプト（DALL-E用、詳細に描写、例: A cute cartoon monkey happily eating a banana, Pixar style, white background）"\n}';
+      const enhancedPrompt = prompt + '\n\n【重要】必ず以下のJSON形式のみで回答してください。余計な解説、テキスト、マークダウン記号は一切不要です。JSONのみを返してください。\n\n{\n  "message": "動物のセリフや反応（日本語、60文字以内）",\n  "imagePrompt": "画像生成用の英語プロンプト（DALL-E用、詳細に描写、例: A cute cartoon monkey happily eating a banana, Pixar style, white background）",\n  "likeLevel": "大好き|好き|普通|嫌い|大嫌い のいずれか",\n  "moodEmoji": "感情を表す絵文字1つ"\n}\n\nlikeLevelは必ず上記5種類のいずれかにしてください。';
     
       const payload = {
         model: 'gpt-3.5-turbo',
@@ -134,6 +147,8 @@ function doPost(e) {
       let aiResponseText = '';
       let messageText = '';
       let imagePrompt = null;
+      let responseLikeLevel = null;
+      let moodEmoji = null;
       
       if (responseData.choices && responseData.choices[0] && responseData.choices[0].message) {
         aiResponseText = responseData.choices[0].message.content;
@@ -152,6 +167,8 @@ function doPost(e) {
           if (parsedContent.message) {
             messageText = parsedContent.message;
           }
+          responseLikeLevel = normalizeLikeLevel(parsedContent.likeLevel);
+          moodEmoji = String(parsedContent.moodEmoji || '').trim();
           if (parsedContent.imagePrompt) {
             // imagePromptを優先
             imagePrompt = parsedContent.imagePrompt;
@@ -173,7 +190,7 @@ function doPost(e) {
         if (baseImagePrompt) {
           imagePrompt = baseImagePrompt + ', ' + foodItem;
         } else {
-          imagePrompt = buildImagePromptFromData(requestData.animalType, foodItem, requestData.likeLevel || null);
+          imagePrompt = buildImagePromptFromData(requestData.animalType, foodItem, resolvedLikeLevel);
         }
       } else {
         // 基礎プロンプトがある場合は、それを先頭に追加
@@ -181,8 +198,8 @@ function doPost(e) {
           imagePrompt = baseImagePrompt + ', ' + imagePrompt;
         }
         // 好き度を反映
-        if (requestData.likeLevel) {
-          imagePrompt = enhanceImagePromptWithLikeLevel(imagePrompt, requestData.likeLevel);
+        if (resolvedLikeLevel) {
+          imagePrompt = enhanceImagePromptWithLikeLevel(imagePrompt, resolvedLikeLevel);
         }
       }
       
@@ -199,9 +216,13 @@ function doPost(e) {
       }
       
       // テキストと画像URLを含むレスポンスを作成
+      const finalLikeLevel = resolvedLikeLevel || responseLikeLevel;
+      const finalMessage = normalizeMessageByLikeLevel(messageText, finalLikeLevel, foodItem);
       const enhancedResponse = {
         success: true,
-        message: messageText,
+        message: finalMessage,
+        likeLevel: finalLikeLevel,
+        moodEmoji: emojiFromLikeLevel(finalLikeLevel) || moodEmoji || null,
         imageUrl: imageUrl,
         imagePrompt: imagePrompt,
         imageError: imageError,
@@ -234,7 +255,7 @@ function doPost(e) {
 
     // OpenAI APIにリクエストを送信
     // プロンプトにJSON形式で返すように指示を追加（画像生成用キーワードを含めるため）
-    const enhancedPrompt = prompt + '\n\n【重要】必ず以下のJSON形式のみで回答してください。余計な解説、テキスト、マークダウン記号は一切不要です。JSONのみを返してください。\n\n{\n  "message": "動物のセリフや反応（日本語、60文字以内）",\n  "imagePrompt": "画像生成用の英語プロンプト（DALL-E用、詳細に描写、例: A cute cartoon monkey happily eating a banana, Pixar style, white background）"\n}';
+    const enhancedPrompt = prompt + '\n\n【重要】必ず以下のJSON形式のみで回答してください。余計な解説、テキスト、マークダウン記号は一切不要です。JSONのみを返してください。\n\n{\n  "message": "動物のセリフや反応（日本語、60文字以内）",\n  "imagePrompt": "画像生成用の英語プロンプト（DALL-E用、詳細に描写、例: A cute cartoon monkey happily eating a banana, Pixar style, white background）",\n  "likeLevel": "大好き|好き|普通|嫌い|大嫌い のいずれか",\n  "moodEmoji": "感情を表す絵文字1つ"\n}\n\nlikeLevelは必ず上記5種類のいずれかにしてください。';
     
     const payload = {
       model: 'gpt-3.5-turbo',
@@ -287,6 +308,8 @@ function doPost(e) {
     let aiResponseText = '';
     let messageText = '';
     let imagePrompt = null;
+    let responseLikeLevel = null;
+    let moodEmoji = null;
     
     if (responseData.choices && responseData.choices[0] && responseData.choices[0].message) {
       aiResponseText = responseData.choices[0].message.content;
@@ -305,6 +328,8 @@ function doPost(e) {
         if (parsedContent.message) {
           messageText = parsedContent.message;
         }
+        responseLikeLevel = normalizeLikeLevel(parsedContent.likeLevel);
+        moodEmoji = String(parsedContent.moodEmoji || '').trim();
         if (parsedContent.imagePrompt) {
           // imagePromptを優先
           imagePrompt = parsedContent.imagePrompt;
@@ -341,9 +366,13 @@ function doPost(e) {
     }
     
     // テキストと画像URLを含むレスポンスを作成
+    const finalLikeLevel = resolvedLikeLevel || responseLikeLevel;
+    const finalMessage = normalizeMessageByLikeLevel(messageText, finalLikeLevel, foodItem);
     const enhancedResponse = {
       success: true,
-      message: messageText,
+      message: finalMessage,
+      likeLevel: finalLikeLevel,
+      moodEmoji: emojiFromLikeLevel(finalLikeLevel) || moodEmoji || null,
       imageUrl: imageUrl,
       imagePrompt: imagePrompt,
       imageError: imageError,
@@ -391,6 +420,7 @@ function doGet(e) {
     const animalType = e.parameter.animalType;
     const foodType = e.parameter.foodType;
     const freeWord = e.parameter.freeWord;
+    const foodCategory = e.parameter.foodCategory;
     const likeLevel = e.parameter.likeLevel;
     const baseImagePrompt = e.parameter.baseImagePrompt;
     const prompt = e.parameter.prompt; // 旧形式のテキストプロンプト
@@ -418,10 +448,16 @@ function doGet(e) {
     }
     
     // プロンプトを生成
+    const resolvedLikeLevel = resolveLikeLevel(
+      animalType,
+      foodCategory || null,
+      foodItem,
+      likeLevel || null
+    );
     const generatedPrompt = buildPromptFromData(
       animalType,
       foodItem,
-      likeLevel || null,
+      resolvedLikeLevel,
       freeWord ? true : false
     );
     
@@ -442,7 +478,7 @@ function doGet(e) {
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
     // OpenAI APIにリクエストを送信
-    const enhancedPrompt = generatedPrompt + '\n\n【重要】必ず以下のJSON形式のみで回答してください。余計な解説、テキスト、マークダウン記号は一切不要です。JSONのみを返してください。\n\n{\n  "message": "動物のセリフや反応（日本語、60文字以内）",\n  "imagePrompt": "画像生成用の英語プロンプト（DALL-E用、詳細に描写、例: A cute cartoon monkey happily eating a banana, Pixar style, white background）"\n}';
+    const enhancedPrompt = generatedPrompt + '\n\n【重要】必ず以下のJSON形式のみで回答してください。余計な解説、テキスト、マークダウン記号は一切不要です。JSONのみを返してください。\n\n{\n  "message": "動物のセリフや反応（日本語、60文字以内）",\n  "imagePrompt": "画像生成用の英語プロンプト（DALL-E用、詳細に描写、例: A cute cartoon monkey happily eating a banana, Pixar style, white background）",\n  "likeLevel": "大好き|好き|普通|嫌い|大嫌い のいずれか",\n  "moodEmoji": "感情を表す絵文字1つ"\n}\n\nlikeLevelは必ず上記5種類のいずれかにしてください。';
     
     const payload = {
       model: 'gpt-3.5-turbo',
@@ -495,6 +531,8 @@ function doGet(e) {
     let aiResponseText = '';
     let messageText = '';
     let imagePrompt = null;
+    let responseLikeLevel = null;
+    let moodEmoji = null;
     
     if (responseData.choices && responseData.choices[0] && responseData.choices[0].message) {
       aiResponseText = responseData.choices[0].message.content;
@@ -513,6 +551,8 @@ function doGet(e) {
         if (parsedContent.message) {
           messageText = parsedContent.message;
         }
+        responseLikeLevel = normalizeLikeLevel(parsedContent.likeLevel);
+        moodEmoji = String(parsedContent.moodEmoji || '').trim();
         if (parsedContent.imagePrompt) {
           // imagePromptを優先
           imagePrompt = parsedContent.imagePrompt;
@@ -534,7 +574,7 @@ function doGet(e) {
       if (baseImagePromptValue) {
         imagePrompt = baseImagePromptValue + ', ' + foodItem;
       } else {
-        imagePrompt = buildImagePromptFromData(animalType, foodItem, likeLevel || null);
+        imagePrompt = buildImagePromptFromData(animalType, foodItem, resolvedLikeLevel);
       }
     } else {
       // 基礎プロンプトがある場合は、それを先頭に追加
@@ -542,8 +582,8 @@ function doGet(e) {
         imagePrompt = baseImagePromptValue + ', ' + imagePrompt;
       }
       // 好き度を反映
-      if (likeLevel) {
-        imagePrompt = enhanceImagePromptWithLikeLevel(imagePrompt, likeLevel);
+      if (resolvedLikeLevel) {
+        imagePrompt = enhanceImagePromptWithLikeLevel(imagePrompt, resolvedLikeLevel);
       }
     }
     
@@ -560,9 +600,13 @@ function doGet(e) {
     }
     
     // テキストと画像URLを含むレスポンスを作成
+    const finalLikeLevel = resolvedLikeLevel || responseLikeLevel;
+    const finalMessage = normalizeMessageByLikeLevel(messageText, finalLikeLevel, foodItem);
     const enhancedResponse = {
       success: true,
-      message: messageText,
+      message: finalMessage,
+      likeLevel: finalLikeLevel,
+      moodEmoji: emojiFromLikeLevel(finalLikeLevel) || moodEmoji || null,
       imageUrl: imageUrl,
       imagePrompt: imagePrompt,
       imageError: imageError,
@@ -822,6 +866,107 @@ function buildPromptFromData(animalType, foodItem, likeLevel, isFreeWord) {
   prompt += '子供向けの口調で、60文字以内で感想を言ってください。';
   
   return prompt;
+}
+
+/**
+ * 動物ごとの好み定義からlikeLevelを解決する
+ * 優先順位: リクエスト指定値 > foodCategory推定値 > free
+ * @param {String} animalType - 動物種類
+ * @param {String|null} foodCategory - 食べ物カテゴリ（meat/grass/tire/spicy/free）
+ * @param {String} foodItem - 食べ物の表示文字列
+ * @param {String|null} likeLevel - リクエスト指定の好き度
+ * @return {String|null}
+ */
+function resolveLikeLevel(animalType, foodCategory, foodItem, likeLevel) {
+  const direct = normalizeLikeLevel(likeLevel);
+  if (direct) return direct;
+
+  const table = ANIMAL_FOOD_PREFERENCES[String(animalType || '').trim()];
+  if (!table) return null;
+
+  const category = detectFoodCategory(foodCategory, foodItem);
+  if (category && table[category]) return table[category];
+  return table.free || null;
+}
+
+/**
+ * foodCategory文字列とfoodItemからカテゴリを推定する
+ * @param {String|null} foodCategory
+ * @param {String} foodItem
+ * @return {String} meat|grass|tire|spicy|free
+ */
+function detectFoodCategory(foodCategory, foodItem) {
+  const category = String(foodCategory || '').trim().toLowerCase();
+  if (category === 'meat' || category === 'grass' || category === 'tire' || category === 'spicy' || category === 'free') {
+    return category;
+  }
+
+  const text = String(foodItem || '').trim().toLowerCase();
+  if (!text) return 'free';
+  if (text.indexOf('meat') !== -1 || text.indexOf('肉') !== -1 || text.indexOf('fish') !== -1 || text.indexOf('さかな') !== -1) return 'meat';
+  if (text.indexOf('grass') !== -1 || text.indexOf('草') !== -1 || text.indexOf('くさ') !== -1) return 'grass';
+  if (text.indexOf('tire') !== -1 || text.indexOf('タイヤ') !== -1 || text.indexOf('たいや') !== -1) return 'tire';
+  if (text.indexOf('spicy') !== -1 || text.indexOf('辛') !== -1 || text.indexOf('から') !== -1 || text.indexOf('げきから') !== -1) return 'spicy';
+  return 'free';
+}
+
+/**
+ * AI応答のlikeLevelを正規化する
+ * @param {String} value - AIから返ってきたlikeLevel
+ * @return {String|null} 正規化されたlikeLevel
+ */
+function normalizeLikeLevel(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  if (text === '大好き' || text === '好き' || text === '普通' || text === '嫌い' || text === '大嫌い') {
+    return text;
+  }
+  return null;
+}
+
+/**
+ * likeLevelに対応する絵文字を返す
+ * @param {String|null} likeLevel
+ * @return {String|null}
+ */
+function emojiFromLikeLevel(likeLevel) {
+  switch (normalizeLikeLevel(likeLevel)) {
+    case '大好き':
+      return '😍';
+    case '好き':
+      return '😊';
+    case '普通':
+      return '😐';
+    case '嫌い':
+      return '😖';
+    case '大嫌い':
+      return '🤢';
+    default:
+      return null;
+  }
+}
+
+/**
+ * likeLevelと文面の整合をとる（嫌い系なのに過剰にポジティブな文を補正）
+ * @param {String} message
+ * @param {String|null} likeLevel
+ * @param {String} foodItem
+ * @return {String}
+ */
+function normalizeMessageByLikeLevel(message, likeLevel, foodItem) {
+  const text = String(message || '').trim();
+  const level = normalizeLikeLevel(likeLevel);
+  if (!text || !level) return text;
+
+  const positivePattern = /(おいしい|美味|最高|ジューシー|もっと食べたい|うれしい|だいすき|大好き|うまい)/;
+  if ((level === '嫌い' || level === '大嫌い') && positivePattern.test(text)) {
+    if (level === '大嫌い') {
+      return `うーん、${foodItem}はちょっと苦手だよ。ぼくには合わないかな。`;
+    }
+    return `うーん、${foodItem}はぼくにはあまり合わないな。`;
+  }
+
+  return text;
 }
 
 /**
